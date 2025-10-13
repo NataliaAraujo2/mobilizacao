@@ -1,0 +1,190 @@
+.hero {
+  position: relative; /* stacking context para ::before */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  background: var(--color-third);
+  opacity: 0.95;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/fundo.png");
+  background-repeat: no-repeat; /* sem repetição */
+  background-size: cover; /* cobre todo o header */
+  background-position: center; /* centraliza a imagem */
+  opacity: 0.5;
+  border-radius: 1rem;
+  z-index: 0;
+}
+
+.hero > * {
+  position: relative; /* filhos ficam acima do background */
+  z-index: 1;
+}
+
+/* Área do mapa */
+.mapContainer {
+  position: relative;
+  flex: 1 1 45%;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+  z-index: 1;
+}
+
+.mapContainerP {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  z-index: 100;
+}
+
+.mapImage {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  cursor: pointer;
+}
+
+.mapInteractive {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+}
+
+.mobileMapButton {
+  display: none;
+}
+
+.stateCoordWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card mapa */
+.cardMap {
+  flex: 1; /* 10% */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cardMap .mapInteractive {
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .modal {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .cardMain,
+  .cardMap {
+    flex: 1 1 100%;
+  }
+
+  .cardMap .mapInteractive {
+    max-width: 100%;
+    margin-top: 1rem;
+  }
+
+  .closeButton {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; /* 🔹 espaçamento entre seções/cards */
+  padding: 2rem 1rem;
+  scroll-margin-top: 120px;
+}
+
+/* Container flex */
+.flexRow {
+  display: flex;
+  flex-wrap: wrap; /* permite quebrar em múltiplas linhas */
+  justify-content: space-around;
+  gap: 0;
+  width: 100%;
+}
+
+.flexRow .cardHalf {
+  flex: 1 1 49%; /* cresce e encolhe, ocupa 45% por padrão */
+  max-width: 700px;
+  box-sizing: border-box;
+  padding: 0.5rem;
+}
+
+/* Cards que ocupam 100% da largura */
+.cardFull {
+  flex: 1 1 100%;
+  max-width: 100%;
+  min-width: 100%;
+}
+
+/* 🟢 Mobile e tablets */
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .mapContainer {
+    order: 2;
+    width: 100%;
+  }
+
+  .mapContainerP {
+    font-size: 0.95rem;
+  }
+
+  /* O mapa interativo deve sempre aparecer no mobile */
+  .mapInteractive {
+    display: block !important;
+    max-width: 100%;
+  }
+
+  .mobileMapButton {
+    display: none; /* opcional — se quiser esconder o botão em mobile */
+  }
+
+  .cards{
+    padding: 1rem 0.5rem;
+  }
+
+
+  .flexRow .cardHalf {
+    flex: 1 1 100%; /* cada card ocupa 100% da largura */
+    min-width: 0;   /* remove o min-width rígido */
+  
+  }
+}

@@ -1,0 +1,163 @@
+.container {
+  padding: 20px;
+}
+
+.header {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  margin-bottom: 20px;
+  /* Cor com bom contraste */
+  color: var(
+    --color-dark
+  ); /* Certifique-se que a cor tenha contraste alto com o fundo */
+ /* Peso da fonte */
+  font-weight: 700; /* 'bolder' pode variar, melhor usar número */
+  line-height: 1.5; /* aumenta o espaçamento entre linhas */
+  /* Evitar texto muito condensado */
+  letter-spacing: 0.5px;
+}
+
+.createButton {
+  padding: 10px 15px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.createButton:hover {
+  background-color: #005bb5;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.editButton {
+  padding: 5px 10px;
+  background-color: #ffa500;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.editButton:hover {
+  background-color: #cc8400;
+}
+
+.formContainer {
+  margin-top: 40px;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+/* ------------------------- Responsivo ------------------------- */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .createButton {
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    padding: 10px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .table thead,
+  .table tbody,
+  .table th,
+  .table td,
+  .table tr {
+    display: block;
+  }
+
+  .table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .table tr {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #fff;
+  }
+
+  .table td {
+    border: none;
+    position: relative;
+    padding-left: 50%;
+    text-align: left;
+  }
+
+  .table td::before {
+    position: absolute;
+    left: 10px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+  }
+
+  .table td:nth-of-type(1)::before {
+    content: "Estado";
+  }
+
+  .table td:nth-of-type(2)::before {
+    content: "Endereço";
+  }
+
+  .table td:nth-of-type(3)::before {
+    content: "Equipe";
+  }
+
+  .table td:nth-of-type(4)::before {
+    content: "Ações";
+  }
+
+  .editButton {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  .formContainer {
+    padding: 15px;
+  }
+}

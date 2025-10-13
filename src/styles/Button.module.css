@@ -1,0 +1,67 @@
+.button {
+  font-family: var(--font-family, "Poppins", sans-serif);
+  font-size: 1.5rem;
+  font-weight: 900;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.button:focus {
+  outline: 3px solid rgba(241, 134, 56, 0.4);
+  outline-offset: 2px;
+}
+
+.button:active {
+  transform: scale(0.96);
+}
+
+/* variantes */
+.primary {
+  background-color: var(--color-primary);
+  color: var(--color-light);
+}
+.primary:hover {
+  background-color: var(--color-dark);
+}
+
+.secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-light);
+}
+.secondary:hover {
+  background-color: #d9742e;
+}
+
+.outline {
+  background: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+.outline:hover {
+  background-color: var(--color-primary);
+  color: var(--color-light);
+}
+
+/* ✅ Responsivo para mobile */
+@media (max-width: 600px) {
+  .button {
+    width: 100%;             /* ocupa toda a largura */
+    font-size: 1.2rem;       /* reduz a fonte */
+    padding: 1rem;           /* aumenta o toque */
+    border-radius: 10px;
+  }
+}
+
+/* opcional: se quiser um espaçamento extra entre botões no mobile */
+@media (max-width: 600px) {
+  .button + .button {
+    margin-top: 0.75rem;
+  }
+}

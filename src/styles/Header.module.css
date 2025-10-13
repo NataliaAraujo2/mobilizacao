@@ -1,0 +1,216 @@
+.header {
+  position: fixed; /* 🔹 fixa no topo da página */
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  background: var(--color-primary); /* #0052CC */
+  color: var(--color-light);
+  z-index: 1000; /* 🔹 acima de todo o conteúdo */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* leve sombra para profundidade */
+}
+
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/fundo.png");
+  background-repeat: no-repeat; /* sem repetição */
+  background-size: cover; /* cobre todo o header */
+  background-position: center; /* centraliza a imagem */
+  opacity: 0.25;
+  z-index: 0;
+}
+
+/* garante que o conteúdo do header fique acima */
+.header > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* marca / logo */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoLink {
+  display: flex; /* coloca img + texto lado a lado */
+  align-items: center; /* alinha verticalmente */
+  gap: 0.5rem; /* espaço entre logo e texto */
+  color: var(--color-light);
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-decoration: none;
+}
+
+.logo {
+  height: 50px; /* antes era 40px */
+  width: auto;
+  display: inline-block;
+}
+
+.primary {
+  color: var(--color-light); /* azul */
+}
+
+.secondary {
+  color: var(--color-secondary); /* laranja */
+}
+
+/* NAV padrão (desktop) */
+.nav {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
+
+.navList {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.navItem a {
+  color: var(--color-light);
+  text-decoration: none;
+  font-weight: bolder;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+.navItem a:hover,
+.navItem a:focus {
+  color: var(--color-secondary); /* #F18638 */
+  outline: none;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* BOTÃO hambúrguer - mobile */
+.hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center; /* centraliza barras horizontalmente */
+  width: 48px; /* aumenta largura para dar espaço */
+  height: 36px;
+  padding: 0; /* remove padding interno */
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: auto; /* empurra o botão para longe da logo */
+}
+
+/* barras do hambúrguer */
+.bar {
+  display: block;
+  height: 3px;
+  width: 22px;
+  background-color: var(--color-light);
+  border-radius: 2px;
+  margin: 4px 0; /* espaço uniforme entre as barras */
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.18s ease;
+  transform-origin: center;
+}
+
+/* estado aberto -> animação para X */
+.open .bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.open .bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0.1);
+}
+.open .bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.restricted a {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--color-light); /* agora branco */
+  transition: color 0.18s ease;
+}
+
+.restricted a:hover {
+  color: var(--color-secondary); /* laranja no hover */
+}
+
+.lockIcon {
+  font-size: 1rem;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .logo {
+    height: 65px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  /* esconde nav padrão */
+  .nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--color-dark); /* #0D5194 - contraste com primary */
+    transform: translateY(-12%);
+    transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1),
+      opacity 0.28s ease;
+    opacity: 0;
+    pointer-events: none;
+    padding: 0.75rem 0;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    z-index: 100;
+  }
+
+  /* ativa menu: visível */
+  .nav.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .navList {
+    gap: 0.75rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navItem a {
+    display: block;
+    width: 90%;
+    text-align: center;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    color: var(--color-light);
+    font-weight: 600;
+  }
+
+  .navItem a:hover,
+  .navItem a:focus {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--color-secondary);
+  }
+}
+
+/* foco visível (acessibilidade) */
+.navItem a:focus {
+  outline: 3px solid rgba(241, 134, 56, 0.18);
+  outline-offset: 4px;
+  border-radius: 6px;
+}

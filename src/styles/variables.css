@@ -1,0 +1,13 @@
+:root {
+  /* 🎨 Colors */
+  --color-primary: #2674ab;
+  --color-secondary: #f18638;
+  --color-third: #8FD19E;
+  --color-third-dark:#3E7D32;
+  --color-light: #fdfdfd;
+  --color-dark: #0d5194;
+  --color-text: #000000;
+
+  /* ✍️ Typography */
+  --font-main: "Poppins", sans-serif;
+}
