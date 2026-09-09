@@ -1,5 +1,19 @@
 {
   "projects": {
-    "default": "campanhamobilizacaomc"
+    "default": "campanha-mobilizacao-dev",
+    "dev": "campanha-mobilizacao-dev",
+    "prod": "campanhamobilizacaomc"
+  },
+  "targets": {
+    "campanhamobilizacaomc": {
+      "hosting": {
+        "principal": [
+          "mobilizacao"
+        ],
+        "mobilizacao2026": [
+          "mobilizacao2026"
+        ]
+      }
+    }
   }
 }

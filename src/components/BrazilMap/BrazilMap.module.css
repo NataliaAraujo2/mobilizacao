@@ -1,0 +1,58 @@
+.map { width: min(100%, 42rem); margin-inline: auto; }
+.map svg { display: block; width: 100%; height: auto; }
+.map :global(.estado) { cursor: pointer; outline: none; }
+.map :global(.estado) path {
+  fill: var(--map-state);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill 160ms ease, filter 160ms ease, transform 160ms ease;
+}
+.map :global(.estado) text {
+  fill: white;
+  stroke: rgb(0 61 106 / 42%);
+  stroke-width: 1.2px;
+  paint-order: stroke fill;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+}
+.map :global(.estado) :global(.circle) {
+  fill: var(--brand-orange);
+  stroke: white;
+  stroke-width: 1.6px;
+  filter: drop-shadow(0 1px 2px rgb(23 50 77 / 24%));
+}
+.map :global(.estado[name="Sergipe"]) text,
+.map :global(.estado[name="Alagoas"]) text,
+.map :global(.estado[name="Rio Grande do Norte"]) text,
+.map :global(.estado[name="Paraíba"]) text,
+.map :global(.estado[name="Espírito Santo"]) text,
+.map :global(.estado[name="Distrito Federal"]) text {
+  stroke-width: 0.8px;
+  font-size: 10.5px;
+  letter-spacing: -0.05em;
+}
+.map :global(.estado):hover path,
+.map :global(.estado):focus-visible path {
+  fill: var(--map-state-hover);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 25%));
+  transform: scale(1.025);
+}
+.map :global(.estado):hover :global(.circle),
+.map :global(.estado):focus-visible :global(.circle) { fill: #c9631f; }
+.map :global(.estado):focus-visible path { stroke: var(--focus); stroke-width: 3px; }
+.map .selected path { fill: var(--map-state-selected); }
+.map .selected :global(.circle) { fill: var(--brand-green); }
+.map[aria-disabled="true"] :global(.estado) { cursor: not-allowed; opacity: 0.58; }
+@media (max-width: 520px) {
+  .map :global(.estado) text { font-size: 12px; }
+  .map :global(.estado[name="Sergipe"]) text,
+  .map :global(.estado[name="Alagoas"]) text,
+  .map :global(.estado[name="Rio Grande do Norte"]) text,
+  .map :global(.estado[name="Paraíba"]) text,
+  .map :global(.estado[name="Espírito Santo"]) text,
+  .map :global(.estado[name="Distrito Federal"]) text { font-size: 9.5px; }
+}
+@media (prefers-reduced-motion: reduce) { .map :global(.estado) path { transition: none; } }

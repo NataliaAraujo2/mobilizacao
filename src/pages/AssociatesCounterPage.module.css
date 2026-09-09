@@ -1,0 +1,23 @@
+.page { width: min(100% - 2rem, 62rem); margin: 0 auto; padding: clamp(1.5rem, 4vw, 3.5rem) 0; }
+.title { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.title p, .eyebrow { margin: 0; color: var(--brand-orange); font-size: .73rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.title h1 { margin: .25rem 0 0; font-size: clamp(2rem, 5vw, 3.5rem); }
+.title a { color: var(--brand-blue); font-size: .85rem; font-weight: 800; }
+.card { display: grid; grid-template-columns: minmax(14rem, .8fr) minmax(0, 1.5fr); gap: clamp(1.5rem, 5vw, 3rem); align-items: center; padding: clamp(1.25rem, 5vw, 3rem); background: white; border: 1px solid var(--border); border-radius: 1.5rem; box-shadow: 0 1rem 3rem rgb(0 97 168 / 9%); }
+.preview { display: grid; justify-items: center; padding: 2rem 1rem; color: white; background: linear-gradient(145deg, var(--brand-green), #0b5725); border-radius: 1.25rem; box-shadow: 0 .8rem 1.8rem rgb(23 112 49 / 22%); }
+.preview small { font-weight: 750; letter-spacing: .08em; text-transform: uppercase; opacity: .82; }
+.preview strong { margin: .35rem 0; font-size: clamp(3rem, 8vw, 5rem); line-height: 1; }
+.preview span { font-size: .85rem; font-weight: 800; text-transform: uppercase; }
+.formArea h2 { margin: .3rem 0; font-size: clamp(1.5rem, 4vw, 2rem); }
+.formArea > p:not(.eyebrow, .success, .error) { color: var(--text-muted); line-height: 1.55; }
+.formArea form { display: grid; gap: .6rem; margin-top: 1.2rem; }
+.formArea label { font-weight: 750; }
+.formArea input { min-height: 3.2rem; padding: .65rem .8rem; color: var(--text); font-size: 1.2rem; font-weight: 800; background: white; border: 1px solid #a9bbb5; border-radius: .65rem; }
+.formArea input:focus { border-color: var(--brand-blue); outline: 3px solid rgb(0 97 168 / 18%); }
+.formArea button { min-height: 3rem; padding: .7rem 1rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .65rem; cursor: pointer; }
+.formArea button:disabled, .formArea input:disabled { opacity: .62; cursor: wait; }
+.success { color: var(--brand-green); font-weight: 750; }
+.error { color: #a22b2b; font-weight: 750; }
+.costNote { display: block; margin-top: 1rem; color: var(--text-muted); line-height: 1.45; }
+@media (max-width: 680px) { .card { grid-template-columns: 1fr; } .preview { padding-block: 1.4rem; } }
+@media (max-width: 440px) { .page { width: min(100% - 1.5rem, 62rem); } .title { align-items: start; flex-direction: column; } .card { border-radius: 1.1rem; } }

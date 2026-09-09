@@ -1,0 +1,51 @@
+.page { width: min(100% - 2rem, 72rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 3.5rem) 0; }
+.title { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }
+.title p { margin: 0; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.title h1 { margin: .25rem 0 0; font-size: clamp(2.2rem, 7vw, 4rem); }
+.title > span { padding: .5rem .8rem; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; white-space: nowrap; }
+.card { margin-bottom: 1.5rem; padding: clamp(1.15rem, 4vw, 2rem); background: var(--surface); border: 1px solid var(--border); border-radius: 1.15rem; }
+.card h2 { margin-top: 0; }
+.privacy { padding: .8rem 1rem; color: #315e52; background: #eef7f3; border-left: .25rem solid var(--map-state); border-radius: .4rem; }
+.card form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.card label { display: grid; align-content: start; gap: .4rem; min-width: 0; font-weight: 750; }
+.card label small { color: var(--text-muted); font-weight: 500; }
+.card input, .card select { width: 100%; min-height: 3rem; padding: .7rem .75rem; color: var(--text); background: white; border: 1px solid #a9bbb5; border-radius: .65rem; font: inherit; }
+.card input:focus, .card select:focus { outline: 3px solid color-mix(in srgb, var(--focus) 60%, transparent); border-color: var(--map-state); }
+.wide { grid-column: 1 / -1; }
+.formActions, .actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.formActions { grid-column: 1 / -1; margin-top: .25rem; }
+.primary, .secondary, .actions button, .textButton { min-height: 2.8rem; padding: .65rem .9rem; font-weight: 800; border-radius: .6rem; cursor: pointer; }
+.primary, .actions button { color: white; background: var(--map-state); border: 1px solid var(--map-state); }
+.secondary, .actions button:nth-child(2), .actions button:nth-child(3), .textButton { color: var(--map-state); background: white; border: 1px solid var(--border); }
+.card button:disabled { cursor: not-allowed; opacity: .55; }
+.error { color: #a22b2b; font-weight: 700; }
+.success { color: var(--brand-green); font-weight: 700; }
+.list { display: grid; gap: .9rem; }
+.loadMore { display: block; width: min(100%, 20rem); min-height: 2.8rem; margin: 1.25rem auto 0; padding: .65rem .9rem; color: var(--map-state); background: white; border: 1px solid var(--border); border-radius: .6rem; font: inherit; font-weight: 800; cursor: pointer; }
+.loadMore:disabled { cursor: wait; }
+.listError { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1rem; padding: .8rem 1rem; color: #8b2525; background: #fff0f0; border: 1px solid #f0bbbb; border-radius: .7rem; }
+.listError p { margin: 0; font-weight: 700; }
+.listError button { min-height: 2.5rem; padding: .45rem .75rem; color: #8b2525; background: white; border: 1px solid #d99b9b; border-radius: .55rem; font: inherit; font-weight: 800; cursor: pointer; }
+.volunteer { padding: 1rem; background: #f7faf8; border: 1px solid var(--border); border-radius: .85rem; }
+.summary { display: flex; justify-content: space-between; align-items: start; gap: .75rem; }
+.summary h3, .summary p { margin: 0; }
+.summary p, .contact { color: var(--text-muted); }
+.summary p { margin-top: .25rem; }
+.active, .blocked { padding: .35rem .65rem; font-size: .8rem; font-weight: 800; border-radius: 999px; }
+.active { color: var(--brand-green); background: #e4f3e8; }
+.blocked { color: #922f2f; background: #fde6e6; }
+.contact { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; margin: .85rem 0; font-size: .9rem; overflow-wrap: anywhere; }
+.documents { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin: 1rem 0; padding: 1rem; background: #eef4f1; border-radius: .7rem; }
+.documents div { display: grid; gap: .25rem; }
+.documents span { color: var(--text-muted); font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+.documents .textButton { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 620px) {
+  .page { width: min(100% - 1rem, 72rem); }
+  .title { align-items: start; flex-direction: column; }
+  .card form, .documents { grid-template-columns: 1fr; }
+  .wide, .formActions, .documents .textButton { grid-column: 1; }
+  .formActions, .actions { flex-direction: column; }
+  .formActions button, .actions button, .textButton { width: 100%; min-height: 3.1rem; }
+  .listError { align-items: stretch; flex-direction: column; }
+  .listError button { width: 100%; min-height: 3.1rem; }
+}

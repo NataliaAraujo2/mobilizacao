@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isActive() {
+      return request.auth != null && request.auth.token.status == 'active';
+    }
+
+    function isSuperAdmin() {
+      return isActive() && request.auth.token.role == 'superAdmin';
+    }
+
+    function belongsToBranch(branchId) {
+      return isActive() && request.auth.token.branchId == branchId;
+    }
+
+    function validImage() {
+      return request.resource != null
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    function validPublicReport() {
+      return request.resource != null
+        && request.resource.size <= 25 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    match /public-reports/{year}/report.pdf {
+      // O relatório é uma publicação institucional aberta ao público.
+      allow read: if true;
+      allow create, update: if isSuperAdmin() && validPublicReport();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /branches/{branchId}/mobilization/{fileName} {
+      allow read: if isSuperAdmin() || belongsToBranch(branchId);
+      allow create, update: if isSuperAdmin() && validImage();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /branches/{branchId}/actions/{actionId}/{phase}/{fileName} {
+      allow read: if isSuperAdmin() || belongsToBranch(branchId);
+      allow create, update: if isSuperAdmin() && validImage();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

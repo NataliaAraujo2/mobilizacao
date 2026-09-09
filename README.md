@@ -1,16 +1,36 @@
-# React + Vite
+# Mobilização
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Base reiniciada em React com JavaScript, CSS Modules e Firebase. O mapa interativo do Brasil foi preservado.
 
-Currently, two official plugins are available:
+## Comandos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `npm install`
+- `npm run dev`
+- `npm run lint`
+- `npm run build`
 
-## React Compiler
+O mapa não consulta o Firebase. Serviços de Auth, Firestore e Storage permanecem em `src/services` e devem ser carregados somente quando uma funcionalidade precisar deles.
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Ambientes Firebase
 
-## Expanding the ESLint configuration
+- `dev`: `campanha-mobilizacao-dev` (ambiente padrão)
+- `prod`: `campanhamobilizacaomc` (site atual)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+O desenvolvimento local usa `.env.development.local`, que não é versionado. Os comandos de deploy exigem a escolha explícita entre `deploy:dev` e `deploy:prod`; não existe um comando genérico de deploy.
+
+## Emuladores locais
+
+Execute `npm run emulators` e, em outro terminal, `npm run dev`. A interface dos emuladores estará em `http://127.0.0.1:4000`.
+
+- Authentication: porta 9099
+- Firestore: porta 8080
+- Storage: porta 9199
+
+Use `npm run emulators:save` para preservar dados fictícios entre sessões. As regras iniciais negam todas as operações até implementarmos e testarmos os perfis de acesso.
+
+Com os emuladores ativos, execute `npm run seed:superadmin` para criar a conta fictícia local:
+
+- E-mail: `superadmin@example.test`
+- Senha: `DevOnly123!`
+
+Essa conta e suas permissões existem somente nos emuladores.

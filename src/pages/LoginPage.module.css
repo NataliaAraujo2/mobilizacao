@@ -1,0 +1,13 @@
+.page { min-height: calc(100vh - 4.25rem); display: grid; place-items: center; padding: 1rem; }
+.card { width: min(100%, 27rem); padding: clamp(1.5rem, 5vw, 2.5rem); background: var(--surface); border: 1px solid var(--border); border-top: .35rem solid var(--brand-orange); border-radius: 1.25rem; box-shadow: 0 1.25rem 4rem rgb(0 97 168 / 10%); }
+.eyebrow { margin: 0 0 0.4rem; color: var(--accent); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.card h1 { margin: 0; font-size: 2.2rem; }
+.card > p:not(.eyebrow, .devNote) { color: var(--text-muted); }
+.card form { display: grid; gap: 0.65rem; margin-top: 1.5rem; }
+.card label { margin-top: 0.45rem; font-weight: 750; }
+.card input { width: 100%; min-height: 3rem; padding: 0.75rem; color: var(--text); background: white; border: 1px solid #a9bbb5; border-radius: 0.65rem; }
+.card input:focus { outline: 3px solid color-mix(in srgb, var(--focus) 65%, transparent); border-color: var(--map-state); }
+.card button { min-height: 3rem; margin-top: 0.75rem; color: white; font-weight: 800; background: var(--map-state); border: 0; border-radius: 0.65rem; cursor: pointer; }
+.card button:disabled { cursor: wait; opacity: 0.65; }
+.error { margin: 0.5rem 0 0; color: #a22b2b; font-weight: 700; }
+.devNote { margin: 1.25rem 0 0; color: var(--text-muted); font-size: 0.82rem; }

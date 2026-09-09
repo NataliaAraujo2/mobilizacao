@@ -1,0 +1,94 @@
+.page { min-height: calc(100vh - 4.25rem); padding: clamp(1rem, 4vw, 3.5rem); }
+.intro { max-width: 46rem; margin: 0 auto 2rem; text-align: center; }
+.eyebrow { margin: 0; color: var(--brand-orange); font-size: .74rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.intro h1 { margin: .25rem 0; }
+.wordmark { display: flex; align-items: baseline; justify-content: center; line-height: .95; }
+.wordmark span { color: var(--brand-blue); font-size: clamp(2.5rem, 7vw, 4.5rem); font-weight: 800; letter-spacing: -.055em; }
+.wordmark em { margin-left: .06em; color: var(--brand-green); font-family: "Amithen", cursive; font-size: clamp(3rem, 8.5vw, 5.45rem); font-style: normal; font-weight: 400; letter-spacing: 0; transform: rotate(-2deg); }
+.intro > p:last-child { margin: .5rem auto 0; color: var(--text-muted); }
+.activeCampaign { width: min(100%, 72rem); margin: 0 auto 1.25rem; padding: clamp(.75rem, 2vw, 1rem); background: white; border: 1px solid var(--border); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(23 50 77 / 9%); }
+.activeCampaign > img { display: block; width: 100%; height: auto; border-radius: 1rem; }
+.campaignHeading { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: .5rem .4rem 1rem; }
+.campaignHeading h2 { margin: .3rem 0 0; color: var(--brand-blue); font-size: clamp(1.25rem, 3vw, 1.8rem); }
+.associatesCounter { display: grid; justify-items: center; min-width: 10rem; padding: .65rem 1rem; color: white; background: linear-gradient(135deg, var(--brand-green), #0b5725); border-radius: 1rem; box-shadow: 0 .55rem 1.2rem rgb(23 112 49 / 22%); }
+.associatesCounter small { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .82; }
+.associatesCounter strong { margin: .15rem 0; font-size: clamp(1.65rem, 4vw, 2.25rem); line-height: 1; }
+.associatesCounter span { font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+.mapTeaser { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(15rem, .65fr); align-items: center; gap: clamp(1rem, 5vw, 4rem); width: min(100%, 68rem); min-height: 24rem; margin: 2.5rem auto; padding: clamp(1.5rem, 4vw, 3rem); color: var(--text); text-decoration: none; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #fff7ef 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.75rem; box-shadow: 0 1.25rem 3rem rgb(0 97 168 / 13%); overflow: hidden; transition: transform 180ms ease, box-shadow 180ms ease; }
+.mapTeaser:hover, .mapTeaser:focus-visible { box-shadow: 0 1.5rem 3.5rem rgb(0 97 168 / 25%); transform: translateY(-3px); outline: 3px solid rgb(237 133 54 / 45%); }
+.mapTeaserCopy, .mapLogo { position: relative; z-index: 1; }
+.mapTeaser .eyebrow { color: var(--brand-orange); }
+.mapTeaserCopy h2 { max-width: 38rem; margin: .5rem 0; color: var(--brand-blue); font-size: clamp(1.8rem, 5vw, 3.4rem); line-height: 1.06; letter-spacing: -.04em; }
+.mapTeaserCopy > p:not(.eyebrow) { max-width: 36rem; color: var(--text-muted); line-height: 1.6; }
+.mapTeaserCopy > span { display: inline-flex; align-items: center; gap: .55rem; margin-top: .75rem; padding: .75rem 1rem; color: white; font-size: .86rem; font-weight: 800; background: var(--brand-blue); border-radius: .75rem; box-shadow: 0 .45rem 1rem rgb(0 97 168 / 16%); }
+.countdown { display: flex; gap: .5rem; margin-top: 1.1rem; }
+.countdown span { display: grid; min-width: 4.5rem; padding: .45rem .55rem; text-align: center; background: rgb(255 255 255 / 86%); border: 1px solid #c9dfed; border-radius: .65rem; box-shadow: 0 .3rem .8rem rgb(0 97 168 / 7%); }
+.countdown strong { color: var(--brand-blue); font-size: 1.35rem; line-height: 1; }
+.countdown small { margin-top: .18rem; color: var(--text-muted); font-size: .67rem; font-weight: 800; text-transform: uppercase; }
+.openNotice { margin: 1rem 0 0; color: var(--brand-green); font-weight: 800; }
+.mapLogo { justify-self: center; width: min(100%, 19.5rem); height: auto; filter: drop-shadow(0 1rem 1.4rem rgb(0 97 168 / 15%)); }
+.kitElement { position: absolute; width: auto; height: auto; pointer-events: none; opacity: .075; }
+.kitLeaves { top: -2rem; left: 38%; max-width: 9rem; transform: rotate(18deg); }
+.kitGrowing { right: 23%; bottom: -3.5rem; max-width: 12rem; transform: rotate(-8deg); }
+.kitSprout { right: -1.5rem; top: -2rem; max-width: 9rem; transform: rotate(16deg); }
+.previousEditions { width: min(100%, 64rem); margin: 3rem auto 0; }
+.previousHeading { margin-bottom: 1rem; text-align: center; }
+.previousHeading h2 { margin: .35rem 0 0; color: var(--brand-blue); font-size: clamp(1.5rem, 4vw, 2.25rem); }
+.previousCard { display: grid; grid-template-columns: 8rem auto minmax(0, 1fr) auto; align-items: center; gap: clamp(.8rem, 3vw, 1.5rem); padding: 1.25rem; color: var(--text); text-decoration: none; background: linear-gradient(rgb(255 255 255 / 88%), rgb(255 255 255 / 94%)), url("../assets/brand/mobilizacao-fundo-2025.webp") center / cover; border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 .8rem 2rem rgb(23 50 77 / 9%); transition: transform 180ms ease, box-shadow 180ms ease; }
+.previousCard:hover, .previousCard:focus-visible { box-shadow: 0 1rem 2.5rem rgb(0 97 168 / 15%); transform: translateY(-2px); outline: none; }
+.previousCard > img { width: 8rem; height: 8rem; object-fit: contain; }
+.year { color: var(--brand-orange); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; }
+.previousCopy { display: grid; gap: .25rem; }
+.previousCopy strong { color: var(--brand-blue); font-size: 1.2rem; }
+.previousCopy small { color: var(--text-muted); line-height: 1.5; }
+.previousLink { color: var(--brand-blue); font-size: .82rem; font-weight: 800; white-space: nowrap; }
+
+.legacyPage { display: grid; align-items: center; background: linear-gradient(rgb(245 248 250 / 76%), rgb(245 248 250 / 90%)), url("../assets/brand/mobilizacao-fundo-2025.webp") center / cover; }
+.legacyHero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(17rem, 28rem); align-items: center; gap: clamp(1rem, 5vw, 4rem); width: min(100%, 68rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 4rem); background: rgb(255 255 255 / 88%); border: 1px solid rgb(255 255 255 / 90%); border-radius: 2rem; box-shadow: 0 1.5rem 4rem rgb(23 50 77 / 13%); backdrop-filter: blur(8px); }
+.legacyCopy h1 { margin: .4rem 0; color: var(--brand-blue); font-size: clamp(2.2rem, 6vw, 4.25rem); line-height: 1.03; letter-spacing: -.05em; }
+.legacyCopy > p:not(.eyebrow) { max-width: 36rem; color: var(--text-muted); line-height: 1.65; }
+.legacyHero > img { width: 100%; height: auto; filter: drop-shadow(0 .8rem 1.2rem rgb(23 50 77 / 13%)); }
+.legacyActions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.5rem; }
+.primaryButton, .secondaryButton { display: inline-flex; justify-content: center; padding: .78rem 1rem; font-weight: 800; text-decoration: none; border-radius: .75rem; }
+.primaryButton { color: white; background: var(--brand-blue); }
+.secondaryButton { color: var(--brand-blue); background: white; border: 1px solid var(--border); }
+
+.soonPage { display: grid; align-items: center; }
+.soonHero { position: relative; width: min(100%, 48rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3rem); text-align: center; background: white; border: 1px solid var(--border); border-radius: 2rem; box-shadow: 0 1.4rem 4rem rgb(0 97 168 / 12%); overflow: hidden; }
+.soonLogo { display: block; width: min(100%, 25rem); height: auto; margin: -1rem auto -1.5rem; }
+.soonHero h2 { margin: 0; color: var(--brand-blue); font-size: clamp(1.6rem, 5vw, 2.6rem); }
+.soonHero > p:not(.eyebrow) { max-width: 35rem; margin: .8rem auto 1.4rem; color: var(--text-muted); line-height: 1.6; }
+.soonLeaf { position: absolute; top: 2rem; right: 2rem; width: 4rem; height: auto; opacity: .14; transform: rotate(18deg); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 720px) {
+  .campaignHeading { align-items: stretch; flex-direction: column; }
+  .associatesCounter { width: 100%; }
+  .mapTeaser { grid-template-columns: 1fr; text-align: center; }
+  .mapTeaserCopy h2, .mapTeaserCopy > p:not(.eyebrow) { margin-inline: auto; }
+  .countdown { justify-content: center; }
+  .mapLogo { grid-row: 1; width: min(60vw, 15rem); }
+  .kitLeaves { left: -2rem; }
+  .kitGrowing { right: -3rem; bottom: 18%; }
+  .kitSprout { display: none; }
+  .previousCard { grid-template-columns: 6rem 1fr; }
+  .previousCard > img { grid-row: span 2; width: 6rem; height: 6rem; }
+  .previousCopy { grid-column: 2; }
+  .previousLink { grid-column: 1 / -1; justify-self: end; }
+  .legacyHero { grid-template-columns: 1fr; text-align: center; border-radius: 1.25rem; }
+  .legacyHero > img { grid-row: 1; width: min(75vw, 20rem); justify-self: center; }
+  .legacyCopy > p:not(.eyebrow) { margin-inline: auto; }
+  .legacyActions { justify-content: center; }
+}
+@media (max-width: 420px) {
+  .page { padding: .75rem; }
+  .activeCampaign { border-radius: 1.1rem; }
+  .activeCampaign > img { border-radius: .75rem; }
+  .mapTeaser { border-radius: 1.1rem; }
+  .previousCard { grid-template-columns: 5rem 1fr; border-radius: 1.1rem; }
+  .previousCard > img { width: 5rem; height: 5rem; }
+  .year { font-size: 2rem; }
+  .soonHero { border-radius: 1.25rem; }
+  .legacyActions { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { .mapTeaser, .previousCard { transition: none; } }

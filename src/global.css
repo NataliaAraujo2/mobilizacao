@@ -1,0 +1,55 @@
+@font-face {
+  font-family: "Poppins";
+  src: url("./assets/fonts/Poppins-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("./assets/fonts/Poppins-BoldItalic.ttf") format("truetype");
+  font-style: italic;
+  font-weight: 700 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Amithen";
+  src: url("./assets/fonts/Amithen.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  font-family: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  color: #17324d;
+  background: #f5f8fa;
+  font-synthesis: none;
+  --brand-blue: #0061a8;
+  --brand-orange: #ed8536;
+  --brand-green: #177031;
+  --surface: #ffffff;
+  --border: #d8e4eb;
+  --text: #17324d;
+  --text-muted: #536a78;
+  --accent: var(--brand-orange);
+  --map-state: var(--brand-blue);
+  --map-state-hover: #004d86;
+  --map-state-selected: var(--brand-orange);
+  --focus: var(--brand-orange);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-width: 0;
+  background:
+    radial-gradient(circle at 6% 18%, rgb(23 112 49 / 5%) 0 .35rem, transparent .4rem),
+    radial-gradient(circle at 94% 30%, rgb(237 133 54 / 6%) 0 .45rem, transparent .5rem),
+    #f5f8fa;
+}
+button, input, textarea, select { font: inherit; }
+h1, h2, h3, strong { font-family: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 70%, white); outline-offset: 3px; }
