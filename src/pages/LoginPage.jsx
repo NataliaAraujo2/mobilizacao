@@ -29,7 +29,7 @@ export default function LoginPage() {
   const { user, claims, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ email: "superadmin@example.test", password: "DevOnly123!" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -68,7 +68,6 @@ export default function LoginPage() {
           {error && <p className={styles.error} role="alert">{error}</p>}
           <button type="submit" disabled={submitting}>{submitting ? "Entrando..." : "Entrar"}</button>
         </form>
-        {import.meta.env.DEV && <p className={styles.devNote}>Conta fictícia preenchida para testes locais.</p>}
       </section>
     </main>
   );

@@ -11,12 +11,13 @@ import styles from "./CampaignGateway.module.css";
 
 function AssociatesCounter() {
   const [count, setCount] = useState(null);
+  const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {
     let active = true;
     getNewAssociatesCount()
       .then((value) => { if (active) setCount(value); })
-      .catch(() => { if (active) setCount(0); });
+      .catch(() => { if (active) setUnavailable(true); });
     return () => { active = false; };
   }, []);
 
@@ -24,7 +25,7 @@ function AssociatesCounter() {
     <div className={styles.associatesCounter} aria-live="polite" aria-busy={count === null}>
       <small>Já somos</small>
       <strong>{count === null ? "—" : count.toLocaleString("pt-BR")}</strong>
-      <span>novos associados</span>
+      <span>{unavailable ? "contador em atualização" : "novos associados"}</span>
     </div>
   );
 }
@@ -79,22 +80,6 @@ export default function CampaignGateway() {
         <p>Conheça nossas edições e acompanhe o que estamos preparando.</p>
       </section>
 
-      <section className={styles.activeCampaign} aria-labelledby="active-campaign-title">
-        <div className={styles.campaignHeading}>
-          <div>
-            <p className={styles.eyebrow}>Campanha em andamento</p>
-            <h2 id="active-campaign-title">A campanha de associação já começou!</h2>
-          </div>
-          <AssociatesCounter />
-        </div>
-        <img
-          src={associatesBanner}
-          alt="Seja um associado da ONG Moradia e Cidadania. De 1º de setembro a 31 de dezembro de 2026, cada novo associado representa uma árvore plantada."
-          width="1920"
-          height="689"
-        />
-      </section>
-
       <Link className={styles.mapTeaser} to="/2026" aria-labelledby="map-teaser-title">
         <img className={`${styles.kitElement} ${styles.kitLeaves}`} src={leavesElement} alt="" aria-hidden="true" />
         <img className={`${styles.kitElement} ${styles.kitGrowing}`} src={growingElement} alt="" aria-hidden="true" />
@@ -123,6 +108,22 @@ export default function CampaignGateway() {
           </span>
           <span className={styles.previousLink}>Ver relatório da edição 2025 <b aria-hidden="true">→</b></span>
         </Link>
+      </section>
+
+      <section className={styles.activeCampaign} aria-labelledby="active-campaign-title">
+        <div className={styles.campaignHeading}>
+          <div>
+            <p className={styles.eyebrow}>Associação em andamento</p>
+            <h2 id="active-campaign-title">Você já pode contribuir para a MobilizAÇÃO! Seja um associado</h2>
+          </div>
+          <AssociatesCounter />
+        </div>
+        <img
+          src={associatesBanner}
+          alt="Seja um associado da ONG Moradia e Cidadania. De 1º de setembro a 31 de dezembro de 2026, cada novo associado representa uma árvore plantada."
+          width="1920"
+          height="689"
+        />
       </section>
     </main>
   );
