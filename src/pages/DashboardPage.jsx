@@ -12,6 +12,7 @@ const ADMIN_ACTIONS = [
   { to: "/admin/voluntarios", code: "VO", title: "Voluntários", description: "Cadastre e organize os dados das pessoas participantes." },
   { to: "/admin/filiais", code: "FI", title: "Filiais", description: "Gerencie as filiais e seus estados de atuação." },
   { to: "/admin/acessos-consulta", code: "PE", title: "Acessos das filiais", description: "Crie e acompanhe os acessos de consulta de cada filial." },
+  { to: "/admin/superadmins", code: "SA", title: "SuperAdmins", description: "Autorize novos administradores nacionais." },
 ];
 
 function friendlyName(user, isSuperAdmin) {

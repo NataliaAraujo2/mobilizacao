@@ -1,25 +1,29 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import RequireAuth from "./auth/RequireAuth";
 import AppLayout from "./layout/AppLayout";
 import AccessMessagePage from "./pages/AccessMessagePage";
-import BranchesPage from "./pages/BranchesPage";
-import BranchViewersPage from "./pages/BranchViewersPage";
-import ConsultationPage from "./pages/ConsultationPage";
-import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
-import PublicHome from "./pages/PublicHome";
-import VolunteersPage from "./pages/VolunteersPage";
-import ActionsPage from "./pages/ActionsPage";
 import CampaignGateway from "./pages/CampaignGateway";
 import Campaign2025Page from "./pages/Campaign2025Page";
 import Campaign2026Page from "./pages/Campaign2026Page";
-import AssociatesCounterPage from "./pages/AssociatesCounterPage";
-import ReportsAdminPage from "./pages/ReportsAdminPage";
-import ReportViewerPage from "./pages/ReportViewerPage";
+
+const PublicHome = lazy(() => import("./pages/PublicHome"));
+const ReportViewerPage = lazy(() => import("./pages/ReportViewerPage"));
+const BranchesPage = lazy(() => import("./pages/BranchesPage"));
+const BranchViewersPage = lazy(() => import("./pages/BranchViewersPage"));
+const ConsultationPage = lazy(() => import("./pages/ConsultationPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const VolunteersPage = lazy(() => import("./pages/VolunteersPage"));
+const ActionsPage = lazy(() => import("./pages/ActionsPage"));
+const AssociatesCounterPage = lazy(() => import("./pages/AssociatesCounterPage"));
+const ReportsAdminPage = lazy(() => import("./pages/ReportsAdminPage"));
+const SuperAdminsPage = lazy(() => import("./pages/SuperAdminsPage"));
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={<main style={{ padding: "2rem", textAlign: "center" }}>Carregando...</main>}>
+      <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<CampaignGateway />} />
         <Route path="2025" element={<Campaign2025Page />} />
@@ -36,6 +40,7 @@ export default function App() {
           <Route path="admin/acoes" element={<ActionsPage />} />
           <Route path="admin/contador-associados" element={<AssociatesCounterPage />} />
           <Route path="admin/relatorio-2025" element={<ReportsAdminPage />} />
+          <Route path="admin/superadmins" element={<SuperAdminsPage />} />
         </Route>
 
         <Route element={<RequireAuth allowedRoles={["superAdmin"]} />}>
@@ -53,6 +58,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
