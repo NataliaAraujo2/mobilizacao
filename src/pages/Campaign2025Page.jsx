@@ -17,7 +17,7 @@ const odsIndicators = [
   [11, "Cidades sustentáveis", 7900, "#fd9d24"], [12, "Consumo responsável", 6900, "#bf8b2e"],
   [13, "Ação climática", 10800, "#3f7e44"], [14, "Vida na água", 5000, "#0a97d9"],
   [15, "Vida terrestre", 3000, "#56c02b"], [16, "Paz e justiça", 10800, "#00689d"],
-  [17, "Parcerias", 10800, "#19486a"], [18, "Indicador complementar", 1900, "#a44a1c"],
+  [17, "Parcerias", 10800, "#19486a"], [18, "Igualdade étnico-racial", 1900, "#a44a1c"],
 ];
 
 export default function Campaign2025Page() {
@@ -56,7 +56,7 @@ export default function Campaign2025Page() {
       <section className={styles.section} aria-labelledby="numbers-title">
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Impacto nacional</p><h2 id="numbers-title">Grandes números da mobilização</h2></div>
         <div className={styles.numbers}>
-          {[['1.417', 'voluntários mobilizados'], ['11.136', 'beneficiários diretos'], ['33.408', 'beneficiários indiretos'], ['11.136', 'mudas plantadas'], ['4,3 t', 'resíduos recolhidos'], ['27', 'espaços revitalizados']].map(([value, label]) => <article className={styles.number} key={label}><strong>{value}</strong><span>{label}</span></article>)}
+          {[['1.417', 'voluntários mobilizados'], ['11.136', 'beneficiários diretos'], ['33.408', 'beneficiários indiretos'], ['3.280', 'mudas plantadas'], ['4,3 t', 'resíduos recolhidos'], ['27', 'espaços revitalizados']].map(([value, label]) => <article className={styles.number} key={label}><strong>{value}</strong><span>{label}</span></article>)}
         </div>
       </section>
 
