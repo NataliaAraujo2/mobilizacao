@@ -1,10 +1,11 @@
 .page { min-height: calc(100vh - 4.25rem); padding: clamp(1rem, 4vw, 3.5rem); background: linear-gradient(rgb(245 248 250 / 88%), rgb(245 248 250 / 96%)), url("../assets/brand/mobilizacao-fundo-2025.webp") center / cover fixed; }
 .hero, .section { width: min(100%, 70rem); margin-inline: auto; }
-.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, .72fr); align-items: center; gap: clamp(1.5rem, 5vw, 4rem); padding: clamp(1.5rem, 5vw, 4rem); background: rgb(255 255 255 / 94%); border: 1px solid var(--border); border-radius: 2rem; box-shadow: 0 1.2rem 3.5rem rgb(23 50 77 / 12%); }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem); align-items: center; gap: clamp(1.5rem, 5vw, 4rem); padding: clamp(1.5rem, 5vw, 4rem); background: rgb(255 255 255 / 94%); border: 1px solid var(--border); border-radius: 2rem; box-shadow: 0 1.2rem 3.5rem rgb(23 50 77 / 12%); }
 .eyebrow { margin: 0; color: var(--brand-orange); font-size: .74rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .hero h1 { margin: .4rem 0; color: var(--brand-blue); font-size: clamp(2.3rem, 6vw, 4.8rem); line-height: 1; letter-spacing: -.055em; }
 .hero p:not(.eyebrow) { max-width: 40rem; color: var(--text-muted); font-size: 1.07rem; line-height: 1.65; }
-.hero img { width: min(100%, 22rem); justify-self: center; filter: drop-shadow(0 1rem 1.3rem rgb(23 50 77 / 15%)); }
+.brandPanel { display: grid; min-height: 21rem; padding: 1.25rem; place-items: center; overflow: hidden; background: linear-gradient(145deg, #f6fbfd, #fff8f2); border: 1px solid rgb(237 133 54 / 28%); border-radius: 1.5rem; }
+.brandPanel img { display: block; width: auto; max-width: 100%; height: min(19rem, 42vw); max-height: 19rem; object-fit: contain; filter: drop-shadow(0 .75rem 1rem rgb(23 50 77 / 14%)); }
 .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
 .primaryButton, .secondaryButton { display: inline-flex; align-items: center; justify-content: center; min-height: 3rem; padding: .7rem 1rem; font: inherit; font-weight: 800; text-decoration: none; border-radius: .75rem; cursor: pointer; }
 .primaryButton { color: white; background: var(--brand-blue); border: 1px solid var(--brand-blue); }
@@ -23,13 +24,31 @@
 .impactText p:not(.eyebrow) { color: var(--text-muted); line-height: 1.65; }
 .pillList { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.1rem 0; padding: 0; list-style: none; }
 .pillList li { padding: .45rem .7rem; color: #285e43; background: #eaf6ed; border-radius: 999px; font-size: .83rem; font-weight: 800; }
-.reportCard { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1.2rem; padding: 1.25rem; background: #0b5fa5; border-radius: 1.3rem; color: white; }
-.reportIcon { display: grid; width: 3.8rem; height: 4.6rem; place-items: center; color: var(--brand-blue); background: white; border-radius: .65rem; font-size: .85rem; font-weight: 900; }
-.reportCard h2, .reportCard p { margin: 0; }
-.reportCard p { margin-top: .35rem; color: rgb(255 255 255 / 85%); line-height: 1.5; }
-.reportActions { display: flex; flex-wrap: wrap; gap: .65rem; grid-column: 1 / -1; }
-.reportActions .primaryButton { color: var(--brand-blue); background: white; border-color: white; }
-.reportActions .secondaryButton { color: white; background: transparent; border-color: rgb(255 255 255 / 55%); }
-.unavailable { margin: 1rem 0 0; color: rgb(255 255 255 / 82%); font-size: .9rem; }
-@media (max-width: 720px) { .hero, .impact { grid-template-columns: 1fr; text-align: center; border-radius: 1.25rem; } .hero img { grid-row: 1; } .actions, .pillList { justify-content: center; } .numbers { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 420px) { .page { padding: .75rem; } .numbers { grid-template-columns: 1fr 1fr; gap: .6rem; } .number { min-height: 7rem; padding: .9rem .6rem; } .reportCard { grid-template-columns: 1fr; text-align: center; } .reportIcon { justify-self: center; } .reportActions { flex-direction: column; } }
+.odsSection { padding: clamp(1.2rem, 4vw, 2.5rem); background: white; border: 1px solid var(--border); border-radius: 1.5rem; }
+.odsChart { display: grid; gap: .55rem; width: 100%; margin: 1.5rem auto .5rem; }
+.odsRow { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr) 3.8rem; align-items: center; gap: .65rem; }
+.odsLabel { color: var(--brand-blue); font-size: .8rem; font-weight: 900; }
+.odsTrack { position: relative; min-height: 1.55rem; overflow: hidden; background: #edf3f6; border-radius: .35rem; }
+.odsBar { display: block; min-width: .45rem; height: 1.55rem; border-radius: .35rem; transition: width .4s ease; }
+.odsName { position: absolute; inset: 0 auto 0 .55rem; display: flex; align-items: center; color: white; font-size: .78rem; font-weight: 800; text-shadow: 0 1px 2px rgb(0 0 0 / 35%); }
+.odsValue { color: var(--text-muted); font-size: .8rem; font-weight: 800; text-align: right; }
+.odsLegend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; width: 100%; margin: 1.4rem auto 0; padding-top: 1.1rem; border-top: 1px solid var(--border); }
+.odsLegendItem { display: flex; min-height: 2.45rem; align-items: center; gap: .55rem; padding: .45rem .6rem; color: var(--text-muted); background: #f7fafb; border: 1px solid var(--border); border-radius: .55rem; font-size: .78rem; line-height: 1.25; }
+.odsLegendItem b { display: inline-flex; min-width: 3.35rem; padding: .38rem .3rem; justify-content: center; color: white; border-radius: .3rem; font-size: .66rem; text-shadow: 0 1px 1px rgb(0 0 0 / 25%); }
+.odsNote { margin: 1rem 0 0; color: var(--text-muted); font-size: .78rem; text-align: center; }
+.reportCard { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.2rem; padding: clamp(1.25rem, 3vw, 2rem); background: linear-gradient(135deg, #fff 0%, #f5fbff 100%); border: 1px solid #bfd9e9; border-left: .45rem solid var(--brand-orange); border-radius: 1.3rem; box-shadow: 0 .8rem 2rem rgb(23 50 77 / 8%); }
+.reportIcon { display: grid; width: 4rem; height: 4.8rem; place-items: center; color: var(--brand-blue); background: linear-gradient(145deg, #fff, #edf7fd); border: 1px solid #c5deed; border-radius: .75rem; box-shadow: 0 .4rem .8rem rgb(23 50 77 / 8%); font-size: .85rem; font-weight: 900; }
+.reportContent h2, .reportContent p { margin: 0; }
+.reportContent h2 { color: var(--brand-blue); font-size: clamp(1.25rem, 3vw, 1.7rem); }
+.reportContent > p:not(.reportEyebrow) { margin-top: .35rem; color: var(--text-muted); line-height: 1.5; }
+.reportEyebrow { margin-bottom: .35rem !important; color: var(--brand-orange); font-size: .7rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.reportMeta { display: inline-block; margin-top: .75rem; padding: .3rem .55rem; color: #285e43; background: #e6f5eb; border-radius: 999px; font-size: .76rem; font-weight: 800; }
+.reportActions { display: flex; flex-wrap: wrap; gap: .65rem; }
+.reportActions .primaryButton { color: white; background: var(--brand-blue); border-color: var(--brand-blue); }
+.reportActions .secondaryButton { color: var(--brand-blue); background: white; border-color: #b8d4e5; }
+.unavailable { grid-column: 2 / -1; margin: 0; color: var(--text-muted); font-size: .9rem; }
+@media (max-width: 720px) { .hero, .impact { grid-template-columns: 1fr; text-align: center; border-radius: 1.25rem; } .brandPanel { grid-row: 1; min-height: 15rem; } .brandPanel img { height: 13rem; max-height: 13rem; } .actions, .pillList { justify-content: center; } .numbers { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 720px) { .reportCard { grid-template-columns: auto 1fr; } .reportActions { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .page { padding: .75rem; } .numbers { grid-template-columns: 1fr 1fr; gap: .6rem; } .number { min-height: 7rem; padding: .9rem .6rem; } .reportCard { grid-template-columns: 1fr; text-align: center; } .reportIcon { justify-self: center; } .reportActions { flex-direction: column; } .unavailable { grid-column: auto; } }
+@media (max-width: 520px) { .odsRow { grid-template-columns: 2.8rem minmax(0, 1fr) 3.2rem; gap: .4rem; } .odsName { max-width: calc(100% - .8rem); overflow: hidden; font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; } .odsValue { font-size: .65rem; } }
+@media (max-width: 620px) { .odsLegend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
