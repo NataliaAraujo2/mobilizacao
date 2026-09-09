@@ -27,3 +27,11 @@ export async function updateBranchViewer(uid, status) {
 export async function resetBranchViewerPassword(uid) {
   return callFunction("resetBranchViewerPassword", { uid });
 }
+
+export async function createSuperAdmin(input) {
+  return callFunction("createSuperAdmin", input);
+}
+
+export async function completeSuperAdminPasswordChange(password) {
+  return callFunction("completeSuperAdminPasswordChange", { password });
+}

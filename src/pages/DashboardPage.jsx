@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import growingPlant from "../assets/brand/elements/elemento-03.webp";
 import styles from "./DashboardPage.module.css";
+import { completeSuperAdminPasswordChange } from "../services/branchViewersService";
 
 const ADMIN_ACTIONS = [
   { to: "/admin/contador-associados", code: "+1", title: "Novos associados", description: "Atualize o contador exibido na pré-home.", featured: true },
@@ -19,6 +21,8 @@ function friendlyName(user, isSuperAdmin) {
 
 export default function DashboardPage({ area }) {
   const { user, claims } = useAuth();
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
   const isSuperAdmin = claims?.role === "superAdmin";
   const isAdminArea = area === "admin" && isSuperAdmin;
 
@@ -40,6 +44,7 @@ export default function DashboardPage({ area }) {
 
         {isAdminArea ? (
           <section className={styles.section} aria-labelledby="resources-title">
+            {claims?.mustChangePassword && <form onSubmit={async (event) => { event.preventDefault(); setPasswordMessage(""); try { await completeSuperAdminPasswordChange(newPassword); setPasswordMessage("Senha alterada com sucesso."); } catch { setPasswordMessage("Não foi possível alterar a senha."); } }}><h2>Defina sua senha pessoal</h2><p>Por segurança, altere a senha temporária antes de continuar.</p><input type="password" minLength="10" required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Nova senha (mínimo 10 caracteres)" /><button type="submit">Salvar nova senha</button>{passwordMessage && <p role="status">{passwordMessage}</p>}</form>}
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.eyebrow}>Acessos rápidos</p>

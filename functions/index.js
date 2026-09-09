@@ -1,14 +1,22 @@
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { randomInt } from "node:crypto";
+import { nextBranchViewerUsername } from "./viewerIdentity.js";
 
 initializeApp();
 
 const REGION = "southamerica-east1";
 const VIEWER_ROLE = "branchViewer";
 const VIEWER_EMAIL_DOMAIN = "acesso.mobilizacao.invalid";
+const REPORT_YEAR = "2025";
+const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
+const MAX_REPORT_SIZE = 25 * 1024 * 1024;
+// Operações administrativas são pouco frequentes. Mantemos custo zero em
+// repouso e impedimos escala inesperada por repetição acidental de chamadas.
+const ADMIN_FUNCTION_OPTIONS = { region: REGION, minInstances: 0, maxInstances: 2, concurrency: 10 };
 
 function requireSuperAdmin(request) {
   if (!request.auth || request.auth.token.role !== "superAdmin" || request.auth.token.status !== "active") {
@@ -47,7 +55,13 @@ async function getBranch(branchId) {
   return snapshot;
 }
 
-export const createBranchViewer = onCall({ region: REGION }, async (request) => {
+async function nextBranchViewerIdentity(state, reservedUsernames = new Set()) {
+  const snapshot = await getFirestore().collection("users").where("role", "==", VIEWER_ROLE).get();
+  const username = nextBranchViewerUsername(state, snapshot.docs.map((item) => item.data().displayName), reservedUsernames);
+  return { username, email: `${username.toLowerCase()}@${VIEWER_EMAIL_DOMAIN}` };
+}
+
+export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   requireSuperAdmin(request);
 
   const branchId = requiredText(request.data?.branchId, "branchId", 1, 80);
@@ -62,48 +76,85 @@ export const createBranchViewer = onCall({ region: REGION }, async (request) => 
   }
   const branch = await getBranch(branchId);
   const state = requiredText(branch.data().state, "state", 2, 2).toUpperCase();
-  const username = `USUARIO_${state}`;
-  const email = `${username.toLowerCase()}@${VIEWER_EMAIL_DOMAIN}`;
   const uid = `branch-viewer-${branchId}`;
-  const password = generateFriendlyPassword();
   const auth = getAuth();
   const db = getFirestore();
+  const reservedUsernames = new Set();
 
   if ((await db.collection("users").doc(uid).get()).exists) {
     throw new HttpsError("already-exists", "Esta filial já possui um acesso de consulta.");
   }
 
-  let createdAuthUser = false;
-  try {
-    await auth.createUser({ uid, displayName: username, email, password });
-    createdAuthUser = true;
-    await auth.setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId, status: "active" });
-    await db.collection("users").doc(uid).set({
-      displayName: username,
-      email,
-      role: VIEWER_ROLE,
-      branchId,
-      contactName,
-      contactEmail,
-      contactPhone,
-      status: "active",
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-  } catch (error) {
-    // Só remove a conta se ela tiver sido criada por esta tentativa. Nunca
-    // excluímos uma conta já existente ao receber auth/uid-already-exists.
-    if (createdAuthUser) await auth.deleteUser(uid).catch(() => {});
-    if (error.code === "auth/uid-already-exists" || error.code === "auth/email-already-exists") {
-      throw new HttpsError("already-exists", "Esta filial já possui um acesso de consulta.");
+  // Duas solicitações simultâneas para a mesma UF podem escolher o mesmo
+  // sufixo. Em caso de colisão de e-mail, tentamos o próximo identificador;
+  // nunca excluímos uma conta que já existia.
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const { username, email } = await nextBranchViewerIdentity(state, reservedUsernames);
+    const password = generateFriendlyPassword();
+    let createdAuthUser = false;
+    try {
+      await auth.createUser({ uid, displayName: username, email, password });
+      createdAuthUser = true;
+      await auth.setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId, status: "active" });
+      await db.collection("users").doc(uid).set({
+        displayName: username,
+        email,
+        role: VIEWER_ROLE,
+        branchId,
+        contactName,
+        contactEmail,
+        contactPhone,
+        status: "active",
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      return { uid, username, password };
+    } catch (error) {
+      // Só remove a conta criada por esta própria tentativa após uma falha
+      // posterior. Conflitos nunca excluem uma conta que já existia.
+      if (createdAuthUser) await auth.deleteUser(uid).catch(() => {});
+      if (error.code === "auth/uid-already-exists") {
+        throw new HttpsError("already-exists", "Esta filial já possui um acesso de consulta.");
+      }
+      if (error.code === "auth/email-already-exists") {
+        reservedUsernames.add(username);
+        continue;
+      }
+      throw new HttpsError("internal", "Não foi possível gerar o acesso de consulta.");
     }
-    throw new HttpsError("internal", "Não foi possível gerar o acesso de consulta.");
   }
-
-  return { uid, username, password };
+  throw new HttpsError("resource-exhausted", "Não foi possível gerar um identificador único. Tente novamente.");
 });
 
-export const updateBranchViewer = onCall({ region: REGION }, async (request) => {
+export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const displayName = requiredText(request.data?.displayName, "displayName", 2, 120);
+  const email = requiredText(request.data?.email, "email", 5, 160).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpsError("invalid-argument", "E-mail inválido.");
+  const password = generateFriendlyPassword();
+  const auth = getAuth();
+  let created;
+  try {
+    created = await auth.createUser({ displayName, email, password });
+    await auth.setCustomUserClaims(created.uid, { role: "superAdmin", status: "active", mustChangePassword: true });
+    await getFirestore().collection("users").doc(created.uid).set({ displayName, email, role: "superAdmin", status: "active", createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    return { uid: created.uid, email, displayName, password };
+  } catch (error) {
+    if (created?.uid) await auth.deleteUser(created.uid).catch(() => {});
+    if (error.code === "auth/email-already-exists") throw new HttpsError("already-exists", "Este e-mail já possui uma conta.");
+    throw new HttpsError("internal", "Não foi possível criar o superAdmin.");
+  }
+});
+
+export const completeSuperAdminPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || request.auth.token.role !== "superAdmin" || request.auth.token.status !== "active") throw new HttpsError("permission-denied", "Acesso negado.");
+  const password = requiredText(request.data?.password, "password", 10, 128);
+  await getAuth().updateUser(request.auth.uid, { password });
+  await getAuth().setCustomUserClaims(request.auth.uid, { role: "superAdmin", status: "active", mustChangePassword: false });
+  return { ok: true };
+});
+
+export const updateBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   requireSuperAdmin(request);
   const uid = requiredText(request.data?.uid, "uid", 1, 128);
   const status = request.data?.status;
@@ -120,7 +171,7 @@ export const updateBranchViewer = onCall({ region: REGION }, async (request) => 
   return { uid, status };
 });
 
-export const updateBranchViewerContact = onCall({ region: REGION }, async (request) => {
+export const updateBranchViewerContact = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   requireSuperAdmin(request);
   const uid = requiredText(request.data?.uid, "uid", 1, 128);
   const contactName = requiredText(request.data?.contactName, "contactName", 2, 120);
@@ -137,7 +188,7 @@ export const updateBranchViewerContact = onCall({ region: REGION }, async (reque
   return { uid, contactName, contactEmail, contactPhone };
 });
 
-export const resetBranchViewerPassword = onCall({ region: REGION }, async (request) => {
+export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   requireSuperAdmin(request);
   const uid = requiredText(request.data?.uid, "uid", 1, 128);
   const profile = await getFirestore().collection("users").doc(uid).get();
@@ -147,4 +198,33 @@ export const resetBranchViewerPassword = onCall({ region: REGION }, async (reque
   const password = generateFriendlyPassword();
   await getAuth().updateUser(uid, { password });
   return { uid, username: profile.data().displayName, password };
+});
+
+// Finaliza a publicação do PDF já enviado ao Storage. Isso permite repetir
+// somente a etapa de catálogo se houver falha entre upload e Firestore, sem
+// duplicar o arquivo nem deixar a página pública apontando para "em breve".
+export const publishPublicReport2025 = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+
+  const file = getStorage().bucket().file(REPORT_PATH);
+  const [exists] = await file.exists();
+  if (!exists) throw new HttpsError("not-found", "Envie o PDF antes de publicá-lo.");
+
+  const [metadata] = await file.getMetadata();
+  const size = Number(metadata.size);
+  if (metadata.contentType !== "application/pdf" || !Number.isSafeInteger(size) || size <= 0 || size > MAX_REPORT_SIZE) {
+    throw new HttpsError("failed-precondition", "O arquivo armazenado não é um PDF válido de até 25 MB.");
+  }
+
+  const fileName = String(metadata.metadata?.originalFileName || metadata.name?.split("/").at(-1) || "relatorio-mobilizacao-2025.pdf").slice(0, 180);
+  await getFirestore().collection("publicReports").doc(REPORT_YEAR).set({
+    year: REPORT_YEAR,
+    path: REPORT_PATH,
+    fileName,
+    size,
+    publishedAt: FieldValue.serverTimestamp(),
+    publishedBy: request.auth.uid,
+  });
+
+  return { year: REPORT_YEAR, path: REPORT_PATH, fileName, size };
 });
