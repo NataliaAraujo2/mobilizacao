@@ -50,6 +50,9 @@ export function createFormsApi(db, now = () => Date.now()) {
           });
           return { id: ref.id };
         }
+        case 'deleteTemplate': {
+          const ref = root.collection('templates').doc(id(data.id)); ensure((await ref.get()).exists, 'Modelo não encontrado.'); await db.recursiveDelete(ref); return { ok: true };
+        }
         case 'archiveTemplate': {
           const ref = root.collection('templates').doc(id(data.id));
           await ref.update({ archived: true, updatedAt: now() }); return { ok: true };
@@ -57,8 +60,9 @@ export function createFormsApi(db, now = () => Date.now()) {
         case 'listCampaigns': return page(root.collection('campaigns').where('archived', '==', !!data.archived), data.cursor);
         case 'createCampaign': {
           const definition = validateDefinition(data.definition);
-          const title = boundedText(data.title); const description = data.description ?? '';
+          const title = boundedText(data.title); const description = data.description ?? ''; const message = typeof data.whatsappMessage === 'string' ? data.whatsappMessage.trim() : '';
           ensure(typeof description === 'string' && description.length <= 3000, 'Descrição inválida.');
+          ensure(message.length <= 3000, 'Mensagem do WhatsApp acima do limite.');
           const expiresAt = Number(data.expiresAt);
           ensure(Number.isFinite(expiresAt) && expiresAt > now() && expiresAt <= now() + 366 * 86400000, 'Prazo inválido.');
           ensure(['individual', 'general'].includes(data.mode), 'Modo de envio inválido.');
@@ -68,7 +72,7 @@ export function createFormsApi(db, now = () => Date.now()) {
             const existing = await tx.get(ref);
             // A retry of the same creation never creates a second campaign or replaces a snapshot.
             if (existing.exists) return;
-            tx.create(ref, { title, description, formTitle: definition.title, createdAt: now(), expiresAt, mode: data.mode, recipientCount: recipients.length, responseCount: 0, archived: false, generalToken });
+            tx.create(ref, { title, description, whatsappMessage: message, formTitle: definition.title, createdAt: now(), expiresAt, mode: data.mode, recipientCount: recipients.length, responseCount: 0, archived: false, generalToken });
             tx.create(ref.collection('definition').doc('snapshot'), definition);
             if (generalToken) tx.create(db.collection('formTokens').doc(hash(generalToken)), { ownerId: uid, campaignId: ref.id, kind: 'general' });
             for (const recipient of recipients) {
@@ -113,6 +117,10 @@ export function createFormsApi(db, now = () => Date.now()) {
             else ensure(['RESPONDIDA', 'APROVADA', 'REJEITADA'].includes(current.status), 'Somente respostas recebidas podem ser revisadas.');
             tx.update(r, { status: data.status, reviewedBy: uid, reviewedAt: now() });
           }); return { ok: true };
+        }
+        case 'deleteCampaign': {
+          const ref = campaignRef(uid, data.id); ensure((await ref.get()).exists, 'Campanha não encontrada.');
+          const tokens = await db.collection('formTokens').where('ownerId', '==', uid).where('campaignId', '==', ref.id).get(); const batch = db.batch(); tokens.docs.forEach(item => batch.delete(item.ref)); await batch.commit(); await db.recursiveDelete(ref); return { ok: true };
         }
         case 'archiveCampaign': {
           const c = await campaign(uid, data.id); await c.ref.update({ archived: true }); return { ok: true };

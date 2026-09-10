@@ -89,7 +89,8 @@ export function validateAnswers(definition, answers) {
   }
   return result;
 }
-export function whatsappMessage(name, title, link) { return `Olá, ${name}! Por favor, responda ao formulário ‘${title}’: ${link}`; }
+export function whatsappMessage(name, title, link, custom = '') { return custom.trim() ? `${custom.trim()}\n${link}` : `Olá, ${name}! Por favor, responda ao formulário ‘${title}’: ${link}`; }
+export function generalWhatsappMessage(title, description, link) { return `${[title.trim(), description.trim()].filter(Boolean).join('\n\n')}\n${link}`; }
 export function whatsappUrl(phone, message) {
   let digits = String(phone ?? '').replace(/\D/g, '');
   if (!digits) return null;
