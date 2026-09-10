@@ -19,11 +19,14 @@ const ActionsPage = lazy(() => import("./pages/ActionsPage"));
 const AssociatesCounterPage = lazy(() => import("./pages/AssociatesCounterPage"));
 const ReportsAdminPage = lazy(() => import("./pages/ReportsAdminPage"));
 const SuperAdminsPage = lazy(() => import("./pages/SuperAdminsPage"));
+const LinkFormsPage = lazy(() => import("./pages/LinkFormsPage"));
+const PublicLinkFormPage = lazy(() => import("./pages/PublicLinkFormPage"));
 
 export default function App() {
   return (
     <Suspense fallback={<main style={{ padding: "2rem", textAlign: "center" }}>Carregando...</main>}>
       <Routes>
+      <Route path="formularios/:token" element={<PublicLinkFormPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<CampaignGateway />} />
         <Route path="2025" element={<Campaign2025Page />} />
@@ -36,6 +39,7 @@ export default function App() {
 
         <Route element={<RequireAuth allowedRoles={["superAdmin"]} />}>
           <Route path="admin" element={<DashboardPage area="admin" />} />
+          <Route path="admin/formularios" element={<LinkFormsPage />} />
           <Route path="admin/voluntarios" element={<VolunteersPage />} />
           <Route path="admin/acoes" element={<ActionsPage />} />
           <Route path="admin/contador-associados" element={<AssociatesCounterPage />} />

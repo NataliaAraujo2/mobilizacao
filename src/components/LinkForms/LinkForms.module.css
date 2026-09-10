@@ -1,0 +1,50 @@
+.page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 5rem; }
+.publicPage { max-width: 780px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.page, .publicPage { overflow-wrap: break-word; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.6; }
+.page h1, .publicPage h1 { color: var(--brand-blue); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin: 1rem 0; box-shadow: 0 5px 18px rgb(23 50 77 / 4%); }
+.questionCard, .group { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin: 1rem 0; min-width: 0; }
+.questionCard { border-left: 4px solid var(--brand-orange); }
+.page label, .publicPage label { display: flex; flex-direction: column; align-items: stretch; gap: .45rem; margin: 1.15rem 0; font-weight: 600; }
+.page input, .page select, .page textarea, .publicPage input, .publicPage textarea, .publicPage select { width: 100%; min-width: 0; padding: .7rem; border: 1px solid #8da5b3; border-radius: 6px; color: var(--text); background: white; }
+.page textarea, .publicPage textarea { min-height: 90px; resize: vertical; }
+.page button, .publicPage button, .buttonLink { cursor: pointer; border: 1px solid var(--brand-blue); background: white; color: var(--brand-blue); border-radius: 7px; padding: .65rem .9rem; text-decoration: none; min-height: 44px; }
+.page button:disabled, .publicPage button:disabled { opacity: .5; cursor: not-allowed; }
+.page button:hover:enabled, .publicPage button:hover:enabled, .buttonLink:hover { background: #edf5fb; }
+.page button.primary, .publicPage button.primary { color: white; background: var(--brand-blue); }
+.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; margin: .8rem 0; }
+.toolbar h2 { margin-right: auto; }
+.page .check, .choices .choices label { display: flex; flex-direction: row; align-items: center; gap: .65rem; }
+.page input[type=checkbox], .publicPage input[type=checkbox], .page input[type=radio], .publicPage input[type=radio] { width: 20px; height: 20px; flex: 0 0 auto; }
+.choices { border: 0; padding: 0; }
+.notice { background: #eaf4fb; border-left: 4px solid var(--brand-blue); padding: 1rem; white-space: pre-wrap; }
+.error { background: #fff0ed; color: #8b2115; padding: 1rem; border: 1px solid #e5b8af; border-radius: 8px; }
+.success { background: #edf7ee; color: var(--brand-green); padding: 1rem; }
+.multiline { white-space: pre-wrap; }
+.question { margin: 1rem 0; }
+.question p { margin-top: .4rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
+.badge { display: inline-block; background: #edf2f5; border-radius: 30px; padding: .3rem .7rem; font-size: .85rem; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.page :focus-visible, .publicPage :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+@media (max-width: 600px) { .card { padding: 1rem; } .toolbar > button, .toolbar > a { flex: 1 1 auto; } .page, .publicPage { padding-top: 1rem; } }
+
+.page { max-width: 1040px; }
+.page h1, .publicPage h1 { font-size: clamp(1.65rem, 3vw, 2.2rem); line-height: 1.25; letter-spacing: -.035em; }
+.page h2, .publicPage h2 { font-size: 1.3rem; line-height: 1.4; }
+.page h3, .publicPage h3 { font-size: 1.05rem; }
+.page p, .publicPage p { color: var(--text-muted); }
+.card { border-radius: 18px; padding: 1.75rem 2rem; margin: 1.5rem 0; box-shadow: 0 6px 24px rgb(23 50 77 / 3%); }
+.card > h2:first-child, .card > h3:first-child { margin-top: 0; }
+.page input, .page select, .page textarea, .publicPage input, .publicPage select, .publicPage textarea { border-color: var(--border); background: #fbfcfd; border-radius: 9px; padding: .8rem .9rem; font-weight: 400; }
+.page input:focus, .page select:focus, .page textarea:focus, .publicPage input:focus, .publicPage select:focus, .publicPage textarea:focus { background: white; border-color: var(--brand-blue); }
+.page button, .publicPage button, .buttonLink { font-weight: 600; font-size: .9rem; border-color: var(--border); border-radius: 9px; }
+.page nav.toolbar { padding: .5rem; background: #eaf0f4; border-radius: 13px; margin: 1.5rem 0; }
+.page nav.toolbar button { border-color: transparent; background: transparent; }
+.page nav.toolbar button[aria-pressed=true] { background: white; box-shadow: 0 2px 6px rgb(23 50 77 / 8%); }
+.questionCard { background: #f8fafc; border-left: 3px solid var(--brand-blue); padding: 1.25rem; }
+.questionCard .toolbar button { padding: .4rem .65rem; font-size: .8rem; }
+.notice { border-radius: 0 10px 10px 0; }
+.recipientRow { display: flex; gap: 1rem; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding: 1rem 0; }
+.recipientRow small { display: block; color: var(--text-muted); }
+@media (max-width: 600px) { .card { padding: 1.15rem; } .recipientRow { align-items: stretch; flex-direction: column; } .page nav.toolbar { gap: .3rem; } }

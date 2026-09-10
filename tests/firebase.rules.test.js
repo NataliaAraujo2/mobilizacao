@@ -1,12 +1,13 @@
 import { after, afterEach, before } from "node:test";
 import test from "node:test";
+import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   assertFails,
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { collection, doc, getDoc, getDocs, setDoc, Timestamp, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
 import { ref, uploadBytes } from "firebase/storage";
 
 const PROJECT_ID = "campanha-mobilizacao-dev";
@@ -132,7 +133,7 @@ test("usuário de consulta lê somente a própria filial e não altera dados", a
   await assertFails(updateDoc(doc(db, "branches", "sp"), { name: "Alteração indevida" }));
 });
 
-test("conta compartilhada exige nome, telefone e e-mail da pessoa responsável", async () => {
+test("perfis de usuários e papéis privilegiados são exclusivos das Functions", async () => {
   const db = auth("god-admin", "superAdmin").firestore();
   const completeProfile = {
     ...user({ displayName: "USUARIO_SP", email: "usuario_sp@acesso.mobilizacao.invalid", role: "branchViewer", branchId: "sp" }),
@@ -140,8 +141,8 @@ test("conta compartilhada exige nome, telefone e e-mail da pessoa responsável",
     contactEmail: "maria@example.test",
     contactPhone: "11999999999",
   };
-  await assertSucceeds(setDoc(doc(db, "users", "viewer-sp"), completeProfile));
-  await assertFails(setDoc(doc(db, "users", "viewer-rj"), { ...completeProfile, branchId: "rj", contactPhone: "" }));
+  await assertFails(setDoc(doc(db, "users", "viewer-sp"), completeProfile));
+  await assertFails(setDoc(doc(db, "users", "another-super-admin"), user({ displayName: "Outro admin", email: "admin@example.test", role: "superAdmin" })));
 });
 
 test("somente superAdmin cadastra dados comuns e documentos pessoais", async () => {
@@ -153,14 +154,14 @@ test("somente superAdmin cadastra dados comuns e documentos pessoais", async () 
   await assertFails(setDoc(doc(sharedDb, "volunteerPrivate", "another-sp"), volunteerPrivate("another-sp", "sp")));
 });
 
-test("conta compartilhada consulta documentos somente da própria filial", async () => {
+test("conta compartilhada não consulta documentos pessoais, inclusive da própria filial", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "volunteerPrivate", "volunteer-sp"), volunteerPrivate("volunteer-sp", "sp"));
     await setDoc(doc(context.firestore(), "volunteerPrivate", "volunteer-rj"), volunteerPrivate("volunteer-rj", "rj"));
   });
 
   const db = auth("viewer-sp", "branchViewer", "sp").firestore();
-  await assertSucceeds(getDoc(doc(db, "volunteerPrivate", "volunteer-sp")));
+  await assertFails(getDoc(doc(db, "volunteerPrivate", "volunteer-sp")));
   await assertFails(getDoc(doc(db, "volunteerPrivate", "volunteer-rj")));
 });
 
@@ -198,6 +199,18 @@ test("superAdmin cadastra ação e conta compartilhada apenas consulta a própri
   await assertFails(getDoc(doc(viewerDb, "actions", "action-rj")));
 });
 
+test("consulta da filial precisa filtrar e paginar somente documentos da própria filial", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-1"), { ...volunteer("sp"), fullName: "Ana Silva" });
+    await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-2"), { ...volunteer("sp"), fullName: "Beatriz Souza" });
+    await setDoc(doc(context.firestore(), "volunteers", "volunteer-rj-1"), { ...volunteer("rj"), fullName: "Carla Lima" });
+  });
+  const db = auth("viewer-sp", "branchViewer", "sp").firestore();
+  await assertSucceeds(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "sp"), orderBy("fullName"), limit(1))));
+  await assertFails(getDocs(query(collection(db, "volunteers"), orderBy("fullName"), limit(25))));
+  await assertFails(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "rj"), orderBy("fullName"), limit(25))));
+});
+
 test("contador de associados é público, mas não permite listar outros dados", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "publicStats", "associationCampaign"), {
@@ -228,6 +241,16 @@ test("Storage aceita foto comprimida da ação somente do superAdmin", async () 
   await assertFails(uploadBytes(ref(auth("viewer-sp", "branchViewer", "sp").storage(), "branches/sp/actions/action-sp/before/viewer.webp"), image));
 });
 
+test("Storage aceita somente WebP de até 5 MB nas fases permitidas", async () => {
+  const storage = auth("god-admin", "superAdmin").storage();
+  const webp = new Blob(["imagem"], { type: "image/webp" });
+  const png = new Blob(["imagem"], { type: "image/png" });
+  await assertSucceeds(uploadBytes(ref(storage, "branches/sp/actions/action-sp/during/photo.webp"), webp));
+  await assertFails(uploadBytes(ref(storage, "branches/sp/actions/action-sp/invalid/photo.webp"), webp));
+  await assertFails(uploadBytes(ref(storage, "branches/sp/actions/action-sp/after/photo.png"), png));
+  assert.match(await readFile("storage.rules", "utf8"), /request\.resource\.size <= 5 \* 1024 \* 1024/);
+});
+
 test("usuário bloqueado não acessa a filial", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "branches", "sp"), branch("Filial São Paulo", "SP", "SP"));
@@ -244,6 +267,21 @@ test("somente superAdmin envia imagens; conta compartilhada apenas consulta", as
 
   await assertSucceeds(uploadBytes(ref(storage, "branches/sp/mobilization/photo.webp"), image));
   await assertFails(uploadBytes(ref(sharedStorage, "branches/sp/mobilization/shared-photo.webp"), image));
+});
+
+test("busca de responsáveis das filiais é paginada e exclusiva do superAdmin", async () => {
+  await environment.withSecurityRulesDisabled(async context => {
+    await Promise.all(Array.from({ length: 30 }, (_, index) => setDoc(doc(context.firestore(), 'users', `contact-${index}`), {
+      role: 'branchViewer', contactName: `Responsável ${String(index).padStart(2, '0')}`, contactPhone: '11999999999', branchId: 'sp',
+    })));
+  });
+  const adminDb = auth('admin', 'superAdmin').firestore();
+  const makeQuery = db => query(collection(db, 'users'), where('role', '==', 'branchViewer'), orderBy('contactName'), limit(26));
+  const result = await assertSucceeds(getDocs(makeQuery(adminDb)));
+  assert.equal(result.size, 26);
+  assert.equal(result.docs[0].data().contactName, 'Responsável 00');
+  await assertFails(getDocs(makeQuery(auth('viewer', 'branchViewer', 'sp').firestore())));
+  await assertFails(getDocs(makeQuery(environment.unauthenticatedContext().firestore())));
 });
 
 test("Storage rejeita arquivo que não seja imagem", async () => {

@@ -8,6 +8,8 @@ import { nextBranchViewerUsername } from "./viewerIdentity.js";
 
 initializeApp();
 
+export { manageLinkForms, publicLinkForms } from './formsFunctions.js';
+
 const REGION = "southamerica-east1";
 const VIEWER_ROLE = "branchViewer";
 const VIEWER_EMAIL_DOMAIN = "acesso.mobilizacao.invalid";

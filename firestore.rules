@@ -178,11 +178,9 @@ service cloud.firestore {
 
       allow list: if isSuperAdmin();
 
-      allow create: if isSuperAdmin() && validUser(request.resource.data);
-
-      allow update: if isSuperAdmin() && validUser(request.resource.data);
-
-      allow delete: if isSuperAdmin();
+      // Perfis e seus papéis são criados e atualizados apenas por Functions
+      // com Admin SDK. Isso evita perfis privilegiados escritos pelo cliente.
+      allow create, update, delete: if false;
     }
 
     match /volunteers/{volunteerId} {
@@ -203,12 +201,13 @@ service cloud.firestore {
     }
 
     match /volunteerPrivate/{volunteerId} {
+      // CPF, RG e nascimento nunca são expostos pela conta compartilhada da
+      // filial. A consulta é restrita ao administrador nacional ou ao próprio
+      // voluntário autenticado.
       allow get: if isSuperAdmin()
-        || (isBranchViewer() && resource.data.branchId == request.auth.token.branchId)
         || (hasRole('volunteer') && request.auth.uid == volunteerId);
 
-      allow list: if isSuperAdmin()
-        || (isBranchViewer() && resource.data.branchId == request.auth.token.branchId);
+      allow list: if isSuperAdmin();
 
       allow create: if isSuperAdmin() && validVolunteerPrivate(request.resource.data, volunteerId);
 
@@ -244,6 +243,15 @@ service cloud.firestore {
         && isSuperAdmin()
         && validPublicReport(request.resource.data, year);
       allow delete: if isSuperAdmin();
+    }
+
+    // Formulários são acessados exclusivamente por Functions: autenticação,
+    // isolamento, validação do snapshot e resposta única em transação.
+    match /formAccounts/{document=**} {
+      allow read, write: if false;
+    }
+    match /formTokens/{tokenId} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

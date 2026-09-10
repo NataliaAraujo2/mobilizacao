@@ -6,6 +6,7 @@ import styles from "./DashboardPage.module.css";
 import { completeSuperAdminPasswordChange } from "../services/branchViewersService";
 
 const ADMIN_ACTIONS = [
+  { to: "/admin/formularios", code: "FO", title: "Formulários por link", description: "Crie formulários, envie links e revise respostas individualmente." },
   { to: "/admin/contador-associados", code: "+1", title: "Novos associados", description: "Atualize o contador exibido na pré-home.", featured: true },
   { to: "/admin/relatorio-2025", code: "PDF", title: "Relatório 2025", description: "Arquive a versão comprimida para leitura e impressão pública." },
   { to: "/admin/acoes", code: "AC", title: "Ações", description: "Cadastre locais, orientações, fotos e informações de cada mobilização.", featured: true },
