@@ -55,7 +55,7 @@ function CampaignDetail({ initial, run, onClose }) {
       {!page.items.length && <p className={styles.notice}>Nenhuma solicitação neste filtro.</p>}
       {page.items.map(r => {
         const link = formLink(r.token); const message = campaign.mode === 'general' ? generalWhatsappMessage(campaign.title, campaign.description, link) : whatsappMessage(r.name, campaign.formTitle, link, campaign.whatsappMessage); const whatsapp = whatsappUrl(r.phone, message);
-        return <article className={styles.card} key={r.id}><h3>{r.name}</h3><p>{r.phone || 'Sem telefone'} · <span className={styles.badge}>{r.status}</span></p>
+        return <article className={styles.card} key={r.id}><h3>{r.name}</h3>{r.branchName && <p>Filial: {r.branchName}</p>}<p>{r.phone || 'Sem telefone'} · <span className={styles.badge}>{r.status}</span></p>
           <div className={styles.toolbar}>
             {whatsapp && r.status === 'PENDENTE' && !campaign.archived ? <a className={styles.buttonLink} href={whatsapp} target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a> : <button disabled>Abrir WhatsApp{!r.phone ? ' (sem telefone)' : ''}</button>}
             <button onClick={() => copy(message)}>Copiar mensagem</button><button onClick={() => copy(link)}>Copiar link</button>
@@ -78,6 +78,8 @@ export default function LinkFormsPage() {
   const [definition, setDefinition] = useState(blankForm); const [templateId, setTemplateId] = useState(null);
   const [campaign, setCampaign] = useState(null); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(''); const [error, setError] = useState('');
   const [title, setTitle] = useState(''); const [description, setDescription] = useState(''); const [whatsappMessageText, setWhatsappMessageText] = useState(''); const [expiresAt, setExpiresAt] = useState(() => localDate(30));
+  const [collectBranch, setCollectBranch] = useState(false);
+  const [broadcastText, setBroadcastText] = useState('');
   const [mode, setMode] = useState('individual'); const [recipients, setRecipients] = useState(''); const [creationId, setCreationId] = useState(() => crypto.randomUUID());
   const listAction = tab === 'templates' ? 'listTemplates' : 'listCampaigns';
   useEffect(() => {
@@ -91,13 +93,13 @@ export default function LinkFormsPage() {
     try { await work(); setMessage(success); } catch (e) { setError(e.message); } finally { setBusy(false); }
   }
   function start(def = blankForm(), id = null) {
-    setDefinition(def); setTemplateId(id); setTitle(def.title); setExpiresAt(localDate(def.validityDays)); setCreationId(crypto.randomUUID()); setRecipients(''); setDescription(''); setTab('builder'); setMessage('');
+    setDefinition(def); setTemplateId(id); setTitle(def.title); setExpiresAt(localDate(def.validityDays)); setCreationId(crypto.randomUUID()); setRecipients(''); setDescription(''); setCollectBranch(false); setWhatsappMessageText(''); setTab('builder'); setMessage('');
   }
   async function createCampaign() {
     await run(async () => {
       const valid = validateDefinition(definition);
       const parsed = mode === 'individual' ? validateRecipients(recipients.split('\n').filter(l => l.trim()).map(line => { const [name, phone = '', ...extra] = line.split(';'); if (extra.length) throw new Error('Use Nome; telefone, um por linha.'); return { name: name.trim(), phone: phone.trim() }; })) : [];
-      const result = await manageForms('createCampaign', { id: creationId, title: title || valid.title, description, whatsappMessage: whatsappMessageText, definition: valid, expiresAt: new Date(expiresAt).getTime(), mode, recipients: parsed });
+      const result = await manageForms('createCampaign', { id: creationId, title: title || valid.title, description, whatsappMessage: whatsappMessageText, definition: valid, expiresAt: new Date(expiresAt).getTime(), mode, collectBranch, recipients: parsed });
       setCampaign(await manageForms('getCampaign', { id: result.id })); setTab('campaigns'); setCreationId(crypto.randomUUID());
     }, 'Campanha criada. Os links estão disponíveis na fila.');
   }
@@ -108,10 +110,12 @@ export default function LinkFormsPage() {
       {campaign ? <CampaignDetail key={campaign.id} initial={campaign} run={run} onClose={() => { setCampaign(null); setRevision(v => v + 1); }} /> : <>
         <h1>Formulários por link</h1><p>Crie perguntas, compartilhe links e acompanhe cada resposta.</p>
         <nav className={styles.toolbar} aria-label="Central de formulários"><button aria-pressed={tab === 'campaigns'} onClick={() => setTab('campaigns')}>Campanhas</button><button aria-pressed={tab === 'templates'} onClick={() => setTab('templates')}>Modelos</button><button onClick={() => { if (tab !== 'builder' || window.confirm('Descartar a edição atual e criar um formulário em branco?')) start(); }}>Criar formulário em branco</button>{tab !== 'builder' && <button onClick={() => setTab('builder')}>Retomar construtor</button>}</nav>
+        <details className={styles.card}><summary>Texto para transmissão sem link</summary><label>Mensagem<textarea rows={6} maxLength={10000} value={broadcastText} onChange={e => setBroadcastText(e.target.value)} /></label><p>Copie o texto e cole na sua lista de transmissão no WhatsApp. Não é necessário criar uma campanha.</p><button disabled={!broadcastText.trim()} onClick={() => run(() => navigator.clipboard.writeText(broadcastText.trim()), 'Texto copiado. Cole na lista de transmissão do WhatsApp.')}>Copiar somente o texto</button></details>
         {tab === 'builder' ? <>
           <FormBuilder value={definition} onChange={setDefinition} />
           <div className={styles.toolbar}><button onClick={() => run(async () => { const result = await manageForms('saveTemplate', { id: templateId, definition: validateDefinition(definition) }); setTemplateId(result.id); }, 'Modelo salvo. Campanhas já enviadas permanecem com a versão original.')}>{templateId ? 'Salvar alterações no modelo' : 'Salvar como modelo'}</button>{templateId && <button onClick={() => run(async () => { const result = await manageForms('saveTemplate', { definition: validateDefinition(definition) }); setTemplateId(result.id); }, 'Cópia do modelo salva.')}>Salvar como novo modelo</button>}</div>
           <section className={styles.card}><h2>Gerar campanha</h2><label>Título da campanha<input maxLength={160} value={title} onChange={e => setTitle(e.target.value)} placeholder={definition.title} /></label><label>Descrição da campanha<textarea maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} /></label><label>Mensagem adicional para links individuais (opcional)<textarea maxLength={3000} value={whatsappMessageText} onChange={e => setWhatsappMessageText(e.target.value)} placeholder="Deixe vazio para usar a saudação padrão com o nome do destinatário." /></label><p className={styles.help}>No link geral, o texto copiado usa automaticamente o título e a descrição da campanha.</p><label>Prazo de validade<input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} /></label><button onClick={() => setExpiresAt(localDate(definition.validityDays))}>Usar validade padrão do formulário</button><label>Tipo de link<select value={mode} onChange={e => setMode(e.target.value)}><option value="individual">Um link por destinatário</option><option value="general">Um link geral compartilhável</option></select></label>
+            {mode === 'general' && <label className={styles.check}><input type="checkbox" checked={collectBranch} onChange={e => setCollectBranch(e.target.checked)} />Pedir nome e filial ao abrir o link geral</label>}
             {mode === 'individual' ? <><label>Destinatários — um por linha: Nome; telefone (opcional)<textarea rows={6} maxLength={33000} value={recipients} onChange={e => setRecipients(e.target.value)} placeholder={'Maria; 11999999999\nJoão'} /></label><p>{recipients.split('\n').filter(l => l.trim()).length}/{LIMITS.recipients} destinatários</p></> : <p>Compartilhe o mesmo endereço. Cada participante informa o nome e recebe uma solicitação própria. Limite: {LIMITS.recipients} participantes.</p>}
           </section>
           {mode === 'individual' && <RecipientImport run={run} onAdd={v => { const lines = recipients.split('\n').filter(l => l.trim()); if (lines.length >= LIMITS.recipients) { setError(`Limite de ${LIMITS.recipients} destinatários.`); return; } const line = `${v.fullName.replaceAll(';', ',')}; ${v.phone || ''}`; if (!lines.includes(line)) setRecipients([...lines, line].join('\n')); }} />}

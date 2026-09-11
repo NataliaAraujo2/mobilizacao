@@ -67,12 +67,15 @@ export function createFormsApi(db, now = () => Date.now()) {
           ensure(Number.isFinite(expiresAt) && expiresAt > now() && expiresAt <= now() + 366 * 86400000, 'Prazo inválido.');
           ensure(['individual', 'general'].includes(data.mode), 'Modo de envio inválido.');
           const recipients = data.mode === 'individual' ? validateRecipients(data.recipients) : [];
+          const collectBranch = data.mode === 'general' && data.collectBranch === true;
+          const branchOptions = collectBranch ? (await db.collection('branches').get()).docs.filter(d => d.data().status === 'active').map(d => ({ id: d.id, name: d.data().name })).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) : [];
+          ensure(!collectBranch || branchOptions.length > 0, 'Cadastre uma filial ativa antes de solicitar a filial.');
           const ref = campaignRef(uid, data.id); const generalToken = data.mode === 'general' ? token() : null;
           await db.runTransaction(async tx => {
             const existing = await tx.get(ref);
             // A retry of the same creation never creates a second campaign or replaces a snapshot.
             if (existing.exists) return;
-            tx.create(ref, { title, description, whatsappMessage: message, formTitle: definition.title, createdAt: now(), expiresAt, mode: data.mode, recipientCount: recipients.length, responseCount: 0, archived: false, generalToken });
+            tx.create(ref, { collectBranch, branchOptions, title, description, whatsappMessage: message, formTitle: definition.title, createdAt: now(), expiresAt, mode: data.mode, recipientCount: recipients.length, responseCount: 0, archived: false, generalToken });
             tx.create(ref.collection('definition').doc('snapshot'), definition);
             if (generalToken) tx.create(db.collection('formTokens').doc(hash(generalToken)), { ownerId: uid, campaignId: ref.id, kind: 'general' });
             for (const recipient of recipients) {
@@ -131,11 +134,11 @@ export function createFormsApi(db, now = () => Date.now()) {
     async public(input) {
       const data = input ?? {};
       ensure(['open', 'join', 'submit'].includes(data.action), 'Operação inválida.');
-      ensure(Object.keys(data).every(k => ['action', 'token', 'name', 'session', 'answers'].includes(k)), 'Campo não solicitado.');
+      ensure(Object.keys(data).every(k => ['action', 'token', 'name', 'session', 'answers', 'branchId'].includes(k)), 'Campo não solicitado.');
       const c = await resolve(data.token);
       if (c.link.kind === 'general') {
         assertPending({ status: 'PENDENTE' }, c.data, now());
-        if (data.action === 'open') return { kind: 'general', title: c.data.formTitle, description: c.data.description, expiresAt: c.data.expiresAt };
+        if (data.action === 'open') return { kind: 'general', title: c.data.title, description: c.data.description, collectBranch: !!c.data.collectBranch, branches: c.data.branchOptions ?? [], expiresAt: c.data.expiresAt };
         ensure(data.action === 'join', 'Link geral requer identificação.');
         const name = boundedText(data.name, 120); const session = validToken(data.session);
         const r = c.ref.collection('requests').doc(hash(session));
@@ -144,8 +147,10 @@ export function createFormsApi(db, now = () => Date.now()) {
           assertPending({ status: 'PENDENTE' }, cs.data(), now());
           if (rs.exists) return { token: rs.data().token };
           ensure(cs.data().recipientCount < LIMITS.recipients, 'Esta campanha atingiu o limite de participantes.');
+          const branch = cs.data().collectBranch ? cs.data().branchOptions.find(b => b.id === data.branchId) : null;
+          ensure(!cs.data().collectBranch || branch, 'Selecione uma filial válida.');
           const secret = token();
-          tx.create(r, { name, phone: '', token: secret, status: 'PENDENTE', archived: false, createdAt: now() });
+          tx.create(r, { branchId: branch?.id ?? null, branchName: branch?.name ?? '', name, phone: '', token: secret, status: 'PENDENTE', archived: false, createdAt: now() });
           tx.create(db.collection('formTokens').doc(hash(secret)), { ownerId: c.link.ownerId, campaignId: c.ref.id, requestId: r.id, kind: 'individual' });
           tx.update(c.ref, { recipientCount: FieldValue.increment(1) });
           return { token: secret };
@@ -157,7 +162,7 @@ export function createFormsApi(db, now = () => Date.now()) {
         ensure(rs.exists, 'Link inválido.'); assertPending(rs.data(), c.data, now());
         return { kind: 'individual', name: rs.data().name, definition: definition.data(), expiresAt: c.data.expiresAt };
       }
-      ensure(data.action === 'submit' && !Object.hasOwn(data, 'name') && !Object.hasOwn(data, 'session'), 'Campo não solicitado.');
+      ensure(data.action === 'submit' && !Object.hasOwn(data, 'name') && !Object.hasOwn(data, 'session') && !Object.hasOwn(data, 'branchId'), 'Campo não solicitado.');
       return db.runTransaction(async tx => {
         const responseRef = c.ref.collection('responses').doc(r.id);
         const [cs, rs, definition, response] = await Promise.all([tx.get(c.ref), tx.get(r), tx.get(c.ref.collection('definition').doc('snapshot')), tx.get(responseRef)]);
