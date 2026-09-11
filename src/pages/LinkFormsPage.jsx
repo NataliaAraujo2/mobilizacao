@@ -8,6 +8,7 @@ import { listVolunteersPage } from '../services/volunteersService';
 import { listBranchContactsPage } from '../services/branchViewersService';
 import { generalWhatsappMessage, LIMITS, STATUSES, validateDefinition, validateRecipients, whatsappMessage, whatsappUrl } from '../../functions/formDomain';
 import styles from '../components/LinkForms/LinkForms.module.css';
+import NoticePoster from '../components/LinkForms/NoticePoster';
 
 const localDate = days => { const d = new Date(Date.now() + days * 86400000); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
 
@@ -79,7 +80,6 @@ export default function LinkFormsPage() {
   const [campaign, setCampaign] = useState(null); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(''); const [error, setError] = useState('');
   const [title, setTitle] = useState(''); const [description, setDescription] = useState(''); const [whatsappMessageText, setWhatsappMessageText] = useState(''); const [expiresAt, setExpiresAt] = useState(() => localDate(30));
   const [collectBranch, setCollectBranch] = useState(false);
-  const [broadcastText, setBroadcastText] = useState('');
   const [mode, setMode] = useState('individual'); const [recipients, setRecipients] = useState(''); const [creationId, setCreationId] = useState(() => crypto.randomUUID());
   const listAction = tab === 'templates' ? 'listTemplates' : 'listCampaigns';
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function LinkFormsPage() {
       {campaign ? <CampaignDetail key={campaign.id} initial={campaign} run={run} onClose={() => { setCampaign(null); setRevision(v => v + 1); }} /> : <>
         <h1>Formulários por link</h1><p>Crie perguntas, compartilhe links e acompanhe cada resposta.</p>
         <nav className={styles.toolbar} aria-label="Central de formulários"><button aria-pressed={tab === 'campaigns'} onClick={() => setTab('campaigns')}>Campanhas</button><button aria-pressed={tab === 'templates'} onClick={() => setTab('templates')}>Modelos</button><button onClick={() => { if (tab !== 'builder' || window.confirm('Descartar a edição atual e criar um formulário em branco?')) start(); }}>Criar formulário em branco</button>{tab !== 'builder' && <button onClick={() => setTab('builder')}>Retomar construtor</button>}</nav>
-        <details className={styles.card}><summary>Texto para transmissão sem link</summary><label>Mensagem<textarea rows={6} maxLength={10000} value={broadcastText} onChange={e => setBroadcastText(e.target.value)} /></label><p>Copie o texto e cole na sua lista de transmissão no WhatsApp. Não é necessário criar uma campanha.</p><button disabled={!broadcastText.trim()} onClick={() => run(() => navigator.clipboard.writeText(broadcastText.trim()), 'Texto copiado. Cole na lista de transmissão do WhatsApp.')}>Copiar somente o texto</button></details>
+        <NoticePoster />
         {tab === 'builder' ? <>
           <FormBuilder value={definition} onChange={setDefinition} />
           <div className={styles.toolbar}><button onClick={() => run(async () => { const result = await manageForms('saveTemplate', { id: templateId, definition: validateDefinition(definition) }); setTemplateId(result.id); }, 'Modelo salvo. Campanhas já enviadas permanecem com a versão original.')}>{templateId ? 'Salvar alterações no modelo' : 'Salvar como modelo'}</button>{templateId && <button onClick={() => run(async () => { const result = await manageForms('saveTemplate', { definition: validateDefinition(definition) }); setTemplateId(result.id); }, 'Cópia do modelo salva.')}>Salvar como novo modelo</button>}</div>
