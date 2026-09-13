@@ -38,6 +38,13 @@ test('gera campanha, tokens individuais diferentes e criação idempotente', asy
   assert.notEqual(first.items[0].token, first.items[1].token); assert.match(first.items[0].token, /^[a-f0-9]{64}$/);
   await create(); assert.deepEqual(await requests(), first);
 });
+test('edita o formulário da campanha sem substituir links ou respostas', async () => {
+  await create(); const before = await requests(); const changed = definition(); changed.sections[0].questions[0].required = false;
+  await api.manage(manager('owner'), { action: 'updateCampaignDefinition', id: 'campaign1', definition: changed });
+  const campaign = await api.manage(manager('owner'), { action: 'getCampaign', id: 'campaign1' });
+  assert.equal(campaign.definition.sections[0].questions[0].required, false);
+  assert.deepEqual((await requests()).items.map(item => item.token), before.items.map(item => item.token));
+});
 test('resposta pública válida preserva repetição e atualiza contador apenas uma vez em concorrência', async () => {
   await create(); const r = (await requests()).items[0];
   const opened = await api.public({ action: 'open', token: r.token }); assert.equal(opened.name, r.name); assert.equal(opened.ownerId, undefined); assert.equal(opened.phone, undefined);
@@ -87,7 +94,7 @@ test('paginação real retorna 25 registros por vez sem repetir destinatários',
 test('isolamento entre contas e bloqueio de papéis de consulta e voluntário', async () => {
   await create(); const r = (await requests()).items[0];
   assert.equal((await api.manage(manager('other'), { action: 'listCampaigns' })).items.length, 0);
-  for (const action of ['getCampaign', 'listRequests', 'getResponse', 'review', 'archiveCampaign']) await assert.rejects(api.manage(manager('other'), { action, id: 'campaign1', requestId: r.id, status: 'CANCELADA' }), /não encontrada/);
+  for (const action of ['getCampaign', 'updateCampaignDefinition', 'listRequests', 'getResponse', 'review', 'archiveCampaign']) await assert.rejects(api.manage(manager('other'), { action, id: 'campaign1', requestId: r.id, status: 'CANCELADA', definition: definition() }), /não encontrada/);
   for (const role of ['branchViewer', 'volunteer']) await assert.rejects(api.manage({ uid: 'owner', token: { role, status: 'active' } }, { action: 'listCampaigns' }), /superadministradores/);
   await assert.rejects(api.manage(null, { action: 'listCampaigns' }));
 });

@@ -90,6 +90,16 @@ export function createFormsApi(db, now = () => Date.now()) {
           const c = await campaign(uid, data.id); const definition = await c.ref.collection('definition').doc('snapshot').get();
           return { ...c.data, id: c.ref.id, definition: definition.data() };
         }
+        case 'updateCampaignDefinition': {
+          const c = await campaign(uid, data.id);
+          ensure(!c.data.archived, 'Campanha arquivada não pode ser editada.');
+          const definition = validateDefinition(data.definition);
+          const batch = db.batch();
+          batch.set(c.ref.collection('definition').doc('snapshot'), definition);
+          batch.update(c.ref, { formTitle: definition.title, updatedAt: now() });
+          await batch.commit();
+          return { definition, formTitle: definition.title };
+        }
         case 'listRequests': {
           const c = await campaign(uid, data.id);
           let q = c.ref.collection('requests').where('archived', '==', !!data.archived);

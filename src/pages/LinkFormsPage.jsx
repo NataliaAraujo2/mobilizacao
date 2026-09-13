@@ -31,6 +31,8 @@ function CampaignDetail({ initial, run, onClose }) {
   const [campaign, setCampaign] = useState(initial); const [status, setStatus] = useState(''); const [archived, setArchived] = useState(false);
   const [page, setPage] = useState({ items: [], cursor: null }); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
   const [review, setReview] = useState(null);
+  const [editingDefinition, setEditingDefinition] = useState(false);
+  const [definitionDraft, setDefinitionDraft] = useState(initial.definition);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     let current = true; setLoading(true); setError('');
@@ -46,12 +48,23 @@ function CampaignDetail({ initial, run, onClose }) {
       setPage(current => ({ ...current, items: next === 'ARCHIVE' ? current.items.filter(item => item.id !== r.id) : current.items.map(item => item.id === r.id ? { ...item, status: next } : item) }));
     }, 'Solicitação atualizada.');
   }
+  async function saveDefinition() {
+    if (!window.confirm('Salvar as alterações neste formulário? Elas valerão para respostas futuras e formulários ainda não enviados. Respostas já recebidas serão preservadas.')) return;
+    await run(async () => {
+      const definition = validateDefinition(definitionDraft);
+      const updated = await manageForms('updateCampaignDefinition', { id: campaign.id, definition });
+      setCampaign(current => ({ ...current, definition: updated.definition, formTitle: updated.formTitle }));
+      setDefinitionDraft(updated.definition);
+      setEditingDefinition(false);
+    }, 'Formulário da campanha atualizado.');
+  }
   const copy = value => run(() => navigator.clipboard.writeText(value), 'Copiado.');
   return <section>
     <button type="button" onClick={onClose}>← Voltar à central</button><h1>{campaign.title}</h1><p>{campaign.description}</p>
     <p>Formulário: {campaign.formTitle} · Criada em {new Date(campaign.createdAt).toLocaleDateString('pt-BR')} · Validade: {new Date(campaign.expiresAt).toLocaleString('pt-BR')}</p>
     <p>{campaign.recipientCount} destinatários · {campaign.responseCount} respostas recebidas {campaign.archived && '· Campanha arquivada'}</p>
-    <div className={styles.toolbar}><button onClick={() => run(refresh)}>Atualizar indicadores e fila</button>{campaign.generalToken && <><button onClick={() => copy(formLink(campaign.generalToken))}>Copiar link geral</button><button onClick={() => copy(generalWhatsappMessage(campaign.title, campaign.description, formLink(campaign.generalToken)))}>Copiar texto para transmissão</button></>}{!campaign.archived && <button onClick={() => { if (window.confirm('Arquivar a campanha? Todos os links deixarão de aceitar respostas. O histórico será preservado.')) run(async () => { await manageForms('archiveCampaign', { id: campaign.id }); await refresh(); }, 'Campanha arquivada.'); }}>Arquivar campanha</button>}{!campaign.archived && <button onClick={() => { if (window.confirm('Excluir esta campanha permanentemente? Respostas, links e histórico serão removidos.')) run(async () => { await manageForms('deleteCampaign', { id: campaign.id }); onClose(); }, 'Campanha excluída.'); }}>Excluir campanha</button>}</div>
+    <div className={styles.toolbar}><button onClick={() => run(refresh)}>Atualizar indicadores e fila</button>{!campaign.archived && <button onClick={() => { setDefinitionDraft(campaign.definition); setEditingDefinition(value => !value); }}>{editingDefinition ? 'Fechar edição' : 'Editar formulário da campanha'}</button>}{campaign.generalToken && <><button onClick={() => copy(formLink(campaign.generalToken))}>Copiar link geral</button><button onClick={() => copy(generalWhatsappMessage(campaign.title, campaign.description, formLink(campaign.generalToken)))}>Copiar texto para transmissão</button></>}{!campaign.archived && <button onClick={() => { if (window.confirm('Arquivar a campanha? Todos os links deixarão de aceitar respostas. O histórico será preservado.')) run(async () => { await manageForms('archiveCampaign', { id: campaign.id }); await refresh(); }, 'Campanha arquivada.'); }}>Arquivar campanha</button>}{!campaign.archived && <button onClick={() => { if (window.confirm('Excluir esta campanha permanentemente? Respostas, links e histórico serão removidos.')) run(async () => { await manageForms('deleteCampaign', { id: campaign.id }); onClose(); }, 'Campanha excluída.'); }}>Excluir campanha</button>}</div>
+    {editingDefinition && <section className={styles.card}><p className={styles.notice}>As respostas já recebidas serão preservadas. Evite remover perguntas se alguém estiver preenchendo o formulário neste momento.</p><FormBuilder value={definitionDraft} onChange={setDefinitionDraft} /><div className={styles.toolbar}><button className={styles.primary} type="button" onClick={saveDefinition}>Salvar alterações na campanha</button><button type="button" onClick={() => { setDefinitionDraft(campaign.definition); setEditingDefinition(false); }}>Cancelar</button></div></section>}
     <h2>Fila de envios e respostas</h2><p>O WhatsApp abre com a mensagem pronta. Confirme o envio manualmente na conversa.</p>
     <label>Filtrar por status<select value={status} onChange={e => { setReview(null); setStatus(e.target.value); }}><option value="">Todos os status</option>{STATUSES.map(s => <option key={s}>{s}</option>)}</select></label>
     <label className={styles.check}><input type="checkbox" checked={archived} onChange={e => setArchived(e.target.checked)} />Mostrar solicitações arquivadas</label>
