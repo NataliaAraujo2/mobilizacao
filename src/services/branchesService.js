@@ -29,7 +29,7 @@ export async function addBranch(input) {
   const reference = doc(db, "branches", id);
 
   if ((await getDoc(reference)).exists()) {
-    const error = new Error("Já existe uma filial com esse código.");
+    const error = new Error("Já existe uma regional com esse código.");
     error.code = "branch/already-exists";
     throw error;
   }

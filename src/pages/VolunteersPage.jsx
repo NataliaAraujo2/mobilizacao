@@ -1,8 +1,10 @@
+import { formatPhone } from '../../functions/contactFields.js';
+import ContactInput from '../components/ContactInput';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/useAuth";
 import { maskCpf } from "../domain/volunteers/volunteerModel";
 import { getBranch, listBranches } from "../services/branchesService";
-import { createVolunteer, getVolunteerPrivate, listVolunteersPage, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
+import { createVolunteer, deleteVolunteer, getVolunteerPrivate, listVolunteersPage, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import styles from "./VolunteersPage.module.css";
 
@@ -12,11 +14,7 @@ function formatCpf(value) {
   return value.replace(/\D/g, "").slice(0, 11).replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
-function formatPhone(value) {
-  const phone = value.replace(/\D/g, "").slice(0, 13);
-  if (phone.length <= 10) return phone.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
-  return phone.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
-}
+
 
 export default function VolunteersPage() {
   const { claims } = useAuth();
@@ -54,7 +52,7 @@ export default function VolunteersPage() {
       .then((branchList) => {
         setBranches(branchList.filter((branch) => branch.status === "active"));
       })
-      .catch(() => setError("Não foi possível carregar as filiais."));
+      .catch(() => setError("Não foi possível carregar as regionais."));
     recarregar({ branchId: listBranchId });
   }, [isSuperAdmin, listBranchId, ownBranchId, recarregar]);
 
@@ -135,10 +133,24 @@ export default function VolunteersPage() {
     }
   }
 
+  async function removeVolunteer(volunteer) {
+    if (!isSuperAdmin || saving || !window.confirm(`Excluir permanentemente ${volunteer.fullName}? O cadastro e os documentos pessoais serão apagados. Esta ação não pode ser desfeita.`)) return;
+    setSaving(true); setError(''); setMessage('');
+    try {
+      await deleteVolunteer(volunteer.id);
+      atualizarDados(items => items.filter(item => item.id !== volunteer.id));
+      setPrivateData(current => { const next = { ...current }; delete next[volunteer.id]; return next; });
+      if (expandedId === volunteer.id) setExpandedId('');
+      if (editingId === volunteer.id) resetForm();
+      setMessage('Voluntário e documentos pessoais excluídos.');
+    } catch { setError('Não foi possível excluir o voluntário. Tente novamente.'); }
+    finally { setSaving(false); }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.title}>
-        <div><p>{isSuperAdmin ? "Administração nacional" : "Minha filial"}</p><h1>Voluntários</h1></div>
+        <div><p>{isSuperAdmin ? "Administração nacional" : "Minha regional"}</p><h1>Voluntários</h1></div>
         <span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>
       </header>
 
@@ -147,12 +159,12 @@ export default function VolunteersPage() {
         <p className={styles.privacy}>CPF, RG e nascimento ficam em uma área protegida e não aparecem nas consultas comuns.</p>
         <form onSubmit={handleSubmit}>
           <label className={styles.wide}>Nome completo<input required minLength="2" maxLength="120" autoComplete="name" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
-          <label>E-mail <small>(opcional)</small><input type="email" maxLength="160" autoComplete="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-          <label>Telefone <small>(opcional)</small><input type="tel" inputMode="tel" autoComplete="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: formatPhone(event.target.value) })} /></label>
+          <label>E-mail <small>(opcional)</small><ContactInput type="email" maxLength="160" autoComplete="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
+          <label>Telefone <small>(opcional)</small><ContactInput type="tel" inputMode="tel" autoComplete="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: formatPhone(event.target.value) })} /></label>
           <label>CPF<input required inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={form.cpf} onChange={(event) => setForm({ ...form, cpf: formatCpf(event.target.value) })} /></label>
           <label>RG<input required minLength="3" maxLength="20" autoComplete="off" value={form.rg} onChange={(event) => setForm({ ...form, rg: event.target.value })} /></label>
           <label>Data de nascimento<input required type="date" autoComplete="bday" max={new Date().toISOString().slice(0, 10)} value={form.birthDate} onChange={(event) => setForm({ ...form, birthDate: event.target.value })} /></label>
-          <label>Filial<select required disabled={!isSuperAdmin || Boolean(editingId)} value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
+          <label>Regional<select required disabled={!isSuperAdmin || Boolean(editingId)} value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>}
           <div className={styles.formActions}>
             <button className={styles.primary} type="submit" disabled={saving || branches.length === 0}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar voluntário"}</button>
@@ -178,7 +190,7 @@ export default function VolunteersPage() {
                 <div><span>Nascimento</span><strong>{documents.birthDate.split("-").reverse().join("/")}</strong></div>
                 <button type="button" className={styles.textButton} onClick={() => setShowFullCpf((current) => !current)}>{showFullCpf ? "Ocultar CPF" : "Mostrar CPF completo"}</button>
               </div>}
-              <div className={styles.actions}><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button></div>
+              <div className={styles.actions}><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>
             </article>;
           })}</div>
         )}

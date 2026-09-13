@@ -1,3 +1,4 @@
+import { isValidEmail, isValidPhone } from './contactFields.js';
 export const LIMITS = Object.freeze({ sections: 20, questions: 100, recipients: 200, repeats: 20, answer: 4000, payload: 100000 });
 export const QUESTION_TYPES = Object.freeze({ short: 'Resposta curta', long: 'Texto longo', email: 'E-mail', phone: 'Telefone', document: 'CPF ou CNPJ', number: 'Número', money: 'Valor', date: 'Data', boolean: 'Sim ou não', single: 'Seleção única', select: 'Lista de opções' });
 export const STATUSES = ['PENDENTE', 'RESPONDIDA', 'APROVADA', 'REJEITADA', 'CANCELADA', 'EXPIRADA'];
@@ -73,8 +74,8 @@ export function validateAnswers(definition, answers) {
         const value = text(group[q.id] ?? '', q.type === 'long' ? LIMITS.answer : 500, q.required);
         if (value) {
           let valid = true;
-          if (q.type === 'email') valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-          if (q.type === 'phone') valid = /^[+\d().\s-]+$/.test(value) && /^\d{10,15}$/.test(value.replace(/\D/g, ''));
+          if (q.type === 'email') valid = isValidEmail(value);
+          if (q.type === 'phone') valid = isValidPhone(value);
           if (q.type === 'document') valid = /^[\d./\s-]+$/.test(value) && validDocument(value);
           if (['number', 'money'].includes(q.type)) valid = /^-?\d+(\.\d+)?$/.test(value) && Number.isFinite(Number(value)) && Math.abs(Number(value)) <= 1e15 && (q.type !== 'money' || /^-?\d+(\.\d{1,2})?$/.test(value));
           if (q.type === 'date') valid = /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value;

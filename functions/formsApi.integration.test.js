@@ -101,7 +101,7 @@ test('link geral gera token próprio por participante e retoma sessão sem dupli
   await db.doc('formAccounts/owner/campaigns/campaign1').update({ recipientCount: 200 });
   await assert.rejects(api.public({ action: 'join', token: c.generalToken, name: 'C', session: 'c'.repeat(64) }), /limite/);
 });
-test('link geral solicita filial somente quando configurado e valida a seleção', async () => {
+test('link geral solicita regional somente quando configurado e valida a seleção', async () => {
   await db.doc('branches/sp').set({ name: 'São Paulo', status: 'active', privateContact: 'oculto' });
   await db.doc('branches/rj').set({ name: 'Rio', status: 'inactive' });
   await create({ mode: 'general', collectBranch: true });
@@ -110,7 +110,7 @@ test('link geral solicita filial somente quando configurado e valida a seleção
   assert.equal(view.collectBranch, true);
   assert.deepEqual(view.branches, [{ id: 'sp', name: 'São Paulo' }]);
   for (const branchId of [undefined, 'rj', 'inventada']) {
-    await assert.rejects(api.public({ action: 'join', token: c.generalToken, name: 'Ana', session: 'a'.repeat(64), branchId }), /filial válida/);
+    await assert.rejects(api.public({ action: 'join', token: c.generalToken, name: 'Ana', session: 'a'.repeat(64), branchId }), /regional válida/);
   }
   const joined = await api.public({ action: 'join', token: c.generalToken, name: 'Ana', session: 'a'.repeat(64), branchId: 'sp' });
   await api.public({ action: 'submit', token: joined.token, answers });

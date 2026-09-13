@@ -1,5 +1,6 @@
 import { LIMITS } from '../../../functions/formDomain';
 import styles from './LinkForms.module.css';
+import ContactInput from '../ContactInput';
 
 export default function FormFields({ definition, answers, onChange, readOnly = false }) {
   function change(sectionId, index, questionId, value) {
@@ -23,7 +24,8 @@ export default function FormFields({ definition, answers, onChange, readOnly = f
             {q.type === 'long' ? <textarea {...props} maxLength={4000} rows={4} />
               : ['single', 'boolean'].includes(q.type) ? <fieldset className={styles.choices}><legend className={styles.srOnly}>{q.title}</legend>{(q.type === 'boolean' ? ['Sim', 'Não'] : q.options).map(option => <label key={option}><input type="radio" name={fieldId} required={q.required} value={option} checked={value === option} onChange={() => change(s.id, i, q.id, option)} />{option}</label>)}{!q.required && <button type="button" onClick={() => change(s.id, i, q.id, '')}>Limpar seleção</button>}</fieldset>
               : q.type === 'select' ? <select {...props}><option value="">Selecione</option>{q.options.map(o => <option key={o}>{o}</option>)}</select>
-              : <input {...props} type={({ email: 'email', phone: 'tel', number: 'number', money: 'number', date: 'date' })[q.type] ?? 'text'} step={q.type === 'money' ? '0.01' : 'any'} maxLength={500} inputMode={q.type === 'document' ? 'numeric' : undefined} />}
+              : ['phone', 'email'].includes(q.type) ? <ContactInput {...props} type={q.type === 'phone' ? 'tel' : 'email'} maxLength={500} />
+              : <input {...props} type={({ number: 'number', money: 'number', date: 'date' })[q.type] ?? 'text'} step={q.type === 'money' ? '0.01' : 'any'} maxLength={500} inputMode={q.type === 'document' ? 'numeric' : undefined} />}
           </div>;
         })}
         {s.repeatable && !readOnly && answers[s.id].length > 1 && <button type="button" onClick={() => { if (window.confirm('Remover este item e suas respostas?')) onChange({ ...answers, [s.id]: answers[s.id].filter((_, index) => index !== i) }); }}>Remover item {i + 1}</button>}

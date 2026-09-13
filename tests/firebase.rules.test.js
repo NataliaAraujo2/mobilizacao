@@ -95,25 +95,25 @@ after(async () => {
   await environment.cleanup();
 });
 
-test("superAdmin cria e acessa qualquer filial", async () => {
+test("superAdmin cria e acessa qualquer regional", async () => {
   const db = auth("god-admin", "superAdmin").firestore();
-  await assertSucceeds(setDoc(doc(db, "branches", "sp"), branch("Filial São Paulo", "SP", "SP")));
+  await assertSucceeds(setDoc(doc(db, "branches", "sp"), branch("Regional São Paulo", "SP", "SP")));
   await assertSucceeds(getDoc(doc(db, "branches", "sp")));
 });
 
 test("perfil antigo branchAdmin não possui mais acesso", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Filial São Paulo", "SP", "SP"));
+    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Regional São Paulo", "SP", "SP"));
   });
 
   const db = auth("admin-sp", "branchAdmin", "sp").firestore();
   await assertFails(getDoc(doc(db, "branches", "sp")));
-  await assertFails(setDoc(doc(db, "branches", "mg"), branch("Filial Minas Gerais", "MG", "MG")));
+  await assertFails(setDoc(doc(db, "branches", "mg"), branch("Regional Minas Gerais", "MG", "MG")));
 });
 
-test("voluntário consulta a própria filial, mas não administra dados", async () => {
+test("voluntário consulta a própria regional, mas não administra dados", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Filial São Paulo", "SP", "SP"));
+    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Regional São Paulo", "SP", "SP"));
   });
 
   const db = auth("volunteer-sp", "volunteer", "sp").firestore();
@@ -121,10 +121,10 @@ test("voluntário consulta a própria filial, mas não administra dados", async 
   await assertFails(updateDoc(doc(db, "branches", "sp"), { name: "Alteração indevida" }));
 });
 
-test("usuário de consulta lê somente a própria filial e não altera dados", async () => {
+test("usuário de consulta lê somente a própria regional e não altera dados", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Filial São Paulo", "SP", "SP"));
-    await setDoc(doc(context.firestore(), "branches", "rj"), branch("Filial Rio de Janeiro", "RJ", "RJ"));
+    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Regional São Paulo", "SP", "SP"));
+    await setDoc(doc(context.firestore(), "branches", "rj"), branch("Regional Rio de Janeiro", "RJ", "RJ"));
   });
 
   const db = auth("branch-viewer-sp", "branchViewer", "sp").firestore();
@@ -154,7 +154,7 @@ test("somente superAdmin cadastra dados comuns e documentos pessoais", async () 
   await assertFails(setDoc(doc(sharedDb, "volunteerPrivate", "another-sp"), volunteerPrivate("another-sp", "sp")));
 });
 
-test("conta compartilhada não consulta documentos pessoais, inclusive da própria filial", async () => {
+test("conta compartilhada não consulta documentos pessoais, inclusive da própria regional", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "volunteerPrivate", "volunteer-sp"), volunteerPrivate("volunteer-sp", "sp"));
     await setDoc(doc(context.firestore(), "volunteerPrivate", "volunteer-rj"), volunteerPrivate("volunteer-rj", "rj"));
@@ -175,7 +175,7 @@ test("voluntário acessa os próprios documentos, mas não consegue alterá-los"
   await assertFails(updateDoc(privateProfile, { rg: "987654321", updatedAt: null }));
 });
 
-test("filial e vínculo dos documentos pessoais não podem ser trocados", async () => {
+test("regional e vínculo dos documentos pessoais não podem ser trocados", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "volunteerPrivate", "volunteer-sp"), volunteerPrivate("volunteer-sp", "sp"));
   });
@@ -185,7 +185,7 @@ test("filial e vínculo dos documentos pessoais não podem ser trocados", async 
   await assertFails(updateDoc(privateProfile, { volunteerId: "another-user", updatedAt: null }));
 });
 
-test("superAdmin cadastra ação e conta compartilhada apenas consulta a própria filial", async () => {
+test("superAdmin cadastra ação e conta compartilhada apenas consulta a própria regional", async () => {
   const adminDb = auth("god-admin", "superAdmin").firestore();
   await assertSucceeds(setDoc(doc(adminDb, "actions", "action-sp"), action("sp")));
 
@@ -199,7 +199,7 @@ test("superAdmin cadastra ação e conta compartilhada apenas consulta a própri
   await assertFails(getDoc(doc(viewerDb, "actions", "action-rj")));
 });
 
-test("consulta da filial precisa filtrar e paginar somente documentos da própria filial", async () => {
+test("consulta da regional precisa filtrar e paginar somente documentos da própria regional", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-1"), { ...volunteer("sp"), fullName: "Ana Silva" });
     await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-2"), { ...volunteer("sp"), fullName: "Beatriz Souza" });
@@ -251,9 +251,9 @@ test("Storage aceita somente WebP de até 5 MB nas fases permitidas", async () =
   assert.match(await readFile("storage.rules", "utf8"), /request\.resource\.size <= 5 \* 1024 \* 1024/);
 });
 
-test("usuário bloqueado não acessa a filial", async () => {
+test("usuário bloqueado não acessa a regional", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Filial São Paulo", "SP", "SP"));
+    await setDoc(doc(context.firestore(), "branches", "sp"), branch("Regional São Paulo", "SP", "SP"));
   });
 
   const db = auth("blocked-user", "volunteer", "sp", "blocked").firestore();
@@ -269,7 +269,7 @@ test("somente superAdmin envia imagens; conta compartilhada apenas consulta", as
   await assertFails(uploadBytes(ref(sharedStorage, "branches/sp/mobilization/shared-photo.webp"), image));
 });
 
-test("busca de responsáveis das filiais é paginada e exclusiva do superAdmin", async () => {
+test("busca de responsáveis das regionais é paginada e exclusiva do superAdmin", async () => {
   await environment.withSecurityRulesDisabled(async context => {
     await Promise.all(Array.from({ length: 30 }, (_, index) => setDoc(doc(context.firestore(), 'users', `contact-${index}`), {
       role: 'branchViewer', contactName: `Responsável ${String(index).padStart(2, '0')}`, contactPhone: '11999999999', branchId: 'sp',

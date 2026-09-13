@@ -48,7 +48,8 @@ export default function App() {
         </Route>
 
         <Route element={<RequireAuth allowedRoles={["superAdmin"]} />}>
-          <Route path="admin/filiais" element={<BranchesPage />} />
+          <Route path="admin/regionais" element={<BranchesPage />} />
+          <Route path="admin/filiais" element={<Navigate to="/admin/regionais" replace />} />
           <Route path="admin/acessos-consulta" element={<BranchViewersPage />} />
         </Route>
 

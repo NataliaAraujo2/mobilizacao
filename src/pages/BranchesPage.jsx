@@ -18,7 +18,7 @@ export default function BranchesPage() {
   useEffect(() => {
     listBranches()
       .then(setBranches)
-      .catch(() => setError("Não foi possível carregar as filiais."))
+      .catch(() => setError("Não foi possível carregar as regionais."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -36,6 +36,10 @@ export default function BranchesPage() {
     setError("");
   }
 
+  function changeState(state) {
+    setForm((current) => ({ ...current, state, code: editingId ? current.code : state }));
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setSaving(true);
@@ -48,17 +52,17 @@ export default function BranchesPage() {
         setBranches((current) => current
           .map((branch) => branch.id === editingId ? { ...branch, ...saved } : branch)
           .sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
-        setMessage("Filial atualizada com sucesso.");
+        setMessage("Regional atualizada com sucesso.");
       } else {
         const saved = await addBranch(form);
         setBranches((current) => [...current, saved].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
-        setMessage("Filial cadastrada com sucesso.");
+        setMessage("Regional cadastrada com sucesso.");
       }
 
       setEditingId(null);
       setForm(EMPTY_FORM);
     } catch (saveError) {
-      setError(saveError.code === "branch/already-exists" ? saveError.message : "Não foi possível salvar a filial.");
+      setError(saveError.code === "branch/already-exists" ? saveError.message : "Não foi possível salvar a regional.");
     } finally {
       setSaving(false);
     }
@@ -72,28 +76,28 @@ export default function BranchesPage() {
     try {
       const saved = await editBranch(branch.id, { ...branch, status: nextStatus });
       setBranches((current) => current.map((item) => item.id === branch.id ? { ...item, ...saved } : item));
-      setMessage(nextStatus === BRANCH_STATUSES.ACTIVE ? "Filial reativada." : "Filial inativada.");
+      setMessage(nextStatus === BRANCH_STATUSES.ACTIVE ? "Regional reativada." : "Regional inativada.");
     } catch {
-      setError("Não foi possível alterar a situação da filial.");
+      setError("Não foi possível alterar a situação da regional.");
     }
   }
 
   return (
     <main className={styles.page}>
       <header className={styles.title}>
-        <div><p>Administração nacional</p><h1>Filiais</h1></div>
+        <div><p>Administração nacional</p><h1>Regionais</h1></div>
         <span>{branches.length} cadastrada{branches.length === 1 ? "" : "s"}</span>
       </header>
 
       <section className={styles.formCard} aria-labelledby="branch-form-title">
-        <h2 id="branch-form-title">{editingId ? "Editar filial" : "Cadastrar filial"}</h2>
+        <h2 id="branch-form-title">{editingId ? "Editar regional" : "Cadastrar regional"}</h2>
         <form onSubmit={handleSubmit}>
           <label>Nome<input required minLength="2" maxLength="120" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
-          <label>Código<input required minLength="2" maxLength="30" disabled={Boolean(editingId)} placeholder="Ex.: SP" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })} /></label>
-          <label>Estado<select required value={form.state} onChange={(event) => setForm({ ...form, state: event.target.value })}><option value="">Selecione</option>{BRAZIL_STATES.map((state) => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label>
+          <label>Código<input required minLength="2" maxLength="30" disabled={Boolean(editingId)} placeholder="Ex.: SP ou SP_02" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })} /><small>Preenchido pela UF; ajuste apenas se houver outra regional no estado.</small></label>
+          <label>Estado<select required value={form.state} onChange={(event) => changeState(event.target.value)}><option value="">Selecione</option>{BRAZIL_STATES.map((state) => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativa</option><option value="inactive">Inativa</option></select></label>}
           <div className={styles.actions}>
-            <button className={styles.primary} type="submit" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar filial"}</button>
+            <button className={styles.primary} type="submit" disabled={saving}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar regional"}</button>
             {editingId && <button className={styles.secondary} type="button" onClick={cancelEdit}>Cancelar</button>}
           </div>
         </form>
@@ -102,8 +106,8 @@ export default function BranchesPage() {
       </section>
 
       <section className={styles.listCard} aria-labelledby="branches-title">
-        <h2 id="branches-title">Filiais cadastradas</h2>
-        {loading ? <p aria-busy="true">Carregando...</p> : branches.length === 0 ? <p>Nenhuma filial cadastrada.</p> : (
+        <h2 id="branches-title">Regionais cadastradas</h2>
+        {loading ? <p aria-busy="true">Carregando...</p> : branches.length === 0 ? <p>Nenhuma regional cadastrada.</p> : (
           <div className={styles.list}>
             {branches.map((branch) => (
               <article key={branch.id} className={styles.branch}>

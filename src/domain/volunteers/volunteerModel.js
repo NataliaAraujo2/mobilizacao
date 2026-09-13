@@ -1,3 +1,4 @@
+import { isValidEmail, isValidPhone, normalizeEmail, normalizePhone } from '../../../functions/contactFields.js';
 const CPF_LENGTH = 11;
 
 function digits(value) {
@@ -24,16 +25,17 @@ export function maskCpf(value) {
 
 export function createVolunteerRecords(input) {
   const fullName = String(input.fullName ?? "").trim();
-  const email = String(input.email ?? "").trim().toLowerCase();
-  const phone = digits(input.phone).slice(0, 13);
+  const email = normalizeEmail(input.email);
+  const phone = normalizePhone(input.phone);
   const branchId = String(input.branchId ?? "").trim();
   const cpf = digits(input.cpf);
   const rg = String(input.rg ?? "").trim().toUpperCase().replace(/[^0-9A-Z]/g, "");
   const birthDate = String(input.birthDate ?? "").trim();
 
   if (fullName.length < 2 || fullName.length > 120) throw new Error("Informe o nome completo.");
-  if (!branchId) throw new Error("Selecione uma filial.");
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Informe um e-mail válido.");
+  if (!branchId) throw new Error("Selecione uma regional.");
+  if (email && !isValidEmail(email)) throw new Error("Informe um e-mail válido.");
+  if (phone && !isValidPhone(input.phone, 13)) throw new Error("Informe um telefone válido com DDD (até 13 dígitos).");
   if (!isValidCpf(cpf)) throw new Error("Informe um CPF válido.");
   if (rg.length < 3 || rg.length > 20) throw new Error("Informe um RG válido.");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || Number.isNaN(Date.parse(`${birthDate}T00:00:00`))) {
@@ -46,4 +48,3 @@ export function createVolunteerRecords(input) {
     privateData: { branchId, cpf, rg, birthDate, createdAt: null, updatedAt: null },
   };
 }
-

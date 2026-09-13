@@ -1,23 +1,25 @@
+import { formatPhone } from '../../functions/contactFields.js';
+import ContactInput from '../components/ContactInput';
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { deleteBranchViewer } from '../services/branchViewersService';
 import { listBranches } from "../services/branchesService";
 import { createBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
 import styles from "./BranchViewersPage.module.css";
 
 const ERROR_MESSAGES = {
-  "functions/already-exists": "Esta filial já possui um acesso de consulta.",
-  "functions/not-found": "A filial ou o acesso não foi encontrado.",
+  "functions/already-exists": "Esta regional já possui um acesso de consulta.",
+  "functions/not-found": "A regional ou o acesso não foi encontrado.",
   "functions/permission-denied": "Você não tem permissão para gerenciar estes acessos.",
   "functions/unavailable": "O serviço local não está disponível. Verifique os emuladores.",
 };
 const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contactPhone: "" };
 
-function formatPhone(value) {
-  const phone = value.replace(/\D/g, "").slice(0, 13);
-  if (phone.length <= 10) return phone.replace(/(\d{2})(\d{4})(\d+)/, "($1) $2-$3");
-  return phone.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
-}
+
 
 export default function BranchViewersPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [branches, setBranches] = useState([]);
   const [viewers, setViewers] = useState([]);
   const [credentials, setCredentials] = useState(null);
@@ -35,11 +37,29 @@ export default function BranchViewersPage() {
         setBranches(branchList.filter((branch) => branch.status === "active"));
         setViewers(viewerList);
       })
-      .catch(() => setError("Não foi possível carregar os acessos e filiais."))
+      .catch(() => setError("Não foi possível carregar os acessos e regionais."))
       .finally(() => setLoading(false));
   }, []);
 
   const viewerByBranch = useMemo(() => new Map(viewers.map((viewer) => [viewer.branchId, viewer])), [viewers]);
+
+  useEffect(() => {
+    const draft = location.state?.responsibleDraft;
+    if (loading || !draft) return;
+    const branch = branches.find(item => item.id === draft.branchId);
+    if (!branch) setError('A regional da resposta não está disponível. Selecione uma regional ativa.');
+    else {
+      const viewer = viewerByBranch.get(branch.id);
+      setEditingContact(viewer?.id ?? `new-${branch.id}`);
+      setContactForm({ branchId: branch.id, ...Object.fromEntries(['contactName', 'contactEmail', 'contactPhone'].map(key => [key, typeof draft[key] === 'string' ? draft[key] : viewer?.[key] ?? ''])) });
+      setMessage(`Dados da resposta carregados para ${branch.name}. Confira os campos e confirme ${viewer ? 'em Salvar contato' : 'em Gerar acesso'}.`);
+    }
+    navigate(location.pathname, { replace: true, state: null });
+  }, [loading, branches, viewerByBranch, location.state, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (editingContact) document.getElementById('responsible-contact-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [editingContact]);
 
   function beginAction(key) {
     setBusy(key);
@@ -133,22 +153,34 @@ export default function BranchViewersPage() {
     setMessage("Usuário e senha copiados.");
   }
 
+  async function removeResponsible(viewer, branch) {
+    if (busy || !window.confirm(`Excluir ${viewer.contactName || viewer.displayName}, responsável por ${branch.name}? O contato e seu acesso serão apagados permanentemente. A regional e seus voluntários serão mantidos.`)) return;
+    beginAction(`delete-${viewer.id}`);
+    try {
+      await deleteBranchViewer(viewer.id);
+      setViewers(current => current.filter(item => item.id !== viewer.id));
+      if (editingContact === viewer.id) cancelContactForm();
+      setPendingReset(''); setBusy('');
+      setMessage('Responsável e acesso excluídos. Você já pode cadastrar outro responsável.');
+    } catch (err) { fail(err, 'Não foi possível excluir o responsável. Tente novamente.'); }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.title}>
-        <div><p>Administração nacional</p><h1>Administradores das filiais</h1></div>
+        <div><p>Administração nacional</p><h1>Administradores das regionais</h1></div>
         <span>{viewers.length} gerado{viewers.length === 1 ? "" : "s"}</span>
       </header>
 
       <section className={styles.intro}>
-        <h2>Um acesso compartilhado por filial</h2>
-        <p>Essas contas podem consultar e imprimir a listagem da própria filial. Elas não podem cadastrar, editar ou apagar dados.</p>
+        <h2>Um acesso compartilhado por regional</h2>
+        <p>Essas contas podem consultar e imprimir a listagem da própria regional. Elas não podem cadastrar, editar ou apagar dados.</p>
         <p>As senhas usam três palavras curtas e dois números, sem dados pessoais e sem caracteres difíceis de digitar.</p>
       </section>
 
       {credentials && (
         <section className={styles.credentials} aria-live="polite">
-          <div><span>Filial</span><strong>{credentials.branchName}</strong></div>
+          <div><span>Regional</span><strong>{credentials.branchName}</strong></div>
           <div><span>Usuário</span><strong>{credentials.username}</strong></div>
           <div><span>Senha temporária</span><strong>{credentials.password}</strong></div>
           <button type="button" onClick={copyCredentials}>Copiar usuário e senha</button>
@@ -160,19 +192,19 @@ export default function BranchViewersPage() {
       {message && <p className={styles.success} role="status">{message}</p>}
 
       <section className={styles.card} aria-labelledby="branches-title">
-        <h2 id="branches-title">Filiais</h2>
-        {loading ? <p aria-busy="true">Carregando...</p> : branches.length === 0 ? <p>Nenhuma filial ativa cadastrada.</p> : (
+        <h2 id="branches-title">Regionais</h2>
+        {loading ? <p aria-busy="true">Carregando...</p> : branches.length === 0 ? <p>Nenhuma regional ativa cadastrada.</p> : (
           <div className={styles.list}>
             {branches.map((branch) => {
               const viewer = viewerByBranch.get(branch.id);
               return (
                 <article className={styles.item} key={branch.id}>
-                  <div className={styles.identity}><h3>{branch.name}</h3><p>{branch.state} · {viewer?.displayName ?? `USUARIO_${branch.state}`}</p>{viewer && <small>Responsável: {viewer.contactName || "Não informado"}<br />{viewer.contactPhone ? formatPhone(viewer.contactPhone) : "Sem telefone"} · {viewer.contactEmail || "Sem e-mail"}</small>}</div>
+                  <div className={styles.identity}><h3>{branch.name}</h3><p>{branch.state} · {viewer?.displayName ?? "usuário será gerado automaticamente"}</p>{viewer && <small>Responsável: {viewer.contactName || "Não informado"}<br />{viewer.contactPhone ? formatPhone(viewer.contactPhone) : "Sem telefone"} · {viewer.contactEmail || "Sem e-mail"}</small>}</div>
                   {!viewer ? (
-                    editingContact === `new-${branch.id}` ? <form className={styles.contactForm} onSubmit={(event) => generateAccess(event, branch)}>
+                    editingContact === `new-${branch.id}` ? <form id="responsible-contact-form" className={styles.contactForm} onSubmit={(event) => generateAccess(event, branch)}>
                       <label>Nome da pessoa responsável<input required minLength="2" maxLength="120" autoComplete="name" value={contactForm.contactName} onChange={(event) => setContactForm({ ...contactForm, contactName: event.target.value })} /></label>
-                      <label>Telefone para contato<input required type="tel" inputMode="tel" autoComplete="tel" value={contactForm.contactPhone} onChange={(event) => setContactForm({ ...contactForm, contactPhone: formatPhone(event.target.value) })} /></label>
-                      <label>E-mail para contato<input required type="email" maxLength="160" autoComplete="email" value={contactForm.contactEmail} onChange={(event) => setContactForm({ ...contactForm, contactEmail: event.target.value })} /></label>
+                      <label>Telefone para contato<ContactInput required type="tel" inputMode="tel" autoComplete="tel" value={contactForm.contactPhone} onChange={(event) => setContactForm({ ...contactForm, contactPhone: formatPhone(event.target.value) })} /></label>
+                      <label>E-mail para contato<ContactInput required type="email" maxLength="160" autoComplete="email" value={contactForm.contactEmail} onChange={(event) => setContactForm({ ...contactForm, contactEmail: event.target.value })} /></label>
                       <div><button type="submit" disabled={Boolean(busy)}>{busy === `create-${branch.id}` ? "Gerando..." : "Gerar acesso"}</button><button type="button" onClick={cancelContactForm}>Cancelar</button></div>
                     </form> : <button type="button" disabled={Boolean(busy)} onClick={() => startContactForm(branch)}>Cadastrar responsável</button>
                   ) : (
@@ -183,10 +215,11 @@ export default function BranchViewersPage() {
                         <div className={styles.confirm}><button type="button" disabled={Boolean(busy)} onClick={() => resetPassword(viewer, branch)}>{busy === `reset-${viewer.id}` ? "Gerando..." : "Confirmar nova senha"}</button><button type="button" onClick={() => setPendingReset("")}>Cancelar</button></div>
                       ) : <button className={styles.secondary} type="button" disabled={Boolean(busy)} onClick={() => setPendingReset(viewer.id)}>Gerar nova senha</button>}
                       <button className={styles.secondary} type="button" disabled={Boolean(busy)} onClick={() => startContactForm(branch, viewer)}>Editar contato</button>
-                      {editingContact === viewer.id && <form className={styles.contactForm} onSubmit={(event) => saveContact(event, viewer)}>
+                      <button type="button" disabled={Boolean(busy)} onClick={() => removeResponsible(viewer, branch)}>Excluir responsável</button>
+                      {editingContact === viewer.id && <form id="responsible-contact-form" className={styles.contactForm} onSubmit={(event) => saveContact(event, viewer)}>
                         <label>Nome da pessoa responsável<input required minLength="2" maxLength="120" value={contactForm.contactName} onChange={(event) => setContactForm({ ...contactForm, contactName: event.target.value })} /></label>
-                        <label>Telefone para contato<input required type="tel" inputMode="tel" value={contactForm.contactPhone} onChange={(event) => setContactForm({ ...contactForm, contactPhone: formatPhone(event.target.value) })} /></label>
-                        <label>E-mail para contato<input required type="email" maxLength="160" value={contactForm.contactEmail} onChange={(event) => setContactForm({ ...contactForm, contactEmail: event.target.value })} /></label>
+                        <label>Telefone para contato<ContactInput required type="tel" inputMode="tel" value={contactForm.contactPhone} onChange={(event) => setContactForm({ ...contactForm, contactPhone: formatPhone(event.target.value) })} /></label>
+                        <label>E-mail para contato<ContactInput required type="email" maxLength="160" value={contactForm.contactEmail} onChange={(event) => setContactForm({ ...contactForm, contactEmail: event.target.value })} /></label>
                         <div><button type="submit" disabled={Boolean(busy)}>Salvar contato</button><button type="button" onClick={cancelContactForm}>Cancelar</button></div>
                       </form>}
                     </>

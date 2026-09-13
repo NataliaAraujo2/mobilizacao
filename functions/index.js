@@ -1,3 +1,4 @@
+import { isValidEmail, isValidPhone } from './contactFields.js';
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
@@ -53,7 +54,7 @@ function generateFriendlyPassword() {
 
 async function getBranch(branchId) {
   const snapshot = await getFirestore().collection("branches").doc(branchId).get();
-  if (!snapshot.exists) throw new HttpsError("not-found", "A filial informada não existe.");
+  if (!snapshot.exists) throw new HttpsError("not-found", "A regional informada não existe.");
   return snapshot;
 }
 
@@ -70,10 +71,10 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   const contactName = requiredText(request.data?.contactName, "contactName", 2, 120);
   const contactEmail = requiredText(request.data?.contactEmail, "contactEmail", 5, 160).toLowerCase();
   const contactPhone = requiredText(request.data?.contactPhone, "contactPhone", 10, 20).replace(/\D/g, "");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+  if (!isValidEmail(contactEmail)) {
     throw new HttpsError("invalid-argument", "E-mail de contato inválido.");
   }
-  if (contactPhone.length < 10 || contactPhone.length > 13) {
+  if (!isValidPhone(contactPhone, 13)) {
     throw new HttpsError("invalid-argument", "Telefone de contato inválido.");
   }
   const branch = await getBranch(branchId);
@@ -84,7 +85,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   const reservedUsernames = new Set();
 
   if ((await db.collection("users").doc(uid).get()).exists) {
-    throw new HttpsError("already-exists", "Esta filial já possui um acesso de consulta.");
+    throw new HttpsError("already-exists", "Esta regional já possui um acesso de consulta.");
   }
 
   // Duas solicitações simultâneas para a mesma UF podem escolher o mesmo
@@ -116,7 +117,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
       // posterior. Conflitos nunca excluem uma conta que já existia.
       if (createdAuthUser) await auth.deleteUser(uid).catch(() => {});
       if (error.code === "auth/uid-already-exists") {
-        throw new HttpsError("already-exists", "Esta filial já possui um acesso de consulta.");
+        throw new HttpsError("already-exists", "Esta regional já possui um acesso de consulta.");
       }
       if (error.code === "auth/email-already-exists") {
         reservedUsernames.add(username);
@@ -132,7 +133,7 @@ export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
   requireSuperAdmin(request);
   const displayName = requiredText(request.data?.displayName, "displayName", 2, 120);
   const email = requiredText(request.data?.email, "email", 5, 160).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpsError("invalid-argument", "E-mail inválido.");
+  if (!isValidEmail(email)) throw new HttpsError("invalid-argument", "E-mail inválido.");
   const password = generateFriendlyPassword();
   const auth = getAuth();
   let created;
@@ -179,15 +180,30 @@ export const updateBranchViewerContact = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   const contactName = requiredText(request.data?.contactName, "contactName", 2, 120);
   const contactEmail = requiredText(request.data?.contactEmail, "contactEmail", 5, 160).toLowerCase();
   const contactPhone = requiredText(request.data?.contactPhone, "contactPhone", 10, 20).replace(/\D/g, "");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) || contactPhone.length < 10 || contactPhone.length > 13) {
+  if (!isValidEmail(contactEmail) || !isValidPhone(contactPhone, 13)) {
     throw new HttpsError("invalid-argument", "Dados de contato inválidos.");
   }
   const profile = await getFirestore().collection("users").doc(uid).get();
   if (!profile.exists || profile.data().role !== VIEWER_ROLE) {
-    throw new HttpsError("not-found", "Acesso da filial não encontrado.");
+    throw new HttpsError("not-found", "Acesso da regional não encontrado.");
   }
   await profile.ref.update({ contactName, contactEmail, contactPhone, updatedAt: FieldValue.serverTimestamp() });
   return { uid, contactName, contactEmail, contactPhone };
+});
+
+export const deleteBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const uid = requiredText(request.data?.uid, 'uid', 1, 128);
+  if (uid.includes('/')) throw new HttpsError('invalid-argument', 'Identificador inválido.');
+  const ref = getFirestore().collection('users').doc(uid);
+  const profile = await ref.get();
+  if (!profile.exists || profile.data().role !== VIEWER_ROLE) throw new HttpsError('not-found', 'Responsável não encontrado.');
+  // Mantém o perfil bloqueado até concluir a remoção no Auth, permitindo repetir falhas parciais.
+  await ref.update({ status: 'blocked', updatedAt: FieldValue.serverTimestamp() });
+  try { await getAuth().deleteUser(uid); }
+  catch (error) { if (error.code !== 'auth/user-not-found') throw new HttpsError('internal', 'Não foi possível excluir o acesso. Tente novamente.'); }
+  await ref.delete();
+  return { ok: true };
 });
 
 export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {

@@ -29,6 +29,8 @@ const FIRESTORE_OPERATORS = {
   orderBy: null,
   limit: null,
   startAfter: null,
+  startAt: null,
+  endAt: null,
   query: null,
   onSnapshot: null,
   serverTimestamp: null,

@@ -6,7 +6,7 @@ Implementação local, sem commit ou deploy. A central fica em `/admin/formulari
 
 - Aplicativo React 19/Vite, React Router, páginas carregadas sob demanda e CSS Modules usando as variáveis de `src/global.css`.
 - Firebase Auth: `AuthProvider`, `RequireAuth` e custom claims `role`/`status`. Os papéis existentes são `superAdmin`, `branchViewer` e `volunteer`. A administração atual pertence a superadministradores ativos.
-- Firestore: serviços carregados sob demanda, regras fechadas por padrão e permissões por papel/filial. O projeto representa uma organização com filiais; não há um modelo de organizações/tenants independentes.
+- Firestore: serviços carregados sob demanda, regras fechadas por padrão e permissões por papel/regional. O projeto representa uma organização com regionais; não há um modelo de organizações/tenants independentes.
 - Cloud Functions callable existentes em `southamerica-east1`, com Admin SDK para operações privilegiadas. O serviço `firebaseFunctions.js` já conecta ao emulador em desenvolvimento.
 - Páginas públicas existentes: campanhas 2025/2026, relatório e contador de associados. Não havia modelos, campanhas de formulários ou convites públicos por token.
 - Destinatários podem ser importados de `volunteers`, usando `listVolunteersPage`, sem consultar documentos pessoais e sem carregar a coleção inteira.

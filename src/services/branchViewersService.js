@@ -31,6 +31,10 @@ export async function createBranchViewer(input) {
   return callFunction("createBranchViewer", input);
 }
 
+export async function deleteBranchViewer(uid) {
+  return callFunction('deleteBranchViewer', { uid });
+}
+
 export async function updateBranchViewerContact(uid, contact) {
   return callFunction("updateBranchViewerContact", { uid, ...contact });
 }

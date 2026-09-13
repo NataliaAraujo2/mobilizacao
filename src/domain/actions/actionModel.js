@@ -27,7 +27,7 @@ export function createAction(input) {
     updatedAt: null,
   };
   if (data.name.length < 3 || data.name.length > 160) throw new Error("Informe o nome da ação.");
-  if (!data.branchId) throw new Error("Selecione uma filial.");
+  if (!data.branchId) throw new Error("Selecione uma regional.");
   if (!data.address.street || !data.address.number || !data.address.city || !isBrazilStateCode(data.address.state)) {
     throw new Error("Preencha logradouro, número, cidade e estado.");
   }

@@ -21,6 +21,7 @@ export async function getAuthService() {
     updateEmail,
     setPersistence,
     browserLocalPersistence,
+    browserSessionPersistence,
     connectAuthEmulator,
     getIdTokenResult,
   } = await import("firebase/auth");
@@ -51,6 +52,9 @@ export async function getAuthService() {
     sendPasswordResetEmail,
     updatePassword,
     updateEmail,
+    setPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence,
     getIdTokenResult,
   });
 

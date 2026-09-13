@@ -9,6 +9,7 @@ import { listBranchContactsPage } from '../services/branchViewersService';
 import { generalWhatsappMessage, LIMITS, STATUSES, validateDefinition, validateRecipients, whatsappMessage, whatsappUrl } from '../../functions/formDomain';
 import styles from '../components/LinkForms/LinkForms.module.css';
 import NoticePoster from '../components/LinkForms/NoticePoster';
+import ResponsibleImport from '../components/LinkForms/ResponsibleImport';
 
 const localDate = days => { const d = new Date(Date.now() + days * 86400000); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
 
@@ -19,9 +20,9 @@ function RecipientImport({ onAdd, run }) {
   async function load(cursor = null) { await run(async () => setResult(await (branches ? listBranchContactsPage({ search, cursor }) : listVolunteersPage({ search, cursor, pageSize: 25 })))); }
   return <section className={styles.card}>
     <h3>Adicionar pessoas cadastradas</h3><p>Escolha uma lista para encontrar os destinatários da campanha.</p>
-    <label>Buscar em<select value={source} onChange={e => { setSource(e.target.value); setSearch(''); setResult(null); }}><option value="branches">Responsáveis das filiais</option><option value="volunteers">Voluntários</option></select></label>
+    <label>Buscar em<select value={source} onChange={e => { setSource(e.target.value); setSearch(''); setResult(null); }}><option value="branches">Responsáveis das regionais</option><option value="volunteers">Voluntários</option></select></label>
     <label>{branches ? 'Nome do responsável' : 'Nome do voluntário'}<input value={search} onChange={e => { setSearch(e.target.value); setResult(null); }} placeholder="Digite o início do nome ou deixe vazio" /></label>
-    <p>Busca pelo início do nome, respeitando maiúsculas e minúsculas.{branches && ' Os contatos vêm do cadastro de acessos das filiais.'}</p>
+    <p>Busca pelo início do nome, respeitando maiúsculas e minúsculas.{branches && ' Os contatos vêm do cadastro de acessos das regionais.'}</p>
     <button type="button" onClick={() => load()}>{branches ? 'Buscar responsáveis' : 'Buscar voluntários'}</button>
     {result && <><p>{result.data.length ? 'Adicione as pessoas que devem receber o formulário.' : 'Nenhuma pessoa encontrada nesta busca.'}</p>{result.data.map(v => <div className={styles.recipientRow} key={v.id}><span><strong>{v.fullName}</strong><small>{v.branchLabel ? `${v.branchLabel} · ` : ''}{v.phone || 'Sem telefone'}</small></span><button type="button" onClick={() => onAdd(v)}>Adicionar {v.fullName}</button></div>)}{result.hasMore && <button type="button" onClick={() => load(result.cursor)}>Próximas 25 pessoas</button>}</>}
   </section>;
@@ -56,7 +57,7 @@ function CampaignDetail({ initial, run, onClose }) {
       {!page.items.length && <p className={styles.notice}>Nenhuma solicitação neste filtro.</p>}
       {page.items.map(r => {
         const link = formLink(r.token); const message = campaign.mode === 'general' ? generalWhatsappMessage(campaign.title, campaign.description, link) : whatsappMessage(r.name, campaign.formTitle, link, campaign.whatsappMessage); const whatsapp = whatsappUrl(r.phone, message);
-        return <article className={styles.card} key={r.id}><h3>{r.name}</h3>{r.branchName && <p>Filial: {r.branchName}</p>}<p>{r.phone || 'Sem telefone'} · <span className={styles.badge}>{r.status}</span></p>
+        return <article className={styles.card} key={r.id}><h3>{r.name}</h3>{r.branchName && <p>Regional: {r.branchName}</p>}<p>{r.phone || 'Sem telefone'} · <span className={styles.badge}>{r.status}</span></p>
           <div className={styles.toolbar}>
             {whatsapp && r.status === 'PENDENTE' && !campaign.archived ? <a className={styles.buttonLink} href={whatsapp} target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a> : <button disabled>Abrir WhatsApp{!r.phone ? ' (sem telefone)' : ''}</button>}
             <button onClick={() => copy(message)}>Copiar mensagem</button><button onClick={() => copy(link)}>Copiar link</button>
@@ -65,6 +66,7 @@ function CampaignDetail({ initial, run, onClose }) {
             {!r.archived && r.status !== 'PENDENTE' && <button onClick={() => change(r, 'ARCHIVE')}>Arquivar</button>}
           </div>
           {review?.request.id === r.id && <section aria-label={`Resposta de ${r.name}`}><h3>Resposta de {r.name}</h3><p>Recebida em {new Date(review.response.submittedAt).toLocaleString('pt-BR')}</p><FormFields definition={campaign.definition} answers={review.response.answers} readOnly />
+            <ResponsibleImport key={r.id} definition={campaign.definition} response={review.response} request={r} />
             <div className={styles.toolbar}>{['RESPONDIDA', 'APROVADA', 'REJEITADA'].includes(r.status) && <><button onClick={() => change(r, 'APROVADA')}>Aprovar</button><button onClick={() => change(r, 'REJEITADA')}>Rejeitar</button></>}<button onClick={() => setReview(null)}>Fechar resposta</button></div></section>}
         </article>;
       })}
@@ -115,7 +117,7 @@ export default function LinkFormsPage() {
           <FormBuilder value={definition} onChange={setDefinition} />
           <div className={styles.toolbar}><button onClick={() => run(async () => { const result = await manageForms('saveTemplate', { id: templateId, definition: validateDefinition(definition) }); setTemplateId(result.id); }, 'Modelo salvo. Campanhas já enviadas permanecem com a versão original.')}>{templateId ? 'Salvar alterações no modelo' : 'Salvar como modelo'}</button>{templateId && <button onClick={() => run(async () => { const result = await manageForms('saveTemplate', { definition: validateDefinition(definition) }); setTemplateId(result.id); }, 'Cópia do modelo salva.')}>Salvar como novo modelo</button>}</div>
           <section className={styles.card}><h2>Gerar campanha</h2><label>Título da campanha<input maxLength={160} value={title} onChange={e => setTitle(e.target.value)} placeholder={definition.title} /></label><label>Descrição da campanha<textarea maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} /></label><label>Mensagem adicional para links individuais (opcional)<textarea maxLength={3000} value={whatsappMessageText} onChange={e => setWhatsappMessageText(e.target.value)} placeholder="Deixe vazio para usar a saudação padrão com o nome do destinatário." /></label><p className={styles.help}>No link geral, o texto copiado usa automaticamente o título e a descrição da campanha.</p><label>Prazo de validade<input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} /></label><button onClick={() => setExpiresAt(localDate(definition.validityDays))}>Usar validade padrão do formulário</button><label>Tipo de link<select value={mode} onChange={e => setMode(e.target.value)}><option value="individual">Um link por destinatário</option><option value="general">Um link geral compartilhável</option></select></label>
-            {mode === 'general' && <label className={styles.check}><input type="checkbox" checked={collectBranch} onChange={e => setCollectBranch(e.target.checked)} />Pedir nome e filial ao abrir o link geral</label>}
+            {mode === 'general' && <label className={styles.check}><input type="checkbox" checked={collectBranch} onChange={e => setCollectBranch(e.target.checked)} />Pedir nome e regional ao abrir o link geral</label>}
             {mode === 'individual' ? <><label>Destinatários — um por linha: Nome; telefone (opcional)<textarea rows={6} maxLength={33000} value={recipients} onChange={e => setRecipients(e.target.value)} placeholder={'Maria; 11999999999\nJoão'} /></label><p>{recipients.split('\n').filter(l => l.trim()).length}/{LIMITS.recipients} destinatários</p></> : <p>Compartilhe o mesmo endereço. Cada participante informa o nome e recebe uma solicitação própria. Limite: {LIMITS.recipients} participantes.</p>}
           </section>
           {mode === 'individual' && <RecipientImport run={run} onAdd={v => { const lines = recipients.split('\n').filter(l => l.trim()); if (lines.length >= LIMITS.recipients) { setError(`Limite de ${LIMITS.recipients} destinatários.`); return; } const line = `${v.fullName.replaceAll(';', ',')}; ${v.phone || ''}`; if (!lines.includes(line)) setRecipients([...lines, line].join('\n')); }} />}

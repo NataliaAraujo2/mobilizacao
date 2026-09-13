@@ -202,7 +202,7 @@ service cloud.firestore {
 
     match /volunteerPrivate/{volunteerId} {
       // CPF, RG e nascimento nunca são expostos pela conta compartilhada da
-      // filial. A consulta é restrita ao administrador nacional ou ao próprio
+      // regional. A consulta é restrita ao administrador nacional ou ao próprio
       // voluntário autenticado.
       allow get: if isSuperAdmin()
         || (hasRole('volunteer') && request.auth.uid == volunteerId);

@@ -1,4 +1,5 @@
 import { getDbService } from "./firebaseDb";
+import { getFunctionsService } from "./firebaseFunctions";
 import { getStorageService } from "./firebaseStorage";
 
 const REPORT_YEAR = "2025";
@@ -21,7 +22,12 @@ export async function getPublicReportUrl(report) {
   return version ? `${url}${url.includes("?") ? "&" : "?"}v=${version}` : url;
 }
 
-export async function publishReport2025(file, userId, onProgress) {
+export async function finalizePublicReport2025() {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, "publishPublicReport2025")()).data;
+}
+
+export async function publishReport2025(file, onProgress) {
   if (!(file instanceof File) || file.type !== "application/pdf") {
     throw new Error("Selecione um arquivo PDF.");
   }
@@ -33,21 +39,12 @@ export async function publishReport2025(file, userId, onProgress) {
   const upload = uploadBytesResumable(ref(storage, REPORT_PATH), file, {
     contentType: "application/pdf",
     cacheControl: "public, max-age=3600",
+    customMetadata: { originalFileName: file.name },
   });
 
   await new Promise((resolve, reject) => upload.on("state_changed", (snapshot) => {
     onProgress?.(snapshot.bytesTransferred, snapshot.totalBytes);
   }, reject, resolve));
 
-  const { db, doc, serverTimestamp, setDoc } = await getDbService([
-    "doc", "serverTimestamp", "setDoc",
-  ]);
-  await setDoc(doc(db, "publicReports", REPORT_YEAR), {
-    year: REPORT_YEAR,
-    path: REPORT_PATH,
-    fileName: file.name,
-    size: file.size,
-    publishedAt: serverTimestamp(),
-    publishedBy: userId,
-  });
+  return finalizePublicReport2025();
 }
