@@ -16,8 +16,8 @@ service firebase.storage {
 
     function validImage() {
       return request.resource != null
-        && request.resource.size <= 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType == 'image/webp';
     }
 
     function validPublicReport() {
@@ -41,7 +41,10 @@ service firebase.storage {
 
     match /branches/{branchId}/actions/{actionId}/{phase}/{fileName} {
       allow read: if isSuperAdmin() || belongsToBranch(branchId);
-      allow create, update: if isSuperAdmin() && validImage();
+      allow create, update: if isSuperAdmin()
+        && phase in ['before', 'during', 'after']
+        && fileName.matches('^[-a-zA-Z0-9_]+\\.webp$')
+        && validImage();
       allow delete: if isSuperAdmin();
     }
 
