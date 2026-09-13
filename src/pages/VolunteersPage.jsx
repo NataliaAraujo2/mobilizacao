@@ -35,6 +35,7 @@ export default function VolunteersPage() {
   const [expandedId, setExpandedId] = useState("");
   const [showFullCpf, setShowFullCpf] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -90,6 +91,7 @@ export default function VolunteersPage() {
     const branch = branches.find(item => item.id === draft.branchId);
     if (!branch) setError('A regional da resposta não está disponível. Selecione uma regional ativa.');
     else {
+      setShowForm(true);
       setEditingId('');
       setForm({
         ...EMPTY_FORM,
@@ -108,7 +110,8 @@ export default function VolunteersPage() {
   }, [branches, location.pathname, location.state, navigate]);
 
   function resetForm() {
-    setEditingId("");
+      setEditingId("");
+      setShowForm(true);
     setForm(EMPTY_FORM);
     setActionBranchId(ownBranchId);
   }
@@ -174,6 +177,7 @@ export default function VolunteersPage() {
       setActionCatalog(catalog => ({ ...catalog, ...Object.fromEntries(selectedActions.map(item => [item.id, item])) }));
       setPrivateData((current) => ({ ...current, [volunteer.id]: documents }));
       setEditingId(volunteer.id);
+      setShowForm(true);
       setForm({
         fullName: volunteer.fullName, email: volunteer.email, phone: formatPhone(volunteer.phone),
         cpf: formatCpf(documents.cpf), rg: documents.rg, birthDate: documents.birthDate,
@@ -240,8 +244,9 @@ export default function VolunteersPage() {
         <span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>
       </header>
 
-      <section className={styles.card} aria-labelledby="volunteer-form-title">
-        <h2 id="volunteer-form-title">{editingId ? "Editar voluntário" : "Cadastrar voluntário"}</h2>
+      {!showForm && <button className={styles.formToggle} type="button" onClick={() => setShowForm(true)}>Cadastrar voluntário manualmente</button>}
+      {showForm && <section className={styles.card} aria-labelledby="volunteer-form-title">
+        <div className={styles.sectionHeading}><h2 id="volunteer-form-title">{editingId ? "Editar voluntário" : "Cadastrar voluntário"}</h2>{!editingId && <button className={styles.secondary} type="button" onClick={() => { resetForm(); setShowForm(false); }}>Recolher</button>}</div>
         <p className={styles.privacy}>CPF, RG e nascimento ficam em uma área protegida e não aparecem nas consultas comuns.</p>
         <form onSubmit={handleSubmit}>
           <label className={styles.wide}>Nome completo<input required minLength="2" maxLength="120" autoComplete="name" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
@@ -261,7 +266,7 @@ export default function VolunteersPage() {
         {error && <p className={styles.error} role="alert">{error}</p>}
         {message && <p className={styles.success} role="status">{message}</p>}
         {credentials && <div className={styles.credentials} role="status"><strong>Credenciais de {credentials.fullName}</strong><span>Usuário: <code>{credentials.username}</code></span><span>Senha inicial: <code>{credentials.password}</code></span><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar credenciais</button><small>A senha não será exibida novamente.</small></div>}
-      </section>
+      </section>}
 
       {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido para impressão</h2><p>CPF e RG são carregados somente ao preparar este relatório. Escolha uma regional para localizar a ação.</p><form onSubmit={prepareReport}><label>Regional da ação<select required value={reportFilter.branchId} onChange={event => { setReportFilter({ branchId: event.target.value, actionId: '' }); setReportReady(false); }}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select required value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="">Selecione</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Preparar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários por regional e ação</h2><p>Regional: {branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportActions.find(action => action.id === reportFilter.actionId)?.name}</p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
 
