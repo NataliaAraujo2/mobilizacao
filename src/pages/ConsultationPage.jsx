@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../auth/useAuth";
+import { Link } from 'react-router-dom';
 import { getBranch } from "../services/branchesService";
 import { listVolunteersPage } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
@@ -66,6 +67,7 @@ export default function ConsultationPage() {
         <ListSearch placeholder="Nome do voluntário" initialValue={search} disabled={preparingPrint} onSearch={value => { if (!preparingRef.current) setSearch(value); }} />
         <button type="button" disabled={loading || loadingVolunteers || preparingPrint || !!listError || volunteers.length === 0} onClick={() => window.print()}>Imprimir carregados ({volunteers.length})</button>
         <button type="button" disabled={loading || loadingVolunteers || preparingPrint || !!listError || volunteers.length === 0} onClick={printAll}>{preparingPrint ? "Carregando para impressão…" : "Carregar todos e imprimir"}</button>
+        <Link to="/presencas">Abrir lista de presença</Link>
       </section>
 
       <p className={styles.safety}>Esta conta consulta somente nome e meios de contato. CPF, RG e nascimento ficam protegidos e não são exibidos ou impressos.</p>

@@ -5,10 +5,16 @@ export const ACTION_PHASES = Object.freeze({ before: "Antes", during: "Durante",
 
 export function createAction(input) {
   const address = input.address ?? {};
+  const date = String(input.date ?? '').trim();
+  const dateStart = /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Date(`${date}T00:00:00-03:00`) : null;
+  const dateEnd = dateStart ? new Date(dateStart.getTime() + 24 * 60 * 60 * 1000) : null;
   const data = {
     name: String(input.name ?? "").trim(),
     nameSearch: normalizeSearchText(input.name),
     branchId: String(input.branchId ?? "").trim(),
+    date,
+    dateStart,
+    dateEnd,
     status: input.status ?? "planning",
     address: {
       cep: String(address.cep ?? "").replace(/\D/g, ""),
@@ -30,6 +36,7 @@ export function createAction(input) {
   };
   if (data.name.length < 3 || data.name.length > 160) throw new Error("Informe o nome da ação.");
   if (!data.branchId) throw new Error("Selecione uma regional.");
+  if (!dateStart || Number.isNaN(dateStart.getTime())) throw new Error('Informe a data da ação.');
   if (!data.address.street || !data.address.number || !data.address.city || !isBrazilStateCode(data.address.state)) {
     throw new Error("Preencha logradouro, número, cidade e estado.");
   }

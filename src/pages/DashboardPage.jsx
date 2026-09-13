@@ -11,6 +11,7 @@ const ADMIN_ACTIONS = [
   { to: "/admin/relatorio-2025", code: "PDF", title: "Relatório 2025", description: "Arquive a versão comprimida para leitura e impressão pública." },
   { to: "/admin/acoes", code: "AC", title: "Ações", description: "Cadastre locais, orientações, fotos e informações de cada mobilização.", featured: true },
   { to: "/admin/voluntarios", code: "VO", title: "Voluntários", description: "Cadastre e organize os dados das pessoas participantes." },
+  { to: "/admin/presencas", code: "✓", title: "Listas de presença", description: "Consulte presenças e ausências por regional e ação." },
   { to: "/admin/regionais", code: "RE", title: "Regionais", description: "Gerencie as regionais e seus estados de atuação." },
   { to: "/admin/acessos-consulta", code: "PE", title: "Acessos das regionais", description: "Crie e acompanhe os acessos de consulta de cada regional." },
   { to: "/admin/superadmins", code: "SA", title: "SuperAdmins", description: "Autorize novos administradores nacionais." },

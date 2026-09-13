@@ -79,8 +79,8 @@ service cloud.firestore {
     }
 
     function validVolunteer(data) {
-      return data.keys().hasAll(['fullName', 'fullNameSearch', 'email', 'phone', 'branchId', 'status', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['fullName', 'fullNameSearch', 'email', 'phone', 'branchId', 'status', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['fullName', 'fullNameSearch', 'email', 'phone', 'actionIds', 'regionalIds', 'participationDates', 'status', 'accessStatus', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['fullName', 'fullNameSearch', 'email', 'phone', 'actionIds', 'regionalIds', 'participationDates', 'status', 'accessStatus', 'createdAt', 'updatedAt'])
         && data.fullName is string
         && data.fullName.size() >= 2
         && data.fullName.size() <= 120
@@ -91,17 +91,22 @@ service cloud.firestore {
         && data.email.size() <= 160
         && data.phone is string
         && data.phone.size() <= 20
-        && data.branchId is string
-        && data.branchId.size() > 0
+        && data.actionIds is list
+        && data.actionIds.size() >= 1
+        && data.actionIds.size() <= 20
+        && data.regionalIds is list
+        && data.regionalIds.size() >= 1
+        && data.regionalIds.size() <= 20
+        && data.participationDates is list
+        && data.participationDates.size() == data.actionIds.size()
+        && data.accessStatus in ['none', 'active', 'blocked']
         && data.status in ['pending', 'active', 'blocked'];
     }
 
     function validVolunteerPrivate(data, volunteerId) {
-      return data.keys().hasAll(['volunteerId', 'branchId', 'cpf', 'rg', 'birthDate', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['volunteerId', 'branchId', 'cpf', 'rg', 'birthDate', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['volunteerId', 'cpf', 'rg', 'birthDate', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['volunteerId', 'cpf', 'rg', 'birthDate', 'createdAt', 'updatedAt'])
         && data.volunteerId == volunteerId
-        && data.branchId is string
-        && data.branchId.size() > 0
         && data.cpf is string
         && data.cpf.matches('^[0-9]{11}$')
         && data.rg is string
@@ -112,8 +117,8 @@ service cloud.firestore {
     }
 
     function validAction(data) {
-      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
         && data.name is string
         && data.name.size() >= 3
         && data.name.size() <= 160
@@ -122,6 +127,11 @@ service cloud.firestore {
         && data.nameSearch.size() <= 160
         && data.branchId is string
         && data.branchId.size() > 0
+        && data.date is string
+        && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.dateStart is timestamp
+        && data.dateEnd is timestamp
+        && data.dateStart < data.dateEnd
         && data.status in ['planning', 'ongoing', 'completed']
         && data.whatToBring is string
         && data.whatToBring.size() <= 5000
@@ -148,6 +158,31 @@ service cloud.firestore {
         && data.address.state is string
         && isBrazilState(data.address.state)
         && data.address.source in ['cep', 'manual'];
+    }
+
+    function validAttendance(data, attendanceId) {
+      return data.keys().hasAll(['actionId', 'branchId', 'volunteerId', 'present', 'updatedAt'])
+        && data.keys().hasOnly(['actionId', 'branchId', 'volunteerId', 'present', 'updatedAt'])
+        && data.actionId is string && data.actionId.size() > 0
+        && data.branchId is string && data.branchId.size() > 0
+        && data.volunteerId is string && data.volunteerId.size() > 0
+        && data.present == true
+        && attendanceId == data.actionId + '_' + data.volunteerId;
+    }
+
+    function validAttendanceSession(data, actionId) {
+      return data.keys().hasAll(['actionId', 'branchId', 'startedAt'])
+        && data.keys().hasOnly(['actionId', 'branchId', 'startedAt'])
+        && data.actionId == actionId
+        && data.branchId is string && data.branchId.size() > 0;
+    }
+
+    function regionalCanManageAttendance(actionId, branchId) {
+      let action = get(/databases/$(database)/documents/actions/$(actionId)).data;
+      return belongsToBranch(branchId)
+        && action.branchId == branchId
+        && request.time >= action.dateStart
+        && request.time < action.dateEnd;
     }
 
     function validAssociationStats(data) {
@@ -194,16 +229,15 @@ service cloud.firestore {
 
     match /volunteers/{volunteerId} {
       allow get: if isSuperAdmin()
-        || (isBranchViewer() && resource.data.branchId == request.auth.token.branchId)
+        || (isBranchViewer() && resource.data.regionalIds.hasAny([request.auth.token.branchId]))
         || (hasRole('volunteer') && request.auth.uid == volunteerId);
 
       allow list: if isSuperAdmin()
-        || (isBranchViewer() && resource.data.branchId == request.auth.token.branchId);
+        || (isBranchViewer() && resource.data.regionalIds.hasAny([request.auth.token.branchId]));
 
       allow create: if isSuperAdmin() && validVolunteer(request.resource.data);
 
       allow update: if validVolunteer(request.resource.data)
-        && request.resource.data.branchId == resource.data.branchId
         && isSuperAdmin();
 
       allow delete: if isSuperAdmin();
@@ -221,19 +255,45 @@ service cloud.firestore {
       allow create: if isSuperAdmin() && validVolunteerPrivate(request.resource.data, volunteerId);
 
       allow update: if validVolunteerPrivate(request.resource.data, volunteerId)
-        && request.resource.data.branchId == resource.data.branchId
         && isSuperAdmin();
 
       allow delete: if isSuperAdmin();
     }
 
     match /actions/{actionId} {
-      allow get, list: if isSuperAdmin() || belongsToBranch(resource.data.branchId);
+      allow get: if isSuperAdmin() || belongsToBranch(resource.data.branchId)
+        || (hasRole('volunteer') && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.actionIds.hasAny([actionId]));
+      allow list: if isSuperAdmin() || belongsToBranch(resource.data.branchId);
       allow create: if isSuperAdmin() && validAction(request.resource.data);
       allow update: if isSuperAdmin()
         && request.resource.data.branchId == resource.data.branchId
         && validAction(request.resource.data);
       allow delete: if isSuperAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow get: if isSuperAdmin() || belongsToBranch(resource.data.branchId)
+        || (hasRole('volunteer') && resource.data.volunteerId == request.auth.uid);
+      allow list: if isSuperAdmin() || belongsToBranch(resource.data.branchId);
+      allow create: if validAttendance(request.resource.data, attendanceId)
+        && (isSuperAdmin() || (regionalCanManageAttendance(request.resource.data.actionId, request.resource.data.branchId)
+          && get(/databases/$(database)/documents/volunteers/$(request.resource.data.volunteerId)).data.actionIds.hasAny([request.resource.data.actionId])
+          && get(/databases/$(database)/documents/volunteers/$(request.resource.data.volunteerId)).data.regionalIds.hasAny([request.resource.data.branchId])));
+      allow update: if validAttendance(request.resource.data, attendanceId)
+        && request.resource.data.actionId == resource.data.actionId
+        && request.resource.data.branchId == resource.data.branchId
+        && request.resource.data.volunteerId == resource.data.volunteerId
+        && (isSuperAdmin() || regionalCanManageAttendance(resource.data.actionId, resource.data.branchId));
+      allow delete: if isSuperAdmin() || regionalCanManageAttendance(resource.data.actionId, resource.data.branchId);
+    }
+
+    match /attendanceSessions/{actionId} {
+      allow get: if isSuperAdmin() || belongsToBranch(resource.data.branchId)
+        || (hasRole('volunteer') && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.actionIds.hasAny([actionId]));
+      allow list: if isSuperAdmin() || belongsToBranch(resource.data.branchId);
+      allow create, update: if validAttendanceSession(request.resource.data, actionId)
+        && (isSuperAdmin() || regionalCanManageAttendance(actionId, request.resource.data.branchId));
+      allow delete: if false;
     }
 
     match /publicStats/{statId} {

@@ -48,6 +48,14 @@
   // ]
   "indexes": [
     {
+      "collectionGroup": "actions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "nameSearch", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
@@ -68,7 +76,7 @@
       "collectionGroup": "volunteers",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "regionalIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "fullNameSearch", "order": "ASCENDING" }
       ]
     },
@@ -76,7 +84,16 @@
       "collectionGroup": "volunteers",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "branchId", "order": "ASCENDING" },
+        { "fieldPath": "regionalIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "fullNameSearch", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "volunteers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "actionIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "fullNameSearch", "order": "ASCENDING" }
       ]

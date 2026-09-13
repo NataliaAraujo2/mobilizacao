@@ -1,0 +1,14 @@
+.panel { width: 100%; margin-top: 1rem; padding: 1rem; background: white; border: 1px solid var(--border); border-radius: 1rem; }
+.actions { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.actions article { padding: 1rem; background: #f5f8fa; border-radius: .75rem; }
+.actions h4 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.actions p { margin: .35rem 0; }
+.panel button { min-height: 2.7rem; padding: .55rem .8rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
+.signup { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.signup form { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+.signup label { display: grid; gap: .3rem; font-weight: 750; }
+.signup input { min-height: 2.8rem; padding: .6rem; font: inherit; border: 1px solid var(--border); border-radius: .55rem; }
+.signup form > button { grid-column: 1 / -1; }
+.error { color: #a22b2b; font-weight: 750; }
+@media (max-width: 600px) { .signup form { grid-template-columns: 1fr; } .signup form > button { grid-column: 1; } }

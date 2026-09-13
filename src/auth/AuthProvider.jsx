@@ -8,11 +8,6 @@ export default function AuthProvider({ children }) {
   const [session, setSession] = useState({ user: null, claims: null, loading: true });
 
   useEffect(() => {
-    const needsAuth = pathname === "/login" || pathname.startsWith("/admin") || pathname.startsWith("/consulta") || pathname.startsWith("/voluntario");
-    if (!needsAuth) {
-      setSession({ user: null, claims: null, loading: false });
-      return undefined;
-    }
     let active = true;
     let unsubscribe = () => {};
 

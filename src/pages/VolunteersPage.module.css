@@ -12,6 +12,16 @@
 .card input, .card select { width: 100%; min-height: 3rem; padding: .7rem .75rem; color: var(--text); background: white; border: 1px solid #a9bbb5; border-radius: .65rem; font: inherit; }
 .card input:focus, .card select:focus { outline: 3px solid color-mix(in srgb, var(--focus) 60%, transparent); border-color: var(--map-state); }
 .wide { grid-column: 1 / -1; }
+.actionChoices { grid-column: 1 / -1; display: grid; gap: .55rem; padding: 1rem; border: 1px solid var(--border); border-radius: .7rem; }
+.actionChoices legend { padding: 0 .35rem; font-weight: 800; }
+.actionChoices label { display: flex; grid-template-columns: none; align-items: center; gap: .55rem; }
+.actionChoices input { width: 1.2rem; min-height: 1.2rem; }
+.actionChoices p { margin: 0; color: var(--text-muted); }
+.report { margin-top: 1.5rem; overflow-x: auto; }
+.report table { width: 100%; border-collapse: collapse; }
+.report th, .report td { padding: .6rem; text-align: left; border: 1px solid var(--border); }
+.report header { margin-bottom: 1rem; }
+.report header h2, .report header p { margin: .2rem 0; }
 .formActions, .actions { display: flex; flex-wrap: wrap; gap: .6rem; }
 .formActions { grid-column: 1 / -1; margin-top: .25rem; }
 .primary, .secondary, .actions button, .textButton { min-height: 2.8rem; padding: .65rem .9rem; font-weight: 800; border-radius: .6rem; cursor: pointer; }
@@ -20,6 +30,9 @@
 .card button:disabled { cursor: not-allowed; opacity: .55; }
 .error { color: #a22b2b; font-weight: 700; }
 .success { color: var(--brand-green); font-weight: 700; }
+.credentials { display: grid; gap: .45rem; margin-top: 1rem; padding: 1rem; color: #17334a; background: #edf6ff; border: 1px solid #a9cdea; border-radius: .75rem; }
+.credentials code { user-select: all; font-size: 1rem; }
+.credentials button { justify-self: start; min-height: 2.5rem; padding: .5rem .75rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
 .list { display: grid; gap: .9rem; }
 .loadMore { display: block; width: min(100%, 20rem); min-height: 2.8rem; margin: 1.25rem auto 0; padding: .65rem .9rem; color: var(--map-state); background: white; border: 1px solid var(--border); border-radius: .6rem; font: inherit; font-weight: 800; cursor: pointer; }
 .loadMore:disabled { cursor: wait; }
@@ -48,4 +61,10 @@
   .formActions button, .actions button, .textButton { width: 100%; min-height: 3.1rem; }
   .listError { align-items: stretch; flex-direction: column; }
   .listError button { width: 100%; min-height: 3.1rem; }
+}
+@media print {
+  body * { visibility: hidden; }
+  .report, .report * { visibility: visible; }
+  .report { position: absolute; inset: 0; margin: 0; color: #000; overflow: visible; }
+  .report table { font-size: 10pt; }
 }

@@ -45,6 +45,19 @@ export async function listActionsPage({ search = "", cursor = null, pageSize = 2
   };
 }
 
+export async function listActionsByBranch(branchId) {
+  const { db, collection, getDocs, orderBy, query, where } = await getDbService(['collection', 'getDocs', 'orderBy', 'query', 'where']);
+  const snapshot = await getDocs(query(collection(db, 'actions'), where('branchId', '==', branchId), orderBy('nameSearch')));
+  return snapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+}
+
+export async function getActionsByIds(ids = []) {
+  const uniqueIds = [...new Set(ids)].filter(Boolean).slice(0, 20);
+  const { db, doc, getDoc } = await getDbService(['doc', 'getDoc']);
+  const snapshots = await Promise.all(uniqueIds.map(id => getDoc(doc(db, 'actions', id))));
+  return snapshots.filter(item => item.exists()).map(item => ({ id: item.id, ...item.data() }));
+}
+
 export async function uploadActionPhotos(action, phase, files, onProgress) {
   const field = { before: "photosBefore", during: "photosDuring", after: "photosAfter" }[phase];
   if (!field) throw new Error("Etapa das fotos inválida.");

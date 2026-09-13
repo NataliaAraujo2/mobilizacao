@@ -7,7 +7,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
 import { ref, uploadBytes } from "firebase/storage";
 
 const PROJECT_ID = "campanha-mobilizacao-dev";
@@ -37,15 +37,17 @@ const volunteer = (branchId = "sp") => ({
   fullNameSearch: "maria da silva",
   email: "maria@example.test",
   phone: "11999999999",
-  branchId,
+  actionIds: [`action-${branchId}`],
+  regionalIds: [branchId],
+  participationDates: ["2026-09-13"],
   status: "active",
+  accessStatus: "none",
   createdAt: null,
   updatedAt: null,
 });
 
-const volunteerPrivate = (volunteerId, branchId = "sp") => ({
+const volunteerPrivate = (volunteerId) => ({
   volunteerId,
-  branchId,
   cpf: "52998224725",
   rg: "123456789",
   birthDate: "1950-05-20",
@@ -57,6 +59,9 @@ const action = (branchId = "sp") => ({
   name: "Mutirão da Praça",
   nameSearch: "mutirao da praca",
   branchId,
+  date: "2026-09-13",
+  dateStart: Timestamp.fromDate(new Date("2026-09-13T00:00:00-03:00")),
+  dateEnd: Timestamp.fromDate(new Date("2026-09-14T00:00:00-03:00")),
   status: "planning",
   address: { cep: "01001000", street: "Praça da Sé", number: "1", complement: "", neighborhood: "Sé", city: "São Paulo", state: "SP", source: "cep" },
   whatToBring: "Luvas e água",
@@ -202,6 +207,23 @@ test("superAdmin cadastra ação e conta compartilhada apenas consulta a própri
   await assertFails(getDoc(doc(viewerDb, "actions", "action-rj")));
 });
 
+test("responsável regional registra presença somente em ação e voluntário da própria regional", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "actions", "action-sp"), action("sp"));
+    await setDoc(doc(db, "actions", "action-rj"), action("rj"));
+    await setDoc(doc(db, "volunteers", "volunteer-sp"), volunteer("sp"));
+    await setDoc(doc(db, "volunteers", "volunteer-rj"), volunteer("rj"));
+  });
+  const db = auth("viewer-sp", "branchViewer", "sp").firestore();
+  const ownAttendance = { actionId: "action-sp", branchId: "sp", volunteerId: "volunteer-sp", present: true, updatedAt: null };
+  await assertSucceeds(setDoc(doc(db, "attendance", "action-sp_volunteer-sp"), ownAttendance));
+  await assertSucceeds(getDocs(query(collection(db, "attendance"), where("actionId", "==", "action-sp"), where("branchId", "==", "sp"))));
+  await assertSucceeds(deleteDoc(doc(db, "attendance", "action-sp_volunteer-sp")));
+  await assertFails(setDoc(doc(db, "attendance", "action-rj_volunteer-rj"), { ...ownAttendance, actionId: "action-rj", branchId: "rj", volunteerId: "volunteer-rj" }));
+  await assertFails(setDoc(doc(db, "attendance", "action-sp_volunteer-rj"), { ...ownAttendance, volunteerId: "volunteer-rj" }));
+});
+
 test("consulta da regional precisa filtrar e paginar somente documentos da própria regional", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-1"), { ...volunteer("sp"), fullName: "Ana Silva", fullNameSearch: "ana silva" });
@@ -209,9 +231,9 @@ test("consulta da regional precisa filtrar e paginar somente documentos da próp
     await setDoc(doc(context.firestore(), "volunteers", "volunteer-rj-1"), { ...volunteer("rj"), fullName: "Carla Lima", fullNameSearch: "carla lima" });
   });
   const db = auth("viewer-sp", "branchViewer", "sp").firestore();
-  await assertSucceeds(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "sp"), orderBy("fullNameSearch"), limit(1))));
+  await assertSucceeds(getDocs(query(collection(db, "volunteers"), where("regionalIds", "array-contains", "sp"), orderBy("fullNameSearch"), limit(1))));
   await assertFails(getDocs(query(collection(db, "volunteers"), orderBy("fullNameSearch"), limit(25))));
-  await assertFails(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "rj"), orderBy("fullNameSearch"), limit(25))));
+  await assertFails(getDocs(query(collection(db, "volunteers"), where("regionalIds", "array-contains", "rj"), orderBy("fullNameSearch"), limit(25))));
 });
 
 test("contador de associados é público, mas não permite listar outros dados", async () => {

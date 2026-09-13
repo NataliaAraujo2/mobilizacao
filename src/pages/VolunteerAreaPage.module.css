@@ -1,0 +1,15 @@
+.page { width: min(100% - 1rem, 65rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 3rem) 0; }
+.page > header p { margin: 0; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.page h1 { margin: .25rem 0; font-size: clamp(2rem, 7vw, 3.7rem); }
+.page > header span { color: var(--text-muted); }
+.list { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.list article { padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
+.list article > div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.list h2 { margin: 0; }
+.list p { color: var(--text-muted); }
+.list strong[class] { padding: .4rem .7rem; border-radius: 999px; }
+.participante { color: var(--brand-blue); background: #e5f1fb; }
+.presente { color: #176b35; background: #e4f3e8; }
+.ausente { color: #922f2f; background: #fde6e6; }
+.error { color: #a22b2b; font-weight: 750; }
+.list article > button { min-height: 2.7rem; padding: .55rem .8rem; color: #922f2f; font-weight: 800; background: white; border: 1px solid #d99b9b; border-radius: .55rem; cursor: pointer; }

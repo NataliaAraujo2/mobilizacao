@@ -6,7 +6,6 @@ import AccessMessagePage from "./pages/AccessMessagePage";
 import LoginPage from "./pages/LoginPage";
 import CampaignGateway from "./pages/CampaignGateway";
 import Campaign2025Page from "./pages/Campaign2025Page";
-import Campaign2026Page from "./pages/Campaign2026Page";
 
 const PublicHome = lazy(() => import("./pages/PublicHome"));
 const ReportViewerPage = lazy(() => import("./pages/ReportViewerPage"));
@@ -16,6 +15,8 @@ const ConsultationPage = lazy(() => import("./pages/ConsultationPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const VolunteersPage = lazy(() => import("./pages/VolunteersPage"));
 const ActionsPage = lazy(() => import("./pages/ActionsPage"));
+const AttendancePage = lazy(() => import("./pages/AttendancePage"));
+const VolunteerAreaPage = lazy(() => import("./pages/VolunteerAreaPage"));
 const AssociatesCounterPage = lazy(() => import("./pages/AssociatesCounterPage"));
 const ReportsAdminPage = lazy(() => import("./pages/ReportsAdminPage"));
 const SuperAdminsPage = lazy(() => import("./pages/SuperAdminsPage"));
@@ -31,7 +32,7 @@ export default function App() {
         <Route index element={<CampaignGateway />} />
         <Route path="2025" element={<Campaign2025Page />} />
         <Route path="2025/relatorio" element={<ReportViewerPage />} />
-        <Route path="2026" element={<Campaign2026Page />} />
+        <Route path="2026" element={<PublicHome />} />
         {import.meta.env.DEV && <Route path="2026/desenvolvimento" element={<PublicHome />} />}
         <Route path="login" element={<LoginPage />} />
         <Route path="admin/login" element={<LoginPage />} />
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="admin/formularios" element={<LinkFormsPage />} />
           <Route path="admin/voluntarios" element={<VolunteersPage />} />
           <Route path="admin/acoes" element={<ActionsPage />} />
+          <Route path="admin/presencas" element={<AttendancePage />} />
           <Route path="admin/contador-associados" element={<AssociatesCounterPage />} />
           <Route path="admin/relatorio-2025" element={<ReportsAdminPage />} />
           <Route path="admin/superadmins" element={<SuperAdminsPage />} />
@@ -59,9 +61,12 @@ export default function App() {
         <Route element={<RequireAuth allowedRoles={["branchViewer"]} />}>
           <Route path="consulta" element={<ConsultationPage />} />
         </Route>
+        <Route element={<RequireAuth allowedRoles={["superAdmin", "branchViewer"]} />}>
+          <Route path="presencas" element={<AttendancePage />} />
+        </Route>
 
         <Route element={<RequireAuth allowedRoles={["volunteer"]} />}>
-          <Route path="voluntario" element={<DashboardPage area="volunteer" />} />
+          <Route path="voluntario" element={<VolunteerAreaPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -14,12 +14,14 @@ export { manageLinkForms, publicLinkForms } from './formsFunctions.js';
 const REGION = "southamerica-east1";
 const VIEWER_ROLE = "branchViewer";
 const VIEWER_EMAIL_DOMAIN = "acesso.mobilizacao.invalid";
+const VOLUNTEER_ROLE = "volunteer";
 const REPORT_YEAR = "2025";
 const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
 const MAX_REPORT_SIZE = 25 * 1024 * 1024;
 // Operações administrativas são pouco frequentes. Mantemos custo zero em
 // repouso e impedimos escala inesperada por repetição acidental de chamadas.
 const ADMIN_FUNCTION_OPTIONS = { region: REGION, minInstances: 0, maxInstances: 2, concurrency: 10 };
+const PUBLIC_FUNCTION_OPTIONS = { ...ADMIN_FUNCTION_OPTIONS, enforceAppCheck: true };
 
 function requireSuperAdmin(request) {
   if (!request.auth || request.auth.token.role !== "superAdmin" || request.auth.token.status !== "active") {
@@ -51,6 +53,102 @@ function generateFriendlyPassword() {
   }
   return `${selected.join("-")}-${randomInt(10, 100)}`;
 }
+
+function digits(value) { return String(value ?? '').replace(/\D/g, ''); }
+function validCpf(value) {
+  const cpf = digits(value);
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  for (let size = 9; size <= 10; size += 1) {
+    let sum = 0;
+    for (let index = 0; index < size; index += 1) sum += Number(cpf[index]) * (size + 1 - index);
+    if ((sum * 10) % 11 % 10 !== Number(cpf[size])) return false;
+  }
+  return true;
+}
+
+export const publicVolunteerActions = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  const state = requiredText(request.data?.state, 'state', 2, 2).toUpperCase();
+  const snapshot = await getFirestore().collection('actions').where('address.state', '==', state).limit(50).get();
+  return snapshot.docs.map(item => {
+    const action = item.data();
+    return { id: item.id, name: action.name, date: action.date, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status };
+  }).filter(action => action.status !== 'closed' && action.date >= new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }));
+});
+
+export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Entre ou crie uma conta para participar.');
+  const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
+  const db = getFirestore();
+  const actionSnapshot = await db.collection('actions').doc(actionId).get();
+  if (!actionSnapshot.exists) throw new HttpsError('not-found', 'A ação não existe.');
+  const action = actionSnapshot.data();
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  if (action.status === 'closed' || action.date < today) throw new HttpsError('failed-precondition', 'As inscrições desta ação foram encerradas.');
+  const volunteerRef = db.collection('volunteers').doc(request.auth.uid);
+  const existing = await volunteerRef.get();
+  if (existing.exists) {
+    if (request.auth.token.role !== VOLUNTEER_ROLE) throw new HttpsError('permission-denied', 'Esta conta não é de voluntário.');
+    await db.runTransaction(async transaction => {
+      const current = await transaction.get(volunteerRef);
+      const data = current.data();
+      if (data.actionIds?.includes(actionId)) return;
+      const conflictIndex = (data.participationDates ?? []).indexOf(action.date);
+      const conflictId = conflictIndex >= 0 ? data.actionIds?.[conflictIndex] : null;
+      const replaceActionId = String(request.data?.replaceActionId ?? '');
+      if (conflictId && replaceActionId !== conflictId) {
+        const conflictSnapshot = await transaction.get(db.collection('actions').doc(conflictId));
+        throw new HttpsError('already-exists', 'Você já está inscrito em uma ação nesta data.', { conflictActionId: conflictId, conflictActionName: conflictSnapshot.exists ? conflictSnapshot.data().name : 'outra ação', newActionName: action.name });
+      }
+      const nextActionIds = conflictId ? data.actionIds.map(id => id === conflictId ? actionId : id) : [...(data.actionIds ?? []), actionId];
+      const actionSnapshots = await transaction.getAll(...nextActionIds.map(id => db.collection('actions').doc(id)));
+      const regionalIds = [...new Set(actionSnapshots.filter(item => item.exists).map(item => item.data().branchId))];
+      const participationDates = actionSnapshots.filter(item => item.exists).map(item => item.data().date);
+      if (new Set(participationDates).size !== participationDates.length) throw new HttpsError('already-exists', 'Só é permitida uma ação por dia.');
+      transaction.update(volunteerRef, { actionIds: nextActionIds, regionalIds, participationDates, updatedAt: FieldValue.serverTimestamp() });
+    });
+    return { created: false, replaced: Boolean(request.data?.replaceActionId) };
+  }
+  const profile = request.data?.profile ?? {};
+  const fullName = requiredText(profile.fullName, 'nome', 2, 120);
+  const email = String(request.auth.token.email ?? '').toLowerCase();
+  const phone = digits(profile.phone);
+  const cpf = digits(profile.cpf);
+  const rg = requiredText(profile.rg, 'RG', 3, 20).toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const birthDate = requiredText(profile.birthDate, 'nascimento', 10, 10);
+  if (!validCpf(cpf)) throw new HttpsError('invalid-argument', 'CPF inválido.');
+  if (phone && !isValidPhone(phone, 13)) throw new HttpsError('invalid-argument', 'Telefone inválido.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new HttpsError('invalid-argument', 'Data de nascimento inválida.');
+  const duplicateCpf = await db.collection('volunteerPrivate').where('cpf', '==', cpf).limit(1).get();
+  if (!duplicateCpf.empty) throw new HttpsError('already-exists', 'Este CPF já possui cadastro. Entre com sua conta ou solicite nova senha.');
+  const batch = db.batch();
+  batch.set(volunteerRef, { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'active', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  await batch.commit();
+  await getAuth().updateUser(request.auth.uid, { displayName: fullName });
+  await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });
+  return { created: true };
+});
+
+export const withdrawVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || request.auth.token.role !== VOLUNTEER_ROLE || request.auth.token.status !== 'active') throw new HttpsError('permission-denied', 'Acesso de voluntário necessário.');
+  const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
+  const db = getFirestore();
+  const volunteerRef = db.collection('volunteers').doc(request.auth.uid);
+  const actionRef = db.collection('actions').doc(actionId);
+  await db.runTransaction(async transaction => {
+    const [volunteerSnapshot, actionSnapshot] = await Promise.all([transaction.get(volunteerRef), transaction.get(actionRef)]);
+    if (!volunteerSnapshot.exists || !actionSnapshot.exists) throw new HttpsError('not-found', 'Inscrição não encontrada.');
+    const action = actionSnapshot.data();
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+    if (action.date <= today) throw new HttpsError('failed-precondition', 'A participação só pode ser cancelada antes do dia da ação.');
+    const remainingIds = (volunteerSnapshot.data().actionIds ?? []).filter(id => id !== actionId);
+    const remainingSnapshots = remainingIds.length ? await transaction.getAll(...remainingIds.map(id => db.collection('actions').doc(id))) : [];
+    const regionalIds = [...new Set(remainingSnapshots.filter(item => item.exists).map(item => item.data().branchId))];
+    const participationDates = [...new Set(remainingSnapshots.filter(item => item.exists).map(item => item.data().date))];
+    transaction.update(volunteerRef, { actionIds: remainingIds, regionalIds, participationDates, updatedAt: FieldValue.serverTimestamp() });
+  });
+  return { ok: true };
+});
 
 async function getBranch(branchId) {
   const snapshot = await getFirestore().collection("branches").doc(branchId).get();
@@ -217,6 +315,60 @@ export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   const password = generateFriendlyPassword();
   await getAuth().updateUser(uid, { password });
   return { uid, username: profile.data().displayName, password };
+});
+
+export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const volunteerId = requiredText(request.data?.volunteerId, 'volunteerId', 1, 128);
+  if (volunteerId.includes('/')) throw new HttpsError('invalid-argument', 'Identificador inválido.');
+  const action = request.data?.action;
+  if (!['create', 'activate', 'block', 'resetPassword', 'delete'].includes(action)) throw new HttpsError('invalid-argument', 'Operação inválida.');
+  const reference = getFirestore().collection('volunteers').doc(volunteerId);
+  const snapshot = await reference.get();
+  if (!snapshot.exists) throw new HttpsError('not-found', 'Voluntário não encontrado.');
+  const auth = getAuth();
+  const username = `vol-${volunteerId.slice(0, 10).toLowerCase()}`;
+  const email = `${username}@${VIEWER_EMAIL_DOMAIN}`;
+
+  if (action === 'create') {
+    if (snapshot.data().accessStatus !== 'none') throw new HttpsError('already-exists', 'Este voluntário já possui acesso.');
+    const password = generateFriendlyPassword();
+    let createdAuthUser = false;
+    try {
+      await auth.createUser({ uid: volunteerId, displayName: snapshot.data().fullName, email, password });
+      createdAuthUser = true;
+      await auth.setCustomUserClaims(volunteerId, { role: VOLUNTEER_ROLE, status: 'active' });
+      await reference.update({ accessStatus: 'active', status: 'active', updatedAt: FieldValue.serverTimestamp() });
+      return { username, password };
+    } catch (error) {
+      if (createdAuthUser) await auth.deleteUser(volunteerId).catch(() => {});
+      if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') throw new HttpsError('already-exists', 'Este voluntário já possui acesso.');
+      throw new HttpsError('internal', 'Não foi possível criar o acesso do voluntário.');
+    }
+  }
+  if (action === 'delete') {
+    try { await auth.deleteUser(volunteerId); } catch (error) { if (error.code !== 'auth/user-not-found') throw new HttpsError('internal', 'Não foi possível excluir o acesso.'); }
+    return { ok: true };
+  }
+  let account;
+  try { account = await auth.getUser(volunteerId); } catch {
+    if ((action === 'activate' || action === 'block') && snapshot.data().accessStatus === 'none') {
+      const status = action === 'activate' ? 'active' : 'blocked';
+      await reference.update({ status, updatedAt: FieldValue.serverTimestamp() });
+      return { status, accessStatus: 'none' };
+    }
+    throw new HttpsError('not-found', 'Este voluntário ainda não possui acesso.');
+  }
+  if (action === 'resetPassword') {
+    const password = generateFriendlyPassword();
+    await auth.updateUser(account.uid, { password });
+    return { username, password };
+  }
+  const status = action === 'activate' ? 'active' : 'blocked';
+  await auth.updateUser(account.uid, { disabled: status === 'blocked' });
+  await auth.setCustomUserClaims(account.uid, { role: VOLUNTEER_ROLE, status });
+  await reference.update({ status, accessStatus: status, updatedAt: FieldValue.serverTimestamp() });
+  return { status };
 });
 
 // Finaliza a publicação do PDF já enviado ao Storage. Isso permite repetir

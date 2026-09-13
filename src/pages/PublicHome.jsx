@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import BrazilMap from "../components/BrazilMap/BrazilMap";
+import PublicActionsPanel from '../components/PublicActionsPanel';
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logoMobilizacao from "../assets/brand/mobilizacao-logo-colorido.webp";
 import leafElement from "../assets/brand/elements/elemento-02.webp";
@@ -74,6 +75,7 @@ export default function PublicHome() {
               <p className={styles.result} aria-live="polite">
                 {selectedState ? <>Estado selecionado: <strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name} ({selectedState})</strong></> : "Nenhum estado selecionado."}
               </p>
+              <PublicActionsPanel state={selectedState} user={user} claims={claims} />
             </div>
           )}
         </section>

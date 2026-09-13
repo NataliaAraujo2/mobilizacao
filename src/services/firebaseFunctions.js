@@ -1,8 +1,10 @@
 import { app } from "./firebaseApp";
+import { initializeFirebaseAppCheck } from './firebaseAppCheck';
 
 let cachedFunctions = null;
 
-export async function getFunctionsService() {
+export async function getFunctionsService({ appCheck = false } = {}) {
+  if (appCheck) await initializeFirebaseAppCheck();
   if (cachedFunctions) return cachedFunctions;
 
   const { connectFunctionsEmulator, getFunctions, httpsCallable } = await import("firebase/functions");

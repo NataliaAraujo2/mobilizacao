@@ -1,15 +1,16 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { createVolunteerRecords, maskCpf } from "../domain/volunteers/volunteerModel";
+import { getActionsByIds, listActionsByBranch } from '../services/actionsService';
 import { getBranch, listBranches } from "../services/branchesService";
-import { createVolunteer, deleteVolunteer, getVolunteerPrivate, listVolunteersPage, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
+import { createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import styles from "./VolunteersPage.module.css";
 
-const EMPTY_FORM = { fullName: "", email: "", phone: "", cpf: "", rg: "", birthDate: "", branchId: "", status: "active" };
+const EMPTY_FORM = { fullName: "", email: "", phone: "", cpf: "", rg: "", birthDate: "", actionIds: [], status: "active", accessStatus: "none" };
 
 function formatCpf(value) {
   return value.replace(/\D/g, "").slice(0, 11).replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
@@ -25,14 +26,24 @@ export default function VolunteersPage() {
   const ownBranchId = claims?.branchId ?? "";
   const listBranchId = isSuperAdmin ? null : ownBranchId;
   const [branches, setBranches] = useState([]);
+  const [actions, setActions] = useState([]);
+  const [reportActions, setReportActions] = useState([]);
+  const [actionCatalog, setActionCatalog] = useState({});
+  const [actionBranchId, setActionBranchId] = useState(ownBranchId);
+  const [loadingActions, setLoadingActions] = useState(false);
   const [privateData, setPrivateData] = useState({});
   const [expandedId, setExpandedId] = useState("");
   const [showFullCpf, setShowFullCpf] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM, branchId: ownBranchId });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [credentials, setCredentials] = useState(null);
+  const [reportFilter, setReportFilter] = useState({ branchId: '', actionId: '' });
+  const [reportRows, setReportRows] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportReady, setReportReady] = useState(false);
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listVolunteersPage({ branchId: filtros.branchId, cursor, pageSize })
@@ -45,7 +56,21 @@ export default function VolunteersPage() {
     recarregar,
     carregarMais,
     atualizarDados,
-  } = useInfiniteScroll(buscarPagina);
+  } = useInfiniteScroll(buscarPagina, { pageSize: 10 });
+
+  useEffect(() => {
+    if (!actionBranchId) { setActions([]); return; }
+    let current = true; setLoadingActions(true);
+    listActionsByBranch(actionBranchId).then(items => { if (current) { setActions(items); setActionCatalog(catalog => ({ ...catalog, ...Object.fromEntries(items.map(item => [item.id, item])) })); } }).catch(() => { if (current) setError('Não foi possível carregar as ações da regional.'); }).finally(() => { if (current) setLoadingActions(false); });
+    return () => { current = false; };
+  }, [actionBranchId]);
+
+  useEffect(() => {
+    if (!reportFilter.branchId) { setReportActions([]); return; }
+    let current = true;
+    listActionsByBranch(reportFilter.branchId).then(items => { if (current) setReportActions(items); }).catch(() => { if (current) setError('Não foi possível carregar as ações do relatório.'); });
+    return () => { current = false; };
+  }, [reportFilter.branchId]);
 
   useEffect(() => {
     const branchesRequest = isSuperAdmin
@@ -68,7 +93,6 @@ export default function VolunteersPage() {
       setEditingId('');
       setForm({
         ...EMPTY_FORM,
-        branchId: branch.id,
         fullName: typeof draft.fullName === 'string' ? draft.fullName : '',
         email: typeof draft.email === 'string' ? draft.email : '',
         phone: formatPhone(typeof draft.phone === 'string' ? draft.phone : ''),
@@ -76,17 +100,17 @@ export default function VolunteersPage() {
         rg: typeof draft.rg === 'string' ? draft.rg : '',
         birthDate: typeof draft.birthDate === 'string' ? draft.birthDate : '',
       });
+      setActionBranchId(branch.id);
       setMessage(`Dados da resposta carregados para ${branch.name}. Confira e complete os campos antes de cadastrar.`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     navigate(location.pathname, { replace: true, state: null });
   }, [branches, location.pathname, location.state, navigate]);
 
-  const branchNames = useMemo(() => new Map(branches.map((branch) => [branch.id, branch.name])), [branches]);
-
   function resetForm() {
     setEditingId("");
-    setForm({ ...EMPTY_FORM, branchId: ownBranchId });
+    setForm(EMPTY_FORM);
+    setActionBranchId(ownBranchId);
   }
 
   async function handleSubmit(event) {
@@ -96,14 +120,19 @@ export default function VolunteersPage() {
     setError("");
     setMessage("");
     try {
-      const records = createVolunteerRecords(form);
+      const regionalIds = [...new Set(form.actionIds.map(id => actionCatalog[id]?.branchId).filter(Boolean))];
+      if (form.actionIds.some(id => !actionCatalog[id]?.branchId)) throw new Error('Selecione novamente as ações para confirmar suas regionais.');
+      const participationDates = [...new Set(form.actionIds.map(id => actionCatalog[id]?.date).filter(Boolean))];
+      if (participationDates.length !== form.actionIds.length) throw new Error('O voluntário só pode participar de uma ação por dia.');
+      const volunteerInput = { ...form, regionalIds, participationDates };
+      const records = createVolunteerRecords(volunteerInput);
       let savedId = editingId;
       if (editingId) {
-        await updateVolunteer(editingId, form);
+        await updateVolunteer(editingId, volunteerInput);
         setPrivateData((current) => ({ ...current, [editingId]: { cpf: form.cpf.replace(/\D/g, ""), rg: form.rg.replace(/[^0-9a-z]/gi, "").toUpperCase(), birthDate: form.birthDate } }));
         setMessage("Cadastro atualizado com sucesso.");
       } else {
-        savedId = await createVolunteer(form);
+        savedId = await createVolunteer(volunteerInput);
         setMessage("Voluntário cadastrado com segurança.");
       }
       atualizarDados(current => {
@@ -141,13 +170,16 @@ export default function VolunteersPage() {
     setError("");
     try {
       const documents = privateData[volunteer.id] ?? await getVolunteerPrivate(volunteer.id);
+      const selectedActions = await getActionsByIds(volunteer.actionIds ?? []);
+      setActionCatalog(catalog => ({ ...catalog, ...Object.fromEntries(selectedActions.map(item => [item.id, item])) }));
       setPrivateData((current) => ({ ...current, [volunteer.id]: documents }));
       setEditingId(volunteer.id);
       setForm({
         fullName: volunteer.fullName, email: volunteer.email, phone: formatPhone(volunteer.phone),
         cpf: formatCpf(documents.cpf), rg: documents.rg, birthDate: documents.birthDate,
-        branchId: volunteer.branchId, status: volunteer.status,
+        actionIds: volunteer.actionIds ?? [], status: volunteer.status, accessStatus: volunteer.accessStatus ?? 'none',
       });
+      setActionBranchId(volunteer.regionalIds?.[0] ?? ownBranchId);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setError("Não foi possível abrir o cadastro para edição.");
@@ -159,11 +191,22 @@ export default function VolunteersPage() {
     setError("");
     try {
       await updateVolunteerStatus(volunteer.id, status);
-      atualizarDados((current) => current.map((item) => item.id === volunteer.id ? { ...item, status } : item));
+      atualizarDados((current) => current.map((item) => item.id === volunteer.id ? { ...item, status, accessStatus: item.accessStatus === 'none' ? 'none' : status } : item));
       setMessage(status === "active" ? "Voluntário reativado." : "Voluntário bloqueado.");
     } catch {
       setError("Não foi possível alterar a situação.");
     }
+  }
+
+  async function manageAccess(volunteer, reset = false) {
+    setSaving(true); setError(''); setMessage(''); setCredentials(null);
+    try {
+      const result = reset ? await resetVolunteerPassword(volunteer.id) : await createVolunteerAccess(volunteer.id);
+      setCredentials({ fullName: volunteer.fullName, username: result.username, password: result.password });
+      atualizarDados(current => current.map(item => item.id === volunteer.id ? { ...item, status: 'active', accessStatus: 'active' } : item));
+      setMessage(reset ? 'Nova senha de acesso gerada.' : 'Acesso individual criado. Copie as credenciais agora.');
+    } catch (accessError) { setError(accessError.message || 'Não foi possível gerar o acesso.'); }
+    finally { setSaving(false); }
   }
 
   async function removeVolunteer(volunteer) {
@@ -178,6 +221,16 @@ export default function VolunteersPage() {
       setMessage('Voluntário e documentos pessoais excluídos.');
     } catch { setError('Não foi possível excluir o voluntário. Tente novamente.'); }
     finally { setSaving(false); }
+  }
+
+  async function prepareReport(event) {
+    event.preventDefault(); setReportLoading(true); setError(''); setReportRows([]); setReportReady(false);
+    try {
+      const rows = await listVolunteerReport(reportFilter);
+      setReportRows(rows); setReportReady(true);
+      if (!rows.length) setMessage('Nenhum voluntário encontrado para esta regional e ação.');
+    } catch { setError('Não foi possível preparar o relatório protegido.'); }
+    finally { setReportLoading(false); }
   }
 
   return (
@@ -197,16 +250,20 @@ export default function VolunteersPage() {
           <label>CPF<input required inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={form.cpf} onChange={(event) => setForm({ ...form, cpf: formatCpf(event.target.value) })} /></label>
           <label>RG<input required minLength="3" maxLength="20" autoComplete="off" value={form.rg} onChange={(event) => setForm({ ...form, rg: event.target.value })} /></label>
           <label>Data de nascimento<input required type="date" autoComplete="bday" max={new Date().toISOString().slice(0, 10)} value={form.birthDate} onChange={(event) => setForm({ ...form, birthDate: event.target.value })} /></label>
-          <label>Regional<select required disabled={!isSuperAdmin || Boolean(editingId)} value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
+          <label>Regional para localizar ações<select required disabled={!isSuperAdmin} value={actionBranchId} onChange={(event) => setActionBranchId(event.target.value)}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
+          <fieldset className={styles.actionChoices} disabled={!actionBranchId || loadingActions}><legend>Ações <small>(selecione uma ou mais; você pode trocar a regional)</small></legend>{loadingActions ? <p>Carregando ações…</p> : actions.length ? actions.map(action => <label key={action.id}><input type="checkbox" checked={form.actionIds.includes(action.id)} onChange={event => setForm({ ...form, actionIds: event.target.checked ? [...new Set([...form.actionIds, action.id])] : form.actionIds.filter(id => id !== action.id) })} />{action.name}</label>) : <p>{actionBranchId ? 'Esta regional ainda não possui ações cadastradas.' : 'Selecione uma regional para localizar ações.'}</p>}<p><strong>{form.actionIds.length}</strong> ação(ões) selecionada(s) no total.</p></fieldset>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>}
           <div className={styles.formActions}>
-            <button className={styles.primary} type="submit" disabled={saving || loadingVolunteers || branches.length === 0}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar voluntário"}</button>
+            <button className={styles.primary} type="submit" disabled={saving || loadingVolunteers || loadingActions || branches.length === 0 || form.actionIds.length === 0}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar voluntário"}</button>
             {editingId && <button className={styles.secondary} type="button" onClick={resetForm}>Cancelar</button>}
           </div>
         </form>
         {error && <p className={styles.error} role="alert">{error}</p>}
         {message && <p className={styles.success} role="status">{message}</p>}
+        {credentials && <div className={styles.credentials} role="status"><strong>Credenciais de {credentials.fullName}</strong><span>Usuário: <code>{credentials.username}</code></span><span>Senha inicial: <code>{credentials.password}</code></span><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar credenciais</button><small>A senha não será exibida novamente.</small></div>}
       </section>
+
+      {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido para impressão</h2><p>CPF e RG são carregados somente ao preparar este relatório. Escolha uma regional para localizar a ação.</p><form onSubmit={prepareReport}><label>Regional da ação<select required value={reportFilter.branchId} onChange={event => { setReportFilter({ branchId: event.target.value, actionId: '' }); setReportReady(false); }}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select required value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="">Selecione</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Preparar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários por regional e ação</h2><p>Regional: {branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportActions.find(action => action.id === reportFilter.actionId)?.name}</p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
 
       <section className={styles.card} aria-labelledby="volunteer-list-title">
         <h2 id="volunteer-list-title">Voluntários cadastrados</h2>
@@ -215,7 +272,7 @@ export default function VolunteersPage() {
           <div className={styles.list}>{volunteers.map((volunteer) => {
             const documents = privateData[volunteer.id];
             return <article className={styles.volunteer} key={volunteer.id}>
-              <div className={styles.summary}><div><h3>{volunteer.fullName}</h3><p>{branchNames.get(volunteer.branchId) ?? volunteer.branchId}</p></div><span className={volunteer.status === "active" ? styles.active : styles.blocked}>{volunteer.status === "active" ? "Ativo" : "Bloqueado"}</span></div>
+              <div className={styles.summary}><div><h3>{volunteer.fullName}</h3><p>{(volunteer.actionIds ?? []).length} ação(ões) · {(volunteer.regionalIds ?? []).length} regional(is)</p></div><span className={volunteer.status === "active" ? styles.active : styles.blocked}>{volunteer.status === "active" ? "Ativo" : "Bloqueado"}</span></div>
               <div className={styles.contact}><span>{volunteer.email || "Sem e-mail"}</span><span>{formatPhone(volunteer.phone) || "Sem telefone"}</span></div>
               {expandedId === volunteer.id && documents && <div className={styles.documents}>
                 <div><span>CPF</span><strong>{showFullCpf ? formatCpf(documents.cpf) : maskCpf(documents.cpf)}</strong></div>
@@ -223,7 +280,7 @@ export default function VolunteersPage() {
                 <div><span>Nascimento</span><strong>{documents.birthDate.split("-").reverse().join("/")}</strong></div>
                 <button type="button" className={styles.textButton} onClick={() => setShowFullCpf((current) => !current)}>{showFullCpf ? "Ocultar CPF" : "Mostrar CPF completo"}</button>
               </div>}
-              <div className={styles.actions}><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>
+              <div className={styles.actions}><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && (volunteer.accessStatus === 'active' || volunteer.accessStatus === 'blocked' ? <button type="button" disabled={saving} onClick={() => manageAccess(volunteer, true)}>Gerar nova senha</button> : <button type="button" disabled={saving} onClick={() => manageAccess(volunteer)}>Criar acesso individual</button>)}{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>
             </article>;
           })}</div>
         )}
