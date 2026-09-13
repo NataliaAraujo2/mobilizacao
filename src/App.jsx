@@ -34,6 +34,9 @@ export default function App() {
         <Route path="2026" element={<Campaign2026Page />} />
         {import.meta.env.DEV && <Route path="2026/desenvolvimento" element={<PublicHome />} />}
         <Route path="login" element={<LoginPage />} />
+        <Route path="admin/login" element={<LoginPage />} />
+        <Route path="admin/acesso-bloqueado" element={<AccessMessagePage blocked />} />
+        <Route path="admin/sem-permissao" element={<AccessMessagePage />} />
         <Route path="acesso-bloqueado" element={<AccessMessagePage blocked />} />
         <Route path="sem-permissao" element={<AccessMessagePage />} />
 

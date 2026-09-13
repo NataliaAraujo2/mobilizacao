@@ -1,9 +1,12 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import AdminInstall from "../components/AdminInstall";
 import { useAuth } from "../auth/useAuth";
 import mobilizacaoLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import styles from "./AppLayout.module.css";
 
 export default function AppLayout() {
+  const { pathname } = useLocation();
+  const adminArea = pathname === "/admin" || pathname.startsWith("/admin/");
   const { user, claims, logout } = useAuth();
   const accountPath = claims?.role === "volunteer" ? "/voluntario" : claims?.role === "branchViewer" ? "/consulta" : "/admin";
 
@@ -25,10 +28,11 @@ export default function AppLayout() {
               <button type="button" onClick={logout}>Sair</button>
             </>
           ) : (
-            <Link to="/login">Entrar</Link>
+            <Link to={adminArea ? "/admin/login" : "/login"}>Entrar</Link>
           )}
         </nav>
       </header>
+      <AdminInstall />
       <Outlet />
     </>
   );
