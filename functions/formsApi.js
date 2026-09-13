@@ -90,6 +90,22 @@ export function createFormsApi(db, now = () => Date.now()) {
           const c = await campaign(uid, data.id); const definition = await c.ref.collection('definition').doc('snapshot').get();
           return { ...c.data, id: c.ref.id, definition: definition.data() };
         }
+        case 'updateCampaign': {
+          const ref = campaignRef(uid, data.id);
+          const title = boundedText(data.title);
+          ensure(typeof data.description === 'string' && data.description.length <= 3000, 'Descrição inválida.');
+          ensure(typeof data.whatsappMessage === 'string' && data.whatsappMessage.length <= 3000, 'Mensagem do WhatsApp inválida ou acima do limite.');
+          const expiresAt = Number(data.expiresAt);
+          const updated = { title, description: data.description.trim(), whatsappMessage: data.whatsappMessage.trim(), expiresAt, updatedAt: now() };
+          await db.runTransaction(async tx => {
+            const snap = await tx.get(ref);
+            ensure(snap.exists, 'Campanha não encontrada.');
+            ensure(!snap.data().archived, 'Campanha arquivada não pode ser editada.');
+            ensure(Number.isFinite(expiresAt) && (expiresAt === snap.data().expiresAt || (expiresAt > now() && expiresAt <= now() + 366 * 86400000)), 'Prazo inválido. Informe uma data futura de até 366 dias.');
+            tx.update(ref, updated);
+          });
+          return updated;
+        }
         case 'updateCampaignDefinition': {
           const c = await campaign(uid, data.id);
           ensure(!c.data.archived, 'Campanha arquivada não pode ser editada.');

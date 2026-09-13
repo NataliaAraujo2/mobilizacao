@@ -33,6 +33,30 @@ test('cria, edita, duplica e arquiva modelo sem mudar snapshot da campanha', asy
   const models = await api.manage(manager('owner'), { action: 'listTemplates', archived: true }); assert.equal(models.items.length, 1);
   const c = await api.manage(manager('owner'), { action: 'getCampaign', id: 'campaign1' }); assert.equal(c.definition.sections[0].questions[0].title, 'Nome');
 });
+test('edita dados mantendo link geral, respostas e definição, e valida permissões e prazo', async () => {
+  await create({ mode: 'general', recipients: [] });
+  const original = await api.manage(manager('owner'), { action: 'getCampaign', id: 'campaign1' });
+  const joined = await api.public({ action: 'join', token: original.generalToken, name: 'Maria', session: 'a'.repeat(64) });
+  await api.public({ action: 'submit', token: joined.token, answers });
+  const request = (await requests()).items[0];
+  const update = { action: 'updateCampaign', id: 'campaign1', title: 'Novo título', description: 'Novo texto', whatsappMessage: 'Nova mensagem', expiresAt: time + 2 * 86400000 };
+  await assert.rejects(api.manage(manager('other'), update), /não encontrada/);
+  for (const invalid of [{ title: ' ' }, { description: 'a'.repeat(3001) }, { whatsappMessage: 123 }, { expiresAt: time - 1 }]) {
+    await assert.rejects(api.manage(manager('owner'), { ...update, ...invalid }));
+  }
+  await api.manage(manager('owner'), update);
+  const current = await api.manage(manager('owner'), { action: 'getCampaign', id: 'campaign1' });
+  assert.equal(current.generalToken, original.generalToken);
+  assert.equal(current.responseCount, 1);
+  assert.deepEqual(current.definition, original.definition);
+  assert.equal(current.whatsappMessage, update.whatsappMessage);
+  const opened = await api.public({ action: 'open', token: original.generalToken });
+  assert.equal(opened.title, update.title); assert.equal(opened.description, update.description); assert.equal(opened.expiresAt, update.expiresAt);
+  assert.deepEqual((await api.manage(manager('owner'), { action: 'getResponse', id: 'campaign1', requestId: request.id })).answers, answers);
+  await api.manage(manager('owner'), { action: 'archiveCampaign', id: 'campaign1' });
+  await assert.rejects(api.manage(manager('owner'), update), /arquivada/);
+});
+
 test('gera campanha, tokens individuais diferentes e criação idempotente', async () => {
   await create(); const first = await requests(); assert.equal(first.items.length, 2);
   assert.notEqual(first.items[0].token, first.items[1].token); assert.match(first.items[0].token, /^[a-f0-9]{64}$/);
