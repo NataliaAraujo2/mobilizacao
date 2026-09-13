@@ -34,6 +34,7 @@ const user = ({ displayName, email, role, branchId = null, status = "active" }) 
 
 const volunteer = (branchId = "sp") => ({
   fullName: "Maria da Silva",
+  fullNameSearch: "maria da silva",
   email: "maria@example.test",
   phone: "11999999999",
   branchId,
@@ -54,6 +55,7 @@ const volunteerPrivate = (volunteerId, branchId = "sp") => ({
 
 const action = (branchId = "sp") => ({
   name: "Mutirão da Praça",
+  nameSearch: "mutirao da praca",
   branchId,
   status: "planning",
   address: { cep: "01001000", street: "Praça da Sé", number: "1", complement: "", neighborhood: "Sé", city: "São Paulo", state: "SP", source: "cep" },
@@ -138,6 +140,7 @@ test("perfis de usuários e papéis privilegiados são exclusivos das Functions"
   const completeProfile = {
     ...user({ displayName: "USUARIO_SP", email: "usuario_sp@acesso.mobilizacao.invalid", role: "branchViewer", branchId: "sp" }),
     contactName: "Maria Responsável",
+    contactNameSearch: "maria responsavel",
     contactEmail: "maria@example.test",
     contactPhone: "11999999999",
   };
@@ -201,14 +204,14 @@ test("superAdmin cadastra ação e conta compartilhada apenas consulta a própri
 
 test("consulta da regional precisa filtrar e paginar somente documentos da própria regional", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-1"), { ...volunteer("sp"), fullName: "Ana Silva" });
-    await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-2"), { ...volunteer("sp"), fullName: "Beatriz Souza" });
-    await setDoc(doc(context.firestore(), "volunteers", "volunteer-rj-1"), { ...volunteer("rj"), fullName: "Carla Lima" });
+    await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-1"), { ...volunteer("sp"), fullName: "Ana Silva", fullNameSearch: "ana silva" });
+    await setDoc(doc(context.firestore(), "volunteers", "volunteer-sp-2"), { ...volunteer("sp"), fullName: "Beatriz Souza", fullNameSearch: "beatriz souza" });
+    await setDoc(doc(context.firestore(), "volunteers", "volunteer-rj-1"), { ...volunteer("rj"), fullName: "Carla Lima", fullNameSearch: "carla lima" });
   });
   const db = auth("viewer-sp", "branchViewer", "sp").firestore();
-  await assertSucceeds(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "sp"), orderBy("fullName"), limit(1))));
-  await assertFails(getDocs(query(collection(db, "volunteers"), orderBy("fullName"), limit(25))));
-  await assertFails(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "rj"), orderBy("fullName"), limit(25))));
+  await assertSucceeds(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "sp"), orderBy("fullNameSearch"), limit(1))));
+  await assertFails(getDocs(query(collection(db, "volunteers"), orderBy("fullNameSearch"), limit(25))));
+  await assertFails(getDocs(query(collection(db, "volunteers"), where("branchId", "==", "rj"), orderBy("fullNameSearch"), limit(25))));
 });
 
 test("contador de associados é público, mas não permite listar outros dados", async () => {
@@ -272,11 +275,11 @@ test("somente superAdmin envia imagens; conta compartilhada apenas consulta", as
 test("busca de responsáveis das regionais é paginada e exclusiva do superAdmin", async () => {
   await environment.withSecurityRulesDisabled(async context => {
     await Promise.all(Array.from({ length: 30 }, (_, index) => setDoc(doc(context.firestore(), 'users', `contact-${index}`), {
-      role: 'branchViewer', contactName: `Responsável ${String(index).padStart(2, '0')}`, contactPhone: '11999999999', branchId: 'sp',
+      role: 'branchViewer', contactName: `Responsável ${String(index).padStart(2, '0')}`, contactNameSearch: `responsavel ${String(index).padStart(2, '0')}`, contactPhone: '11999999999', branchId: 'sp',
     })));
   });
   const adminDb = auth('admin', 'superAdmin').firestore();
-  const makeQuery = db => query(collection(db, 'users'), where('role', '==', 'branchViewer'), orderBy('contactName'), limit(26));
+  const makeQuery = db => query(collection(db, 'users'), where('role', '==', 'branchViewer'), orderBy('contactNameSearch'), limit(26));
   const result = await assertSucceeds(getDocs(makeQuery(adminDb)));
   assert.equal(result.size, 26);
   assert.equal(result.docs[0].data().contactName, 'Responsável 00');

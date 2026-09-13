@@ -1,4 +1,4 @@
-import { isValidEmail, isValidPhone, normalizeEmail, normalizePhone } from '../../../functions/contactFields.js';
+import { isValidEmail, isValidPhone, normalizeEmail, normalizePhone, normalizeSearchText } from '../../../functions/contactFields.js';
 const CPF_LENGTH = 11;
 
 function digits(value) {
@@ -44,7 +44,7 @@ export function createVolunteerRecords(input) {
   if (new Date(`${birthDate}T00:00:00`) > new Date()) throw new Error("A data de nascimento não pode estar no futuro.");
 
   return {
-    publicData: { fullName, email, phone, branchId, status: input.status ?? "active", createdAt: null, updatedAt: null },
+    publicData: { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, branchId, status: input.status ?? "active", createdAt: null, updatedAt: null },
     privateData: { branchId, cpf, rg, birthDate, createdAt: null, updatedAt: null },
   };
 }

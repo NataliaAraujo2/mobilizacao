@@ -1,4 +1,4 @@
-import { isValidEmail, isValidPhone } from './contactFields.js';
+import { isValidEmail, isValidPhone, normalizeSearchText } from './contactFields.js';
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
@@ -105,6 +105,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
         role: VIEWER_ROLE,
         branchId,
         contactName,
+        contactNameSearch: normalizeSearchText(contactName),
         contactEmail,
         contactPhone,
         status: "active",
@@ -187,7 +188,7 @@ export const updateBranchViewerContact = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   if (!profile.exists || profile.data().role !== VIEWER_ROLE) {
     throw new HttpsError("not-found", "Acesso da regional não encontrado.");
   }
-  await profile.ref.update({ contactName, contactEmail, contactPhone, updatedAt: FieldValue.serverTimestamp() });
+  await profile.ref.update({ contactName, contactNameSearch: normalizeSearchText(contactName), contactEmail, contactPhone, updatedAt: FieldValue.serverTimestamp() });
   return { uid, contactName, contactEmail, contactPhone };
 });
 

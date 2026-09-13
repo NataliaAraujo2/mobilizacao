@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LIMITS, QUESTION_TYPES } from '../../../functions/formDomain';
 import FormFields from './FormFields';
+import IntegrationSettings from './IntegrationSettings';
 import { initialAnswers, newQuestion, newSection } from '../../domain/forms/editorModel';
 import styles from './LinkForms.module.css';
 
@@ -28,6 +29,7 @@ export default function FormBuilder({ value, onChange }) {
         <label>Instruções (opcional)<textarea maxLength={3000} value={value.instructions} onChange={e => onChange({ ...value, instructions: e.target.value })} /></label>
         <label>Validade padrão em dias<input type="number" min={1} max={365} value={value.validityDays} onChange={e => onChange({ ...value, validityDays: Number(e.target.value) })} /></label>
       </div>
+      <IntegrationSettings definition={value} onChange={onChange} />
       <p>{value.sections.length}/{LIMITS.sections} seções · {count}/{LIMITS.questions} perguntas. As edições ficam locais até salvar.</p>
       {value.sections.map((s, i) => <section className={styles.card} key={s.id}>
         <h3>Seção {i + 1}</h3>

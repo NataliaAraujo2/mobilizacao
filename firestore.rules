@@ -48,7 +48,7 @@ service cloud.firestore {
 
     function validUser(data) {
       return data.keys().hasAll(['displayName', 'email', 'role', 'branchId', 'status', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['displayName', 'email', 'role', 'branchId', 'contactName', 'contactEmail', 'contactPhone', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['displayName', 'email', 'role', 'branchId', 'contactName', 'contactNameSearch', 'contactEmail', 'contactPhone', 'status', 'createdAt', 'updatedAt'])
         && data.displayName is string
         && data.displayName.size() >= 2
         && data.displayName.size() <= 120
@@ -58,16 +58,19 @@ service cloud.firestore {
         && data.status in ['pending', 'active', 'blocked']
         && (
           (data.role == 'branchViewer'
-            && data.keys().hasAll(['contactName', 'contactEmail', 'contactPhone'])
+            && data.keys().hasAll(['contactName', 'contactNameSearch', 'contactEmail', 'contactPhone'])
             && data.contactName is string
             && data.contactName.size() >= 2
             && data.contactName.size() <= 120
+            && data.contactNameSearch is string
+            && data.contactNameSearch.size() >= 2
+            && data.contactNameSearch.size() <= 120
             && data.contactEmail is string
             && data.contactEmail.size() >= 5
             && data.contactEmail.size() <= 160
             && data.contactPhone is string
             && data.contactPhone.matches('^[0-9]{10,13}$'))
-          || (data.role != 'branchViewer' && !data.keys().hasAny(['contactName', 'contactEmail', 'contactPhone']))
+          || (data.role != 'branchViewer' && !data.keys().hasAny(['contactName', 'contactNameSearch', 'contactEmail', 'contactPhone']))
         )
         && (
           (data.role == 'superAdmin' && data.branchId == null)
@@ -76,11 +79,14 @@ service cloud.firestore {
     }
 
     function validVolunteer(data) {
-      return data.keys().hasAll(['fullName', 'email', 'phone', 'branchId', 'status', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['fullName', 'email', 'phone', 'branchId', 'status', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['fullName', 'fullNameSearch', 'email', 'phone', 'branchId', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['fullName', 'fullNameSearch', 'email', 'phone', 'branchId', 'status', 'createdAt', 'updatedAt'])
         && data.fullName is string
         && data.fullName.size() >= 2
         && data.fullName.size() <= 120
+        && data.fullNameSearch is string
+        && data.fullNameSearch.size() >= 2
+        && data.fullNameSearch.size() <= 120
         && data.email is string
         && data.email.size() <= 160
         && data.phone is string
@@ -106,11 +112,14 @@ service cloud.firestore {
     }
 
     function validAction(data) {
-      return data.keys().hasAll(['name', 'branchId', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['name', 'branchId', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
         && data.name is string
         && data.name.size() >= 3
         && data.name.size() <= 160
+        && data.nameSearch is string
+        && data.nameSearch.size() >= 3
+        && data.nameSearch.size() <= 160
         && data.branchId is string
         && data.branchId.size() > 0
         && data.status in ['planning', 'ongoing', 'completed']

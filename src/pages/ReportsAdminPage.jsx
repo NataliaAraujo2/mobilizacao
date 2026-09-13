@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { finalizePublicReport2025, getPublicReport, getPublicReportUrl, MAX_REPORT_SIZE, publishReport2025 } from "../services/reportsService";
 import styles from "./ReportsAdminPage.module.css";
 
@@ -70,7 +69,7 @@ export default function ReportsAdminPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.title}><div><p>Administração nacional</p><h1>Relatório da edição 2025</h1></div><Link to="/admin">Voltar para minha área</Link></header>
+      <header className={styles.title}><div><p>Administração nacional</p><h1>Relatório da edição 2025</h1></div></header>
       <section className={styles.card}>
         <h2>Arquivo público para leitura e impressão</h2>
         <p>Envie somente o PDF já comprimido. Ele será exibido apenas quando uma pessoa abrir o relatório completo; a página <strong>/2025</strong> continua leve.</p>

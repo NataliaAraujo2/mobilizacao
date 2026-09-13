@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { getNewAssociatesCount, updateNewAssociatesCount } from "../services/associationStatsService";
 import styles from "./AssociatesCounterPage.module.css";
@@ -39,7 +38,6 @@ export default function AssociatesCounterPage() {
     <main className={styles.page}>
       <header className={styles.title}>
         <div><p>Administração nacional</p><h1>Novos associados</h1></div>
-        <Link to="/admin">Voltar para minha área</Link>
       </header>
 
       <section className={styles.card} aria-labelledby="counter-title">

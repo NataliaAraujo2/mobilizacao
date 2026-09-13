@@ -1,0 +1,22 @@
+.container {
+  width: min(calc(100% - 2rem), 82rem);
+  margin: 1rem auto 0;
+}
+
+.button {
+  padding: .55rem .85rem;
+  color: var(--map-state);
+  font: inherit;
+  font-weight: 700;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: .65rem;
+  cursor: pointer;
+}
+
+.button:hover { border-color: var(--map-state); }
+.button:focus-visible { outline: 3px solid var(--brand-orange); outline-offset: 2px; }
+
+@media (max-width: 420px) {
+  .container { width: calc(100% - 1.4rem); margin-top: .7rem; }
+}

@@ -7,6 +7,15 @@ test('criação de formulário normaliza definição e rejeita upload', () => {
   const form = sampleForm(); assert.equal(validateDefinition(form).title, 'Unidades');
   form.sections[0].questions[0].type = 'upload'; assert.throws(() => validateDefinition(form), /Tipo/);
 });
+test('integração opcional aceita destinos e apenas perguntas existentes', () => {
+  const form = sampleForm();
+  form.integration = { target: 'volunteer', mapping: { fullName: 'section1/name' } };
+  assert.deepEqual(validateDefinition(form).integration, form.integration);
+  form.integration.mapping.fullName = 'section1/inexistente';
+  assert.throws(() => validateDefinition(form), /Pergunta de integração/);
+  form.integration = { target: 'desconhecido', mapping: {} };
+  assert.throws(() => validateDefinition(form), /Destino de integração/);
+});
 test('limites de seções, perguntas e opções', () => {
   const form = sampleForm(); form.sections = Array.from({ length: 21 }, (_, i) => ({ ...form.sections[0], id: `s${i}` })); assert.throws(() => validateDefinition(form), /seções/);
   const questions = sampleForm(); questions.sections[0].questions = Array.from({ length: 101 }, (_, i) => ({ ...questions.sections[0].questions[0], id: `q${i}` })); assert.throws(() => validateDefinition(questions), /perguntas/);

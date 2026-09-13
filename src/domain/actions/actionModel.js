@@ -1,4 +1,5 @@
 import { isBrazilStateCode } from "../locations/brazilStates";
+import { normalizeSearchText } from '../../../functions/contactFields.js';
 
 export const ACTION_PHASES = Object.freeze({ before: "Antes", during: "Durante", after: "Depois" });
 
@@ -6,6 +7,7 @@ export function createAction(input) {
   const address = input.address ?? {};
   const data = {
     name: String(input.name ?? "").trim(),
+    nameSearch: normalizeSearchText(input.name),
     branchId: String(input.branchId ?? "").trim(),
     status: input.status ?? "planning",
     address: {

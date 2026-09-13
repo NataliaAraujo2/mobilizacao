@@ -52,7 +52,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "role", "order": "ASCENDING" },
-        { "fieldPath": "contactName", "order": "ASCENDING" }
+        { "fieldPath": "contactNameSearch", "order": "ASCENDING" }
       ]
     },
     {
@@ -69,7 +69,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "branchId", "order": "ASCENDING" },
-        { "fieldPath": "fullName", "order": "ASCENDING" }
+        { "fieldPath": "fullNameSearch", "order": "ASCENDING" }
       ]
     },
     {
@@ -78,7 +78,7 @@
       "fields": [
         { "fieldPath": "branchId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "fullName", "order": "ASCENDING" }
+        { "fieldPath": "fullNameSearch", "order": "ASCENDING" }
       ]
     }
   ],

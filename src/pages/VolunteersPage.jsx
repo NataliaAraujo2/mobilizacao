@@ -1,8 +1,9 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
-import { maskCpf } from "../domain/volunteers/volunteerModel";
+import { createVolunteerRecords, maskCpf } from "../domain/volunteers/volunteerModel";
 import { getBranch, listBranches } from "../services/branchesService";
 import { createVolunteer, deleteVolunteer, getVolunteerPrivate, listVolunteersPage, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
@@ -17,6 +18,8 @@ function formatCpf(value) {
 
 
 export default function VolunteersPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { claims } = useAuth();
   const isSuperAdmin = claims?.role === "superAdmin";
   const ownBranchId = claims?.branchId ?? "";
@@ -56,6 +59,29 @@ export default function VolunteersPage() {
     recarregar({ branchId: listBranchId });
   }, [isSuperAdmin, listBranchId, ownBranchId, recarregar]);
 
+  useEffect(() => {
+    const draft = location.state?.volunteerDraft;
+    if (!draft || branches.length === 0) return;
+    const branch = branches.find(item => item.id === draft.branchId);
+    if (!branch) setError('A regional da resposta não está disponível. Selecione uma regional ativa.');
+    else {
+      setEditingId('');
+      setForm({
+        ...EMPTY_FORM,
+        branchId: branch.id,
+        fullName: typeof draft.fullName === 'string' ? draft.fullName : '',
+        email: typeof draft.email === 'string' ? draft.email : '',
+        phone: formatPhone(typeof draft.phone === 'string' ? draft.phone : ''),
+        cpf: formatCpf(typeof draft.cpf === 'string' ? draft.cpf : ''),
+        rg: typeof draft.rg === 'string' ? draft.rg : '',
+        birthDate: typeof draft.birthDate === 'string' ? draft.birthDate : '',
+      });
+      setMessage(`Dados da resposta carregados para ${branch.name}. Confira e complete os campos antes de cadastrar.`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    navigate(location.pathname, { replace: true, state: null });
+  }, [branches, location.pathname, location.state, navigate]);
+
   const branchNames = useMemo(() => new Map(branches.map((branch) => [branch.id, branch.name])), [branches]);
 
   function resetForm() {
@@ -65,19 +91,26 @@ export default function VolunteersPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (saving || loadingVolunteers) return;
     setSaving(true);
     setError("");
     setMessage("");
     try {
+      const records = createVolunteerRecords(form);
+      let savedId = editingId;
       if (editingId) {
         await updateVolunteer(editingId, form);
         setPrivateData((current) => ({ ...current, [editingId]: { cpf: form.cpf.replace(/\D/g, ""), rg: form.rg.replace(/[^0-9a-z]/gi, "").toUpperCase(), birthDate: form.birthDate } }));
         setMessage("Cadastro atualizado com sucesso.");
       } else {
-        await createVolunteer(form);
+        savedId = await createVolunteer(form);
         setMessage("Voluntário cadastrado com segurança.");
       }
-      await recarregar({ branchId: listBranchId });
+      atualizarDados(current => {
+        const previous = current.find(item => item.id === savedId);
+        const saved = { ...previous, ...records.publicData, id: savedId };
+        return [...current.filter(item => item.id !== savedId), saved].sort((a, b) => a.fullName.localeCompare(b.fullName, "pt-BR"));
+      });
       resetForm();
     } catch (saveError) {
       setError(saveError.message || "Não foi possível salvar o voluntário.");
@@ -167,7 +200,7 @@ export default function VolunteersPage() {
           <label>Regional<select required disabled={!isSuperAdmin || Boolean(editingId)} value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>}
           <div className={styles.formActions}>
-            <button className={styles.primary} type="submit" disabled={saving || branches.length === 0}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar voluntário"}</button>
+            <button className={styles.primary} type="submit" disabled={saving || loadingVolunteers || branches.length === 0}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar voluntário"}</button>
             {editingId && <button className={styles.secondary} type="button" onClick={resetForm}>Cancelar</button>}
           </div>
         </form>
@@ -194,7 +227,7 @@ export default function VolunteersPage() {
             </article>;
           })}</div>
         )}
-        {volunteers.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loadingVolunteers} onClick={carregarMais}>{loadingVolunteers ? "Carregando..." : "Carregar mais voluntários"}</button>}
+        {volunteers.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loadingVolunteers || saving} onClick={carregarMais}>{loadingVolunteers ? "Carregando..." : "Carregar mais voluntários"}</button>}
       </section>
     </main>
   );

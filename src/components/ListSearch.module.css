@@ -1,0 +1,5 @@
+.form { display: flex; align-items: end; gap: .6rem; flex-wrap: wrap; }
+.form label { flex: 1 1 15rem; }
+.form input { width: 100%; }
+.form button { white-space: nowrap; }
+.clear { background: transparent; color: var(--map-state); border: 1px solid var(--border); }

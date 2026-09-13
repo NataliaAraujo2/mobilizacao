@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatPhone, normalizePhone, normalizeEmail, isValidEmail, isValidPhone } from './contactFields.js';
+import { formatPhone, normalizePhone, normalizeEmail, normalizeSearchText, isValidEmail, isValidPhone } from './contactFields.js';
+
+test('busca normaliza letras maiúsculas, espaços e acentos', () => {
+  assert.equal(normalizeSearchText('  Natália de ARAÚJO  '), 'natalia de araujo');
+});
 
 test('telefone formata fixos e celulares sem perder números ou código internacional', () => {
   assert.equal(formatPhone('1133334444'), '(11) 3333-4444');

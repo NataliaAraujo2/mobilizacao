@@ -1,5 +1,6 @@
 import { createVolunteerRecords } from "../domain/volunteers/volunteerModel";
 import { getDbService } from "./firebaseDb";
+import { normalizeSearchText } from '../../functions/contactFields.js';
 
 export async function createVolunteer(input) {
   const records = createVolunteerRecords(input);
@@ -44,8 +45,8 @@ export async function listVolunteersPage({ branchId = null, activeOnly = false, 
   const constraints = [collection(db, "volunteers")];
   if (branchId) constraints.push(where("branchId", "==", branchId));
   if (activeOnly) constraints.push(where("status", "==", "active"));
-  constraints.push(orderBy("fullName"));
-  const term = search.trim();
+  constraints.push(orderBy("fullNameSearch"));
+  const term = normalizeSearchText(search);
   if (term) constraints.push(startAt(term), endAt(`${term}\uf8ff`));
   if (cursor) constraints.push(startAfter(cursor));
   constraints.push(limit(safePageSize + 1));
@@ -77,6 +78,7 @@ export async function updateVolunteer(id, input) {
   const batch = writeBatch(db);
   batch.update(doc(db, "volunteers", id), {
     fullName: records.publicData.fullName,
+    fullNameSearch: records.publicData.fullNameSearch,
     email: records.publicData.email,
     phone: records.publicData.phone,
     status: records.publicData.status,

@@ -1,11 +1,27 @@
 import { createBranch } from "../domain/branches/branchModel";
 import { getDbService } from "./firebaseDb";
 
+const CACHE_MS = 60_000;
+let branchesCache = null;
+let branchesPromise = null;
+function clearBranchesCache() { branchesCache = null; branchesPromise = null; }
+
 function branchIdFromCode(code) {
   return code.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
 }
 
 export async function listBranches() {
+  if (branchesCache?.expiresAt > Date.now()) return branchesCache.data;
+  if (branchesPromise) return branchesPromise;
+  branchesPromise = loadBranches();
+  try {
+    const data = await branchesPromise;
+    branchesCache = { data, expiresAt: Date.now() + CACHE_MS };
+    return data;
+  } finally { branchesPromise = null; }
+}
+
+async function loadBranches() {
   const { db, collection, getDocs } = await getDbService(["collection", "getDocs"]);
   const snapshot = await getDocs(collection(db, "branches"));
 
@@ -15,6 +31,7 @@ export async function listBranches() {
 }
 
 export async function getBranch(id) {
+  if (branchesCache?.expiresAt > Date.now()) return branchesCache.data.find(branch => branch.id === id) ?? null;
   const { db, doc, getDoc } = await getDbService(["doc", "getDoc"]);
   const snapshot = await getDoc(doc(db, "branches", id));
   return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
@@ -39,7 +56,7 @@ export async function addBranch(input) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-
+  clearBranchesCache();
   return { id, ...data };
 }
 
@@ -55,6 +72,6 @@ export async function editBranch(id, input) {
     status: data.status,
     updatedAt: serverTimestamp(),
   });
-
+  clearBranchesCache();
   return { id, ...data };
 }

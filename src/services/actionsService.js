@@ -2,6 +2,7 @@ import { createAction } from "../domain/actions/actionModel";
 import { compressImage } from "../utils/imageCompression";
 import { getDbService } from "./firebaseDb";
 import { getStorageService } from "./firebaseStorage";
+import { normalizeSearchText } from '../../functions/contactFields.js';
 
 async function removeOrphanedPhoto(deleteObject, fileRef) {
   // Uma segunda tentativa cobre falhas transitórias sem criar uma Function
@@ -27,11 +28,11 @@ export async function addAction(input) {
 
 export async function listActionsPage({ search = "", cursor = null, pageSize = 20 } = {}) {
   const safePageSize = Math.min(Math.max(Number(pageSize) || 20, 1), 50);
-  const term = search.trim();
+  const term = normalizeSearchText(search);
   const { db, collection, endAt, getDocs, limit, orderBy, query, startAfter, startAt } = await getDbService([
     "collection", "endAt", "getDocs", "limit", "orderBy", "query", "startAfter", "startAt",
   ]);
-  const constraints = [collection(db, "actions"), orderBy("name")];
+  const constraints = [collection(db, "actions"), orderBy("nameSearch")];
   if (term) constraints.push(startAt(term), endAt(`${term}\uf8ff`));
   if (cursor) constraints.push(startAfter(cursor));
   constraints.push(limit(safePageSize + 1));

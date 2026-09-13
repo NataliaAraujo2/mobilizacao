@@ -1,6 +1,9 @@
 // Shared by the browser and Cloud Functions; no environment-specific dependencies.
 export function normalizePhone(value) { return String(value ?? '').replace(/\D/g, ''); }
 export function normalizeEmail(value) { return String(value ?? '').trim().toLowerCase(); }
+export function normalizeSearchText(value) {
+  return String(value ?? '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR');
+}
 export function isValidEmail(value) {
   const email = normalizeEmail(value);
   return email.length <= 254 && /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/.test(email);

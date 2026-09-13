@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import FormBuilder from '../components/LinkForms/FormBuilder';
 import { blankForm } from '../domain/forms/editorModel';
 import FormFields from '../components/LinkForms/FormFields';
@@ -9,7 +8,8 @@ import { listBranchContactsPage } from '../services/branchViewersService';
 import { generalWhatsappMessage, LIMITS, STATUSES, validateDefinition, validateRecipients, whatsappMessage, whatsappUrl } from '../../functions/formDomain';
 import styles from '../components/LinkForms/LinkForms.module.css';
 import NoticePoster from '../components/LinkForms/NoticePoster';
-import ResponsibleImport from '../components/LinkForms/ResponsibleImport';
+import ResponseIntegration from '../components/LinkForms/ResponseIntegration';
+import ListSearch from '../components/ListSearch';
 
 const localDate = days => { const d = new Date(Date.now() + days * 86400000); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
 
@@ -17,14 +17,13 @@ function RecipientImport({ onAdd, run }) {
   const [search, setSearch] = useState(''); const [result, setResult] = useState(null);
   const [source, setSource] = useState('branches');
   const branches = source === 'branches';
-  async function load(cursor = null) { await run(async () => setResult(await (branches ? listBranchContactsPage({ search, cursor }) : listVolunteersPage({ search, cursor, pageSize: 25 })))); }
+  async function load(cursor = null, term = search) { await run(async () => setResult(await (branches ? listBranchContactsPage({ search: term, cursor, pageSize: 10 }) : listVolunteersPage({ search: term, cursor, pageSize: 10 })))); }
   return <section className={styles.card}>
     <h3>Adicionar pessoas cadastradas</h3><p>Escolha uma lista para encontrar os destinatários da campanha.</p>
     <label>Buscar em<select value={source} onChange={e => { setSource(e.target.value); setSearch(''); setResult(null); }}><option value="branches">Responsáveis das regionais</option><option value="volunteers">Voluntários</option></select></label>
-    <label>{branches ? 'Nome do responsável' : 'Nome do voluntário'}<input value={search} onChange={e => { setSearch(e.target.value); setResult(null); }} placeholder="Digite o início do nome ou deixe vazio" /></label>
-    <p>Busca pelo início do nome, respeitando maiúsculas e minúsculas.{branches && ' Os contatos vêm do cadastro de acessos das regionais.'}</p>
-    <button type="button" onClick={() => load()}>{branches ? 'Buscar responsáveis' : 'Buscar voluntários'}</button>
-    {result && <><p>{result.data.length ? 'Adicione as pessoas que devem receber o formulário.' : 'Nenhuma pessoa encontrada nesta busca.'}</p>{result.data.map(v => <div className={styles.recipientRow} key={v.id}><span><strong>{v.fullName}</strong><small>{v.branchLabel ? `${v.branchLabel} · ` : ''}{v.phone || 'Sem telefone'}</small></span><button type="button" onClick={() => onAdd(v)}>Adicionar {v.fullName}</button></div>)}{result.hasMore && <button type="button" onClick={() => load(result.cursor)}>Próximas 25 pessoas</button>}</>}
+    <ListSearch label={branches ? 'Nome do responsável' : 'Nome do voluntário'} placeholder="Digite o início do nome ou deixe vazio" initialValue={search} onSearch={term => { setSearch(term); load(null, term); }} />
+    <p>Busca pelo início do nome, sem diferenciar maiúsculas, minúsculas ou acentos.{branches && ' Os contatos vêm do cadastro de acessos das regionais.'}</p>
+    {result && <><p>{result.data.length ? 'Adicione as pessoas que devem receber o formulário.' : 'Nenhuma pessoa encontrada nesta busca.'}</p>{result.data.map(v => <div className={styles.recipientRow} key={v.id}><span><strong>{v.fullName}</strong><small>{v.branchLabel ? `${v.branchLabel} · ` : ''}{v.phone || 'Sem telefone'}</small></span><button type="button" onClick={() => onAdd(v)}>Adicionar {v.fullName}</button></div>)}{result.hasMore && <button type="button" onClick={() => load(result.cursor)}>Próximas 10 pessoas</button>}</>}
   </section>;
 }
 
@@ -41,7 +40,11 @@ function CampaignDetail({ initial, run, onClose }) {
   async function refresh() { setCampaign(await manageForms('getCampaign', { id: campaign.id })); setRevision(v => v + 1); }
   async function change(r, next) {
     if (['CANCELADA', 'ARCHIVE'].includes(next) && !window.confirm(next === 'ARCHIVE' ? 'Arquivar esta solicitação?' : 'Cancelar este link? Ele não aceitará novas respostas.')) return;
-    await run(async () => { await manageForms('review', { id: campaign.id, requestId: r.id, status: next }); setReview(null); await refresh(); }, 'Solicitação atualizada.');
+    await run(async () => {
+      await manageForms('review', { id: campaign.id, requestId: r.id, status: next });
+      setReview(null);
+      setPage(current => ({ ...current, items: next === 'ARCHIVE' ? current.items.filter(item => item.id !== r.id) : current.items.map(item => item.id === r.id ? { ...item, status: next } : item) }));
+    }, 'Solicitação atualizada.');
   }
   const copy = value => run(() => navigator.clipboard.writeText(value), 'Copiado.');
   return <section>
@@ -66,7 +69,7 @@ function CampaignDetail({ initial, run, onClose }) {
             {!r.archived && r.status !== 'PENDENTE' && <button onClick={() => change(r, 'ARCHIVE')}>Arquivar</button>}
           </div>
           {review?.request.id === r.id && <section aria-label={`Resposta de ${r.name}`}><h3>Resposta de {r.name}</h3><p>Recebida em {new Date(review.response.submittedAt).toLocaleString('pt-BR')}</p><FormFields definition={campaign.definition} answers={review.response.answers} readOnly />
-            <ResponsibleImport key={r.id} definition={campaign.definition} response={review.response} request={r} />
+            <ResponseIntegration key={r.id} definition={campaign.definition} response={review.response} request={r} />
             <div className={styles.toolbar}>{['RESPONDIDA', 'APROVADA', 'REJEITADA'].includes(r.status) && <><button onClick={() => change(r, 'APROVADA')}>Aprovar</button><button onClick={() => change(r, 'REJEITADA')}>Rejeitar</button></>}<button onClick={() => setReview(null)}>Fechar resposta</button></div></section>}
         </article>;
       })}
@@ -106,7 +109,6 @@ export default function LinkFormsPage() {
     }, 'Campanha criada. Os links estão disponíveis na fila.');
   }
   return <main className={styles.page}>
-    <Link to="/admin">← Minha área</Link>
     {message && <p role="status" className={styles.success}>{message}</p>}{error && <p role="alert" className={styles.error}>{error}</p>}
     <fieldset disabled={busy} className={styles.choices} aria-busy={busy}>
       {campaign ? <CampaignDetail key={campaign.id} initial={campaign} run={run} onClose={() => { setCampaign(null); setRevision(v => v + 1); }} /> : <>

@@ -1,10 +1,10 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { deleteBranchViewer } from '../services/branchViewersService';
-import { listBranches } from "../services/branchesService";
-import { createBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
+import { getBranch, listBranches } from "../services/branchesService";
+import { createBranchViewer, getBranchViewerByBranch, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
 import styles from "./BranchViewersPage.module.css";
 
 const ERROR_MESSAGES = {
@@ -20,6 +20,7 @@ const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contact
 export default function BranchViewersPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const responsibleDraft = useRef(location.state?.responsibleDraft).current;
   const [branches, setBranches] = useState([]);
   const [viewers, setViewers] = useState([]);
   const [credentials, setCredentials] = useState(null);
@@ -32,19 +33,23 @@ export default function BranchViewersPage() {
   const [editingContact, setEditingContact] = useState("");
 
   useEffect(() => {
-    Promise.all([listBranches(), listBranchViewers()])
+    const branchId = responsibleDraft?.branchId;
+    const requests = branchId
+      ? [getBranch(branchId).then(branch => branch ? [branch] : []), getBranchViewerByBranch(branchId).then(viewer => viewer ? [viewer] : [])]
+      : [listBranches(), listBranchViewers()];
+    Promise.all(requests)
       .then(([branchList, viewerList]) => {
         setBranches(branchList.filter((branch) => branch.status === "active"));
         setViewers(viewerList);
       })
       .catch(() => setError("Não foi possível carregar os acessos e regionais."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [responsibleDraft]);
 
   const viewerByBranch = useMemo(() => new Map(viewers.map((viewer) => [viewer.branchId, viewer])), [viewers]);
 
   useEffect(() => {
-    const draft = location.state?.responsibleDraft;
+    const draft = responsibleDraft;
     if (loading || !draft) return;
     const branch = branches.find(item => item.id === draft.branchId);
     if (!branch) setError('A regional da resposta não está disponível. Selecione uma regional ativa.');
@@ -55,7 +60,7 @@ export default function BranchViewersPage() {
       setMessage(`Dados da resposta carregados para ${branch.name}. Confira os campos e confirme ${viewer ? 'em Salvar contato' : 'em Gerar acesso'}.`);
     }
     navigate(location.pathname, { replace: true, state: null });
-  }, [loading, branches, viewerByBranch, location.state, location.pathname, navigate]);
+  }, [loading, branches, viewerByBranch, responsibleDraft, location.pathname, navigate]);
 
   useEffect(() => {
     if (editingContact) document.getElementById('responsible-contact-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -2,6 +2,10 @@ import { isValidEmail, isValidPhone } from './contactFields.js';
 export const LIMITS = Object.freeze({ sections: 20, questions: 100, recipients: 200, repeats: 20, answer: 4000, payload: 100000 });
 export const QUESTION_TYPES = Object.freeze({ short: 'Resposta curta', long: 'Texto longo', email: 'E-mail', phone: 'Telefone', document: 'CPF ou CNPJ', number: 'Número', money: 'Valor', date: 'Data', boolean: 'Sim ou não', single: 'Seleção única', select: 'Lista de opções' });
 export const STATUSES = ['PENDENTE', 'RESPONDIDA', 'APROVADA', 'REJEITADA', 'CANCELADA', 'EXPIRADA'];
+const INTEGRATION_FIELDS = Object.freeze({
+  responsible: ['contactName', 'contactPhone', 'contactEmail'],
+  volunteer: ['fullName', 'email', 'phone', 'cpf', 'rg', 'birthDate'],
+});
 export class FormValidationError extends Error {}
 export function ensure(condition, message) { if (!condition) throw new FormValidationError(message); }
 function text(value, max, required = true) {
@@ -31,7 +35,20 @@ export function validateDefinition(input) {
   });
   const validityDays = Number(input.validityDays ?? 30);
   ensure(Number.isInteger(validityDays) && validityDays >= 1 && validityDays <= 365, 'Validade deve ser de 1 a 365 dias.');
-  return { title: text(input.title, 160), description: text(input.description ?? '', 3000, false), instructions: text(input.instructions ?? '', 3000, false), validityDays, sections };
+  let integration;
+  if (input.integration?.target) {
+    const target = input.integration.target;
+    ensure(Object.hasOwn(INTEGRATION_FIELDS, target), 'Destino de integração inválido.');
+    const mapping = input.integration.mapping ?? {};
+    ensure(mapping && typeof mapping === 'object' && !Array.isArray(mapping), 'Mapeamento de integração inválido.');
+    ensure(Object.keys(mapping).every(field => INTEGRATION_FIELDS[target].includes(field)), 'Campo de integração inválido.');
+    const questionIds = new Set(sections.flatMap(section => section.questions.map(question => `${section.id}/${question.id}`)));
+    integration = { target, mapping: Object.fromEntries(Object.entries(mapping).filter(([, source]) => source).map(([field, source]) => {
+      ensure(typeof source === 'string' && questionIds.has(source), 'Pergunta de integração inválida.');
+      return [field, source];
+    })) };
+  }
+  return { title: text(input.title, 160), description: text(input.description ?? '', 3000, false), instructions: text(input.instructions ?? '', 3000, false), validityDays, sections, integration: integration ?? null };
 }
 export function validateRecipients(recipients) {
   ensure(Array.isArray(recipients) && recipients.length > 0 && recipients.length <= LIMITS.recipients, `Informe de 1 a ${LIMITS.recipients} destinatários.`);

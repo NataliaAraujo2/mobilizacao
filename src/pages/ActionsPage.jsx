@@ -3,6 +3,7 @@ import { addAction, listActionsPage, uploadActionPhotos } from "../services/acti
 import { listBranches } from "../services/branchesService";
 import { findAddressByCep } from "../services/cepService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
+import ListSearch from '../components/ListSearch';
 import styles from "./ActionsPage.module.css";
 
 const EMPTY_ADDRESS = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", source: "manual" };
@@ -15,7 +16,6 @@ function formatCep(value) {
 
 export default function ActionsPage() {
   const [branches, setBranches] = useState([]);
-  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
   const [photos, setPhotos] = useState(EMPTY_PHOTOS);
@@ -29,7 +29,7 @@ export default function ActionsPage() {
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listActionsPage({ search: filtros.search, cursor, pageSize })
   ), []);
-  const { dados: actions, loading, error: listError, hasMore, recarregar, carregarMais } = useInfiniteScroll(buscarPagina, { pageSize: 20 });
+  const { dados: actions, loading, error: listError, hasMore, recarregar, carregarMais } = useInfiniteScroll(buscarPagina, { pageSize: 10 });
 
   useEffect(() => {
     listBranches()
@@ -166,7 +166,7 @@ export default function ActionsPage() {
         {message && <p className={styles.success} role="status">{message}</p>}
       </section>
 
-      <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><form className={styles.searchForm} onSubmit={(event) => { event.preventDefault(); setSearch(searchInput); }}><label>Buscar por nome<input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Nome da ação" /></label><button type="submit">Buscar</button></form></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
+      <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
         <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button></div>
         {photoActionId === action.id && <form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form>}
       </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>

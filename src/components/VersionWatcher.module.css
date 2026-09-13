@@ -1,0 +1,6 @@
+.banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem max(1rem, calc((100% - 1040px) / 2)); background: #eaf4fb; color: #17405b; border-bottom: 2px solid #0061a8; }
+.banner > div { flex: 1 1 240px; }
+.banner p { margin: .25rem 0 0; font-size: .95rem; }
+.banner button { min-height: 44px; padding: .7rem 1rem; border: 0; border-radius: 8px; background: #0061a8; color: #fff; font: inherit; cursor: pointer; }
+.banner button:focus-visible { outline: 3px solid #ee8123; outline-offset: 3px; }
+@media print { .banner { display: none; } }
