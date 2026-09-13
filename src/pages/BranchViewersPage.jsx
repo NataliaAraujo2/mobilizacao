@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { deleteBranchViewer } from '../services/branchViewersService';
 import { getBranch, listBranches } from "../services/branchesService";
 import { createBranchViewer, getBranchViewerByBranch, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
+import { whatsappUrl } from "../utils/whatsapp";
 import styles from "./BranchViewersPage.module.css";
 
 const ERROR_MESSAGES = {
@@ -85,7 +86,7 @@ export default function BranchViewersPage() {
       const input = { ...contactForm, branchId: branch.id, contactPhone: contactForm.contactPhone.replace(/\D/g, "") };
       const result = await createBranchViewer(input);
       setViewers((current) => [...current, { id: result.uid, displayName: result.username, ...input, role: "branchViewer", status: "active" }]);
-      setCredentials({ ...result, branchName: branch.name });
+      setCredentials({ ...result, branchName: branch.name, contactPhone: input.contactPhone });
       setContactForm(EMPTY_CONTACT);
       setMessage("Acesso criado. Copie os dados antes de sair desta tela.");
       setBusy("");
@@ -143,7 +144,7 @@ export default function BranchViewersPage() {
     beginAction(`reset-${viewer.id}`);
     try {
       const result = await resetBranchViewerPassword(viewer.id);
-      setCredentials({ ...result, branchName: branch.name });
+      setCredentials({ ...result, branchName: branch.name, contactPhone: viewer.contactPhone });
       setPendingReset("");
       setMessage("Nova senha criada. A senha anterior não funciona mais.");
       setBusy("");
@@ -156,6 +157,13 @@ export default function BranchViewersPage() {
     if (!credentials) return;
     await navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha: ${credentials.password}`);
     setMessage("Usuário e senha copiados.");
+  }
+
+  function shareCredentials() {
+    if (!credentials) return;
+    const url = whatsappUrl(credentials.contactPhone, `Olá, ${credentials.branchName}!\n\nSeu acesso à MobilizAÇÃO foi criado.\nUsuário: ${credentials.username}\nSenha temporária: ${credentials.password}\n\nAcesse: ${window.location.origin}/login`);
+    if (!url) { setError('Cadastre o telefone do responsável antes de compartilhar pelo WhatsApp.'); return; }
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   async function removeResponsible(viewer, branch) {
@@ -189,6 +197,7 @@ export default function BranchViewersPage() {
           <div><span>Usuário</span><strong>{credentials.username}</strong></div>
           <div><span>Senha temporária</span><strong>{credentials.password}</strong></div>
           <button type="button" onClick={copyCredentials}>Copiar usuário e senha</button>
+          <button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button>
           <p>Guarde agora: por segurança, a senha não fica salva para consulta.</p>
         </section>
       )}
