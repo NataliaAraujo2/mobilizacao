@@ -32,6 +32,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const destination = destinationForRole(claims?.role);
   if (user) return <Navigate to={destination} replace />;
@@ -63,7 +64,16 @@ export default function LoginPage() {
           <input id="email" type="text" autoComplete="username" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
 
           <label htmlFor="password">Senha</label>
-          <input id="password" type="password" autoComplete="current-password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
+          <div className={styles.passwordField}>
+            <input id="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
+            <button className={styles.passwordToggle} type="button" aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"} title={showPassword ? "Ocultar senha" : "Mostrar senha"} aria-controls="password" onClick={() => setShowPassword(current => !current)}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {showPassword && <path d="m3 3 18 18" />}
+              </svg>
+            </button>
+          </div>
 
           {error && <p className={styles.error} role="alert">{error}</p>}
           <button type="submit" disabled={submitting}>{submitting ? "Entrando..." : "Entrar"}</button>

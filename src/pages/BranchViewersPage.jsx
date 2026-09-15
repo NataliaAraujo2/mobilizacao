@@ -9,8 +9,8 @@ import { whatsappUrl } from "../utils/whatsapp";
 import styles from "./BranchViewersPage.module.css";
 
 const ERROR_MESSAGES = {
-  "functions/already-exists": "Esta regional já possui um acesso de consulta.",
-  "functions/not-found": "A regional ou o acesso não foi encontrado.",
+  "functions/already-exists": "Esta coordenação estadual já possui um acesso de consulta.",
+  "functions/not-found": "A coordenação estadual ou o acesso não foi encontrado.",
   "functions/permission-denied": "Você não tem permissão para gerenciar estes acessos.",
   "functions/unavailable": "O serviço local não está disponível. Verifique os emuladores.",
 };
@@ -43,7 +43,7 @@ export default function BranchViewersPage() {
         setBranches(branchList.filter((branch) => branch.status === "active"));
         setViewers(viewerList);
       })
-      .catch(() => setError("Não foi possível carregar os acessos e regionais."))
+      .catch(() => setError("Não foi possível carregar os acessos e coordenações estaduais."))
       .finally(() => setLoading(false));
   }, [responsibleDraft]);
 
@@ -53,7 +53,7 @@ export default function BranchViewersPage() {
     const draft = responsibleDraft;
     if (loading || !draft) return;
     const branch = branches.find(item => item.id === draft.branchId);
-    if (!branch) setError('A regional da resposta não está disponível. Selecione uma regional ativa.');
+    if (!branch) setError('A coordenação estadual da resposta não está disponível. Selecione uma coordenação estadual ativa.');
     else {
       const viewer = viewerByBranch.get(branch.id);
       setEditingContact(viewer?.id ?? `new-${branch.id}`);
@@ -167,7 +167,7 @@ export default function BranchViewersPage() {
   }
 
   async function removeResponsible(viewer, branch) {
-    if (busy || !window.confirm(`Excluir ${viewer.contactName || viewer.displayName}, responsável por ${branch.name}? O contato e seu acesso serão apagados permanentemente. A regional e seus voluntários serão mantidos.`)) return;
+    if (busy || !window.confirm(`Excluir ${viewer.contactName || viewer.displayName}, responsável por ${branch.name}? O contato e seu acesso serão apagados permanentemente. A coordenação estadual e seus voluntários serão mantidos.`)) return;
     beginAction(`delete-${viewer.id}`);
     try {
       await deleteBranchViewer(viewer.id);
@@ -181,19 +181,19 @@ export default function BranchViewersPage() {
   return (
     <main className={styles.page}>
       <header className={styles.title}>
-        <div><p>Administração nacional</p><h1>Administradores das regionais</h1></div>
+        <div><p>Administração nacional</p><h1>Administradores das coordenações estaduais</h1></div>
         <span>{viewers.length} gerado{viewers.length === 1 ? "" : "s"}</span>
       </header>
 
       <section className={styles.intro}>
-        <h2>Um acesso compartilhado por regional</h2>
-        <p>Essas contas podem consultar e imprimir a listagem da própria regional. Elas não podem cadastrar, editar ou apagar dados.</p>
+        <h2>Um acesso compartilhado por coordenação estadual</h2>
+        <p>Essas contas podem consultar e imprimir a listagem da própria coordenação estadual. Elas não podem cadastrar, editar ou apagar dados.</p>
         <p>As senhas usam três palavras curtas e dois números, sem dados pessoais e sem caracteres difíceis de digitar.</p>
       </section>
 
       {credentials && (
         <section className={styles.credentials} aria-live="polite">
-          <div><span>Regional</span><strong>{credentials.branchName}</strong></div>
+          <div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div>
           <div><span>Usuário</span><strong>{credentials.username}</strong></div>
           <div><span>Senha temporária</span><strong>{credentials.password}</strong></div>
           <button type="button" onClick={copyCredentials}>Copiar usuário e senha</button>
@@ -206,8 +206,8 @@ export default function BranchViewersPage() {
       {message && <p className={styles.success} role="status">{message}</p>}
 
       <section className={styles.card} aria-labelledby="branches-title">
-        <h2 id="branches-title">Regionais</h2>
-        {loading ? <p aria-busy="true">Carregando...</p> : branches.length === 0 ? <p>Nenhuma regional ativa cadastrada.</p> : (
+        <h2 id="branches-title">Coordenações estaduais</h2>
+        {loading ? <p aria-busy="true">Carregando...</p> : branches.length === 0 ? <p>Nenhuma coordenação estadual ativa cadastrada.</p> : (
           <div className={styles.list}>
             {branches.map((branch) => {
               const viewer = viewerByBranch.get(branch.id);

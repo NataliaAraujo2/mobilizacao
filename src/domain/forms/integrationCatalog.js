@@ -1,7 +1,7 @@
 export const FORM_INTEGRATIONS = Object.freeze({
   responsible: {
-    label: 'Cadastro de responsável regional',
-    description: 'Leva nome, telefone e e-mail para o cadastro de acesso da regional.',
+    label: 'Cadastro de responsável da coordenação estadual',
+    description: 'Leva nome, telefone e e-mail para o cadastro de acesso da coordenação estadual.',
     route: '/admin/acessos-consulta',
     stateKey: 'responsibleDraft',
     fields: [

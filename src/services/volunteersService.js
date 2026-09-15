@@ -8,6 +8,11 @@ async function callVolunteerAccess(action, volunteerId) {
   return (await httpsCallable(functions, 'manageVolunteerAccess')({ action, volunteerId })).data;
 }
 
+export async function listCoordinationActionVolunteers(input) {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, 'listCoordinationActionVolunteers')(input)).data;
+}
+
 export async function createVolunteer(input) {
   const records = createVolunteerRecords(input);
   const { db, collection, doc, serverTimestamp, writeBatch } = await getDbService([

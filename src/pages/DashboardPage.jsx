@@ -11,9 +11,9 @@ const ADMIN_ACTIONS = [
   { to: "/admin/relatorio-2025", code: "PDF", title: "Relatório 2025", description: "Arquive a versão comprimida para leitura e impressão pública." },
   { to: "/admin/acoes", code: "AC", title: "Ações", description: "Cadastre locais, orientações, fotos e informações de cada mobilização.", featured: true },
   { to: "/admin/voluntarios", code: "VO", title: "Voluntários", description: "Cadastre e organize os dados das pessoas participantes." },
-  { to: "/admin/presencas", code: "✓", title: "Listas de presença", description: "Consulte presenças e ausências por regional e ação." },
-  { to: "/admin/regionais", code: "RE", title: "Regionais", description: "Gerencie as regionais e seus estados de atuação." },
-  { to: "/admin/acessos-consulta", code: "PE", title: "Acessos das regionais", description: "Crie e acompanhe os acessos de consulta de cada regional." },
+  { to: "/admin/presencas", code: "✓", title: "Listas de presença", description: "Consulte presenças e ausências por coordenação estadual e ação." },
+  { to: "/admin/regionais", code: "RE", title: "Coordenações estaduais", description: "Gerencie as coordenações estaduais e seus estados de atuação." },
+  { to: "/admin/acessos-consulta", code: "PE", title: "Acessos das coordenações estaduais", description: "Crie e acompanhe os acessos de consulta de cada coordenação estadual." },
   { to: "/admin/superadmins", code: "SA", title: "SuperAdmins", description: "Autorize novos administradores nacionais." },
 ];
 
@@ -39,7 +39,7 @@ export default function DashboardPage({ area }) {
             <p>{isAdminArea ? "Acompanhe e organize a MobilizAÇÃO em todo o Brasil." : "Consulte aqui as informações da sua participação."}</p>
             <div className={styles.statuses} aria-label="Informações do acesso">
               <span><i aria-hidden="true" /> Conta ativa</span>
-              <span>{isAdminArea ? "Acesso a todas as regionais" : `Regional ${claims?.branchId ?? "não vinculada"}`}</span>
+              <span>{isAdminArea ? "Acesso a todas as coordenações estaduais" : `Coordenação estadual ${claims?.branchId ?? "não vinculada"}`}</span>
             </div>
           </div>
           <img src={growingPlant} alt="" aria-hidden="true" />

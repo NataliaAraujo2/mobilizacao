@@ -36,7 +36,7 @@ export default function ActionsPage() {
       .then((branchList) => {
         setBranches(branchList.filter((branch) => branch.status === "active"));
       })
-      .catch(() => setError("Não foi possível carregar as regionais."));
+      .catch(() => setError("Não foi possível carregar as coordenações estaduais."));
   }, []);
 
   useEffect(() => { recarregar({ search }); }, [recarregar, search]);
@@ -137,7 +137,7 @@ export default function ActionsPage() {
         <form onSubmit={handleSubmit}>
           <fieldset><legend>Informações principais</legend><div className={styles.grid}>
             <label className={styles.wide}>Nome da ação<input required minLength="3" maxLength="160" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
-            <label>Regional responsável<select required value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
+            <label>Coordenação estadual responsável<select required value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
             <label>Data da ação<input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
           </div></fieldset>
 

@@ -9,5 +9,10 @@
 .card input:focus { outline: 3px solid color-mix(in srgb, var(--focus) 65%, transparent); border-color: var(--map-state); }
 .card button { min-height: 3rem; margin-top: 0.75rem; color: white; font-weight: 800; background: var(--map-state); border: 0; border-radius: 0.65rem; cursor: pointer; }
 .card button:disabled { cursor: wait; opacity: 0.65; }
+.passwordField { position: relative; }
+.passwordField input { padding-right: 3.25rem; }
+.card .passwordToggle { position: absolute; inset: 2px 2px 2px auto; width: 2.75rem; min-height: 0; margin: 0; display: grid; place-items: center; color: var(--map-state); background: transparent; }
+.passwordToggle:hover { background: #edf5fa; }
+.passwordToggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .error { margin: 0.5rem 0 0; color: #a22b2b; font-weight: 700; }
 .devNote { margin: 1.25rem 0 0; color: var(--text-muted); font-size: 0.82rem; }

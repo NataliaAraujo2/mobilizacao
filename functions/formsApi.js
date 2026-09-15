@@ -69,7 +69,7 @@ export function createFormsApi(db, now = () => Date.now()) {
           const recipients = data.mode === 'individual' ? validateRecipients(data.recipients) : [];
           const collectBranch = data.mode === 'general' && data.collectBranch === true;
           const branchOptions = collectBranch ? (await db.collection('branches').get()).docs.filter(d => d.data().status === 'active').map(d => ({ id: d.id, name: d.data().name })).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')) : [];
-          ensure(!collectBranch || branchOptions.length > 0, 'Cadastre uma regional ativa antes de solicitar a regional.');
+          ensure(!collectBranch || branchOptions.length > 0, 'Cadastre uma coordenação estadual ativa antes de solicitar a coordenação estadual.');
           const ref = campaignRef(uid, data.id); const generalToken = data.mode === 'general' ? token() : null;
           await db.runTransaction(async tx => {
             const existing = await tx.get(ref);
@@ -174,7 +174,7 @@ export function createFormsApi(db, now = () => Date.now()) {
           if (rs.exists) return { token: rs.data().token };
           ensure(cs.data().recipientCount < LIMITS.recipients, 'Esta campanha atingiu o limite de participantes.');
           const branch = cs.data().collectBranch ? cs.data().branchOptions.find(b => b.id === data.branchId) : null;
-          ensure(!cs.data().collectBranch || branch, 'Selecione uma regional válida.');
+          ensure(!cs.data().collectBranch || branch, 'Selecione uma coordenação estadual válida.');
           const secret = token();
           tx.create(r, { branchId: branch?.id ?? null, branchName: branch?.name ?? '', name, phone: '', token: secret, status: 'PENDENTE', archived: false, createdAt: now() });
           tx.create(db.collection('formTokens').doc(hash(secret)), { ownerId: c.link.ownerId, campaignId: c.ref.id, requestId: r.id, kind: 'individual' });

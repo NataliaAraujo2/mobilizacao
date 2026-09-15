@@ -66,6 +66,36 @@ function validCpf(value) {
   return true;
 }
 
+export const listCoordinationActionVolunteers = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || request.auth.token.status !== 'active' || !['superAdmin', VIEWER_ROLE].includes(request.auth.token.role)) {
+    throw new HttpsError('permission-denied', 'Acesso não autorizado.');
+  }
+  const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
+  if (actionId.includes('/')) throw new HttpsError('invalid-argument', 'Ação inválida.');
+  const db = getFirestore();
+  const action = await db.collection('actions').doc(actionId).get();
+  if (!action.exists || (request.auth.token.role !== 'superAdmin' && action.data().branchId !== request.auth.token.branchId)) {
+    throw new HttpsError('permission-denied', 'Esta ação não pertence à sua coordenação estadual.');
+  }
+  const pageSize = Math.floor(Math.min(100, Math.max(1, Number(request.data?.pageSize) || 10)));
+  const search = normalizeSearchText(String(request.data?.search ?? '').slice(0, 120));
+  let query = db.collection('volunteers').where('actionIds', 'array-contains', actionId).where('status', '==', 'active').orderBy('fullNameSearch').orderBy('__name__');
+  if (search) query = query.startAt(search).endAt(`${search}\uf8ff`);
+  const cursor = request.data?.cursor;
+  if (cursor) {
+    if (typeof cursor.name !== 'string' || typeof cursor.id !== 'string' || !cursor.id || cursor.id.includes('/')) throw new HttpsError('invalid-argument', 'Página inválida.');
+    query = query.startAfter(cursor.name, cursor.id);
+  }
+  const snapshot = await query.limit(pageSize + 1).get();
+  const docs = snapshot.docs.slice(0, pageSize);
+  const last = docs.at(-1);
+  return {
+    data: docs.map(doc => ({ id: doc.id, fullName: doc.data().fullName })),
+    hasMore: snapshot.size > pageSize,
+    cursor: snapshot.size > pageSize ? { name: last.data().fullNameSearch, id: last.id } : null,
+  };
+});
+
 export const publicVolunteerActions = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
   const state = requiredText(request.data?.state, 'state', 2, 2).toUpperCase();
   const snapshot = await getFirestore().collection('actions').where('address.state', '==', state).limit(50).get();
@@ -152,7 +182,7 @@ export const withdrawVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request)
 
 async function getBranch(branchId) {
   const snapshot = await getFirestore().collection("branches").doc(branchId).get();
-  if (!snapshot.exists) throw new HttpsError("not-found", "A regional informada não existe.");
+  if (!snapshot.exists) throw new HttpsError("not-found", "A coordenação estadual informada não existe.");
   return snapshot;
 }
 
@@ -183,7 +213,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   const reservedUsernames = new Set();
 
   if ((await db.collection("users").doc(uid).get()).exists) {
-    throw new HttpsError("already-exists", "Esta regional já possui um acesso de consulta.");
+    throw new HttpsError("already-exists", "Esta coordenação estadual já possui um acesso de consulta.");
   }
 
   // Duas solicitações simultâneas para a mesma UF podem escolher o mesmo
@@ -216,7 +246,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
       // posterior. Conflitos nunca excluem uma conta que já existia.
       if (createdAuthUser) await auth.deleteUser(uid).catch(() => {});
       if (error.code === "auth/uid-already-exists") {
-        throw new HttpsError("already-exists", "Esta regional já possui um acesso de consulta.");
+        throw new HttpsError("already-exists", "Esta coordenação estadual já possui um acesso de consulta.");
       }
       if (error.code === "auth/email-already-exists") {
         reservedUsernames.add(username);
@@ -284,7 +314,7 @@ export const updateBranchViewerContact = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   }
   const profile = await getFirestore().collection("users").doc(uid).get();
   if (!profile.exists || profile.data().role !== VIEWER_ROLE) {
-    throw new HttpsError("not-found", "Acesso da regional não encontrado.");
+    throw new HttpsError("not-found", "Acesso da coordenação estadual não encontrado.");
   }
   await profile.ref.update({ contactName, contactNameSearch: normalizeSearchText(contactName), contactEmail, contactPhone, updatedAt: FieldValue.serverTimestamp() });
   return { uid, contactName, contactEmail, contactPhone };

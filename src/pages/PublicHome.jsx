@@ -93,14 +93,14 @@ export default function PublicHome() {
             <Link to={dashboardPath}>
               <span>Minha conta</span>
               <strong>Acessar meu painel</strong>
-              <small>{claims?.role === "superAdmin" ? "Visão administrativa nacional" : claims?.role === "branchViewer" ? "Consulta da minha regional" : "Área do voluntário"}</small>
+              <small>{claims?.role === "superAdmin" ? "Visão administrativa nacional" : claims?.role === "branchViewer" ? "Consulta da minha coordenação estadual" : "Área do voluntário"}</small>
             </Link>
           )}
 
           {!loading && claims?.role === "superAdmin" && (
             <Link to="/admin/regionais">
               <span>Administração</span>
-              <strong>Gerenciar regionais</strong>
+              <strong>Gerenciar coordenações estaduais</strong>
               <small>Cadastrar, editar, ativar e inativar</small>
             </Link>
           )}
@@ -116,8 +116,8 @@ export default function PublicHome() {
           {!loading && claims?.role === "superAdmin" && (
             <Link to="/admin/acessos-consulta">
               <span>Administração</span>
-              <strong>Administradores das regionais</strong>
-              <small>Gerar o acesso compartilhado de cada regional</small>
+              <strong>Administradores das coordenações estaduais</strong>
+              <small>Gerar o acesso compartilhado de cada coordenação estadual</small>
             </Link>
           )}
 

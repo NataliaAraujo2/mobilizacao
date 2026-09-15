@@ -3,18 +3,18 @@ import { useAuth } from '../auth/useAuth';
 import { listActionsByBranch } from '../services/actionsService';
 import { getAttendanceSession, listAttendance, setVolunteerAttendance, startAttendanceSession } from '../services/attendanceService';
 import { listBranches } from '../services/branchesService';
-import { listVolunteersPage } from '../services/volunteersService';
+import { listCoordinationActionVolunteers } from '../services/volunteersService';
 import styles from './AttendancePage.module.css';
 
 function today() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); }
 
-export default function AttendancePage() {
+export default function AttendancePage({ fixedAction = null }) {
   const { claims } = useAuth();
   const isSuperAdmin = claims?.role === 'superAdmin';
   const [branches, setBranches] = useState([]);
-  const [branchId, setBranchId] = useState(isSuperAdmin ? '' : claims?.branchId ?? '');
-  const [actions, setActions] = useState([]);
-  const [actionId, setActionId] = useState('');
+  const [branchId, setBranchId] = useState(fixedAction?.branchId ?? (isSuperAdmin ? '' : claims?.branchId ?? ''));
+  const [actions, setActions] = useState(fixedAction ? [fixedAction] : []);
+  const [actionId, setActionId] = useState(fixedAction?.id ?? '');
   const [volunteers, setVolunteers] = useState([]);
   const [presentIds, setPresentIds] = useState(new Set());
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -25,23 +25,24 @@ export default function AttendancePage() {
   const loadActionVolunteers = useCallback(async () => {
     let cursor = null; let hasMore = true; const rows = [];
     while (hasMore) {
-      const result = await listVolunteersPage({ branchId, activeOnly: true, cursor, pageSize: 100 });
-      rows.push(...result.data.filter(item => item.actionIds?.includes(actionId)));
+      const result = await listCoordinationActionVolunteers({ actionId, cursor, pageSize: 100 });
+      rows.push(...result.data);
       cursor = result.cursor; hasMore = result.hasMore;
     }
     return rows;
-  }, [actionId, branchId]);
+  }, [actionId]);
 
   useEffect(() => {
-    if (!isSuperAdmin) return;
-    listBranches().then(items => setBranches(items.filter(item => item.status === 'active'))).catch(() => setError('Não foi possível carregar as regionais.'));
-  }, [isSuperAdmin]);
+    if (!isSuperAdmin || fixedAction) return;
+    listBranches().then(items => setBranches(items.filter(item => item.status === 'active'))).catch(() => setError('Não foi possível carregar as coordenações estaduais.'));
+  }, [isSuperAdmin, fixedAction]);
 
   useEffect(() => {
+    if (fixedAction) return;
     setActionId(''); setVolunteers([]); setPresentIds(new Set()); setSessionStarted(false);
     if (!branchId) { setActions([]); return; }
     listActionsByBranch(branchId).then(setActions).catch(() => setError('Não foi possível carregar as ações.'));
-  }, [branchId]);
+  }, [branchId, fixedAction]);
 
   useEffect(() => {
     if (!actionId) { setVolunteers([]); setPresentIds(new Set()); setSessionStarted(false); return; }
@@ -67,11 +68,11 @@ export default function AttendancePage() {
   const attendanceEffective = sessionStarted || Boolean(selectedAction?.date && selectedAction.date < today());
   const canEditAttendance = isSuperAdmin || selectedAction?.date === today();
   return <main className={styles.page}>
-    <header><p>{isSuperAdmin ? 'Administração nacional' : 'Minha regional'}</p><h1>Lista de presença</h1><span>Selecione uma ação para imprimir os nomes e registrar as presenças.</span></header>
+    <header><p>{isSuperAdmin ? 'Administração nacional' : 'Minha coordenação estadual'}</p><h1>Lista de presença</h1><span>{fixedAction ? fixedAction.name : 'Selecione uma ação para imprimir os nomes e registrar as presenças.'}</span></header>
     <section className={styles.filters}>
-      {isSuperAdmin && <label>Regional<select value={branchId} onChange={event => setBranchId(event.target.value)}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>}
-      <label>Ação<select disabled={!branchId} value={actionId} onChange={event => setActionId(event.target.value)}><option value="">Selecione</option>{actions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label>
-      {actionId && <button type="button" onClick={() => window.print()}>Imprimir lista de nomes</button>}
+      {isSuperAdmin && !fixedAction && <label>Coordenação estadual<select value={branchId} onChange={event => setBranchId(event.target.value)}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label>}
+      {!fixedAction && <label>Ação<select disabled={!branchId} value={actionId} onChange={event => setActionId(event.target.value)}><option value="">Selecione</option>{actions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label>}
+      {actionId && <button disabled={loading || Boolean(error) || volunteers.length === 0} type="button" onClick={() => window.print()}>Imprimir lista de nomes</button>}
     </section>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {actionId && <section className={styles.sheet} aria-busy={loading}>

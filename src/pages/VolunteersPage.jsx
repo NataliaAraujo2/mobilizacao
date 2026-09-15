@@ -62,7 +62,7 @@ export default function VolunteersPage() {
   useEffect(() => {
     if (!actionBranchId) { setActions([]); return; }
     let current = true; setLoadingActions(true);
-    listActionsByBranch(actionBranchId).then(items => { if (current) { setActions(items); setActionCatalog(catalog => ({ ...catalog, ...Object.fromEntries(items.map(item => [item.id, item])) })); } }).catch(() => { if (current) setError('Não foi possível carregar as ações da regional.'); }).finally(() => { if (current) setLoadingActions(false); });
+    listActionsByBranch(actionBranchId).then(items => { if (current) { setActions(items); setActionCatalog(catalog => ({ ...catalog, ...Object.fromEntries(items.map(item => [item.id, item])) })); } }).catch(() => { if (current) setError('Não foi possível carregar as ações da coordenação estadual.'); }).finally(() => { if (current) setLoadingActions(false); });
     return () => { current = false; };
   }, [actionBranchId]);
 
@@ -81,7 +81,7 @@ export default function VolunteersPage() {
       .then((branchList) => {
         setBranches(branchList.filter((branch) => branch.status === "active"));
       })
-      .catch(() => setError("Não foi possível carregar as regionais."));
+      .catch(() => setError("Não foi possível carregar as coordenações estaduais."));
     recarregar({ branchId: listBranchId });
   }, [isSuperAdmin, listBranchId, ownBranchId, recarregar]);
 
@@ -89,7 +89,7 @@ export default function VolunteersPage() {
     const draft = location.state?.volunteerDraft;
     if (!draft || branches.length === 0) return;
     const branch = branches.find(item => item.id === draft.branchId);
-    if (!branch) setError('A regional da resposta não está disponível. Selecione uma regional ativa.');
+    if (!branch) setError('A coordenação estadual da resposta não está disponível. Selecione uma coordenação estadual ativa.');
     else {
       setShowForm(true);
       setEditingId('');
@@ -124,7 +124,7 @@ export default function VolunteersPage() {
     setMessage("");
     try {
       const regionalIds = [...new Set(form.actionIds.map(id => actionCatalog[id]?.branchId).filter(Boolean))];
-      if (form.actionIds.some(id => !actionCatalog[id]?.branchId)) throw new Error('Selecione novamente as ações para confirmar suas regionais.');
+      if (form.actionIds.some(id => !actionCatalog[id]?.branchId)) throw new Error('Selecione novamente as ações para confirmar suas coordenações estaduais.');
       const participationDates = [...new Set(form.actionIds.map(id => actionCatalog[id]?.date).filter(Boolean))];
       if (participationDates.length !== form.actionIds.length) throw new Error('O voluntário só pode participar de uma ação por dia.');
       const volunteerInput = { ...form, regionalIds, participationDates };
@@ -232,7 +232,7 @@ export default function VolunteersPage() {
     try {
       const rows = await listVolunteerReport(reportFilter);
       setReportRows(rows); setReportReady(true);
-      if (!rows.length) setMessage('Nenhum voluntário encontrado para esta regional e ação.');
+      if (!rows.length) setMessage('Nenhum voluntário encontrado para esta coordenação estadual e ação.');
     } catch { setError('Não foi possível preparar o relatório protegido.'); }
     finally { setReportLoading(false); }
   }
@@ -240,7 +240,7 @@ export default function VolunteersPage() {
   return (
     <main className={styles.page}>
       <header className={styles.title}>
-        <div><p>{isSuperAdmin ? "Administração nacional" : "Minha regional"}</p><h1>Voluntários</h1></div>
+        <div><p>{isSuperAdmin ? "Administração nacional" : "Minha coordenação estadual"}</p><h1>Voluntários</h1></div>
         <span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>
       </header>
 
@@ -255,8 +255,8 @@ export default function VolunteersPage() {
           <label>CPF<input required inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={form.cpf} onChange={(event) => setForm({ ...form, cpf: formatCpf(event.target.value) })} /></label>
           <label>RG<input required minLength="3" maxLength="20" autoComplete="off" value={form.rg} onChange={(event) => setForm({ ...form, rg: event.target.value })} /></label>
           <label>Data de nascimento<input required type="date" autoComplete="bday" max={new Date().toISOString().slice(0, 10)} value={form.birthDate} onChange={(event) => setForm({ ...form, birthDate: event.target.value })} /></label>
-          <label>Regional para localizar ações<select required disabled={!isSuperAdmin} value={actionBranchId} onChange={(event) => setActionBranchId(event.target.value)}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
-          <fieldset className={styles.actionChoices} disabled={!actionBranchId || loadingActions}><legend>Ações <small>(selecione uma ou mais; você pode trocar a regional)</small></legend>{loadingActions ? <p>Carregando ações…</p> : actions.length ? actions.map(action => <label key={action.id}><input type="checkbox" checked={form.actionIds.includes(action.id)} onChange={event => setForm({ ...form, actionIds: event.target.checked ? [...new Set([...form.actionIds, action.id])] : form.actionIds.filter(id => id !== action.id) })} />{action.name}</label>) : <p>{actionBranchId ? 'Esta regional ainda não possui ações cadastradas.' : 'Selecione uma regional para localizar ações.'}</p>}<p><strong>{form.actionIds.length}</strong> ação(ões) selecionada(s) no total.</p></fieldset>
+          <label>Coordenação estadual para localizar ações<select required disabled={!isSuperAdmin} value={actionBranchId} onChange={(event) => setActionBranchId(event.target.value)}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
+          <fieldset className={styles.actionChoices} disabled={!actionBranchId || loadingActions}><legend>Ações <small>(selecione uma ou mais; você pode trocar a coordenação estadual)</small></legend>{loadingActions ? <p>Carregando ações…</p> : actions.length ? actions.map(action => <label key={action.id}><input type="checkbox" checked={form.actionIds.includes(action.id)} onChange={event => setForm({ ...form, actionIds: event.target.checked ? [...new Set([...form.actionIds, action.id])] : form.actionIds.filter(id => id !== action.id) })} />{action.name}</label>) : <p>{actionBranchId ? 'Esta coordenação estadual ainda não possui ações cadastradas.' : 'Selecione uma coordenação estadual para localizar ações.'}</p>}<p><strong>{form.actionIds.length}</strong> ação(ões) selecionada(s) no total.</p></fieldset>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>}
           <div className={styles.formActions}>
             <button className={styles.primary} type="submit" disabled={saving || loadingVolunteers || loadingActions || branches.length === 0 || form.actionIds.length === 0}>{saving ? "Salvando..." : editingId ? "Salvar alterações" : "Cadastrar voluntário"}</button>
@@ -268,7 +268,7 @@ export default function VolunteersPage() {
         {credentials && <div className={styles.credentials} role="status"><strong>Credenciais de {credentials.fullName}</strong><span>Usuário: <code>{credentials.username}</code></span><span>Senha inicial: <code>{credentials.password}</code></span><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar credenciais</button><small>A senha não será exibida novamente.</small></div>}
       </section>}
 
-      {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido para impressão</h2><p>CPF e RG são carregados somente ao preparar este relatório. Escolha uma regional para localizar a ação.</p><form onSubmit={prepareReport}><label>Regional da ação<select required value={reportFilter.branchId} onChange={event => { setReportFilter({ branchId: event.target.value, actionId: '' }); setReportReady(false); }}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select required value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="">Selecione</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Preparar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários por regional e ação</h2><p>Regional: {branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportActions.find(action => action.id === reportFilter.actionId)?.name}</p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
+      {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido para impressão</h2><p>CPF e RG são carregados somente ao preparar este relatório. Escolha uma coordenação estadual para localizar a ação.</p><form onSubmit={prepareReport}><label>Coordenação estadual da ação<select required value={reportFilter.branchId} onChange={event => { setReportFilter({ branchId: event.target.value, actionId: '' }); setReportReady(false); }}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select required value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="">Selecione</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Preparar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários por coordenação estadual e ação</h2><p>Coordenação estadual: {branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportActions.find(action => action.id === reportFilter.actionId)?.name}</p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
 
       <section className={styles.card} aria-labelledby="volunteer-list-title">
         <h2 id="volunteer-list-title">Voluntários cadastrados</h2>
@@ -277,7 +277,7 @@ export default function VolunteersPage() {
           <div className={styles.list}>{volunteers.map((volunteer) => {
             const documents = privateData[volunteer.id];
             return <article className={styles.volunteer} key={volunteer.id}>
-              <div className={styles.summary}><div><h3>{volunteer.fullName}</h3><p>{(volunteer.actionIds ?? []).length} ação(ões) · {(volunteer.regionalIds ?? []).length} regional(is)</p></div><span className={volunteer.status === "active" ? styles.active : styles.blocked}>{volunteer.status === "active" ? "Ativo" : "Bloqueado"}</span></div>
+              <div className={styles.summary}><div><h3>{volunteer.fullName}</h3><p>{(volunteer.actionIds ?? []).length} ação(ões) · {(volunteer.regionalIds ?? []).length} coordenação(ões) estadual(is)</p></div><span className={volunteer.status === "active" ? styles.active : styles.blocked}>{volunteer.status === "active" ? "Ativo" : "Bloqueado"}</span></div>
               <div className={styles.contact}><span>{volunteer.email || "Sem e-mail"}</span><span>{formatPhone(volunteer.phone) || "Sem telefone"}</span></div>
               {expandedId === volunteer.id && documents && <div className={styles.documents}>
                 <div><span>CPF</span><strong>{showFullCpf ? formatCpf(documents.cpf) : maskCpf(documents.cpf)}</strong></div>

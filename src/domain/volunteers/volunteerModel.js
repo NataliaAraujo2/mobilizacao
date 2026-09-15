@@ -36,7 +36,7 @@ export function createVolunteerRecords(input) {
 
   if (fullName.length < 2 || fullName.length > 120) throw new Error("Informe o nome completo.");
   if (actionIds.length < 1 || actionIds.length > 20) throw new Error("Selecione de 1 a 20 ações.");
-  if (regionalIds.length < 1 || regionalIds.length > 20) throw new Error("Não foi possível identificar as regionais das ações selecionadas.");
+  if (regionalIds.length < 1 || regionalIds.length > 20) throw new Error("Não foi possível identificar as coordenações estaduais das ações selecionadas.");
   if (participationDates.length !== actionIds.length || participationDates.some(value => !/^\d{4}-\d{2}-\d{2}$/.test(value))) throw new Error('Cada ação selecionada deve ocorrer em uma data diferente.');
   if (email && !isValidEmail(email)) throw new Error("Informe um e-mail válido.");
   if (phone && !isValidPhone(input.phone, 13)) throw new Error("Informe um telefone válido com DDD (até 13 dígitos).");
