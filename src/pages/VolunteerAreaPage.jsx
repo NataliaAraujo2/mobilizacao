@@ -4,6 +4,8 @@ import { getActionsByIds } from '../services/actionsService';
 import { getAttendanceSession, listMyAttendance } from '../services/attendanceService';
 import { getVolunteer } from '../services/volunteersService';
 import { withdrawFromAction } from '../services/publicVolunteerService';
+import ActionPhotoGallery from '../components/ActionPhotoGallery';
+import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import styles from './VolunteerAreaPage.module.css';
 
 function today() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); }
@@ -39,5 +41,5 @@ export default function VolunteerAreaPage() {
     return () => { current = false; };
   }, [user.uid]);
 
-  return <main className={styles.page}><header><p>Área do voluntário</p><h1>Minhas ações</h1><span>{volunteer?.fullName ?? user.displayName}</span></header>{error && <p className={styles.error}>{error}</p>}{loading ? <p>Carregando…</p> : actions.length === 0 ? <p>Você ainda não está inscrito em nenhuma ação.</p> : <section className={styles.list}>{actions.map(action => <article key={action.id}><div><h2>{action.name}</h2><strong className={styles[statuses[action.id]?.toLowerCase()]}>{statuses[action.id]}</strong></div><p>{action.date.split('-').reverse().join('/')} · {action.address.city}/{action.address.state}</p><p>{action.address.street}, {action.address.number}</p>{action.whatToBring && <p><strong>O que levar:</strong> {action.whatToBring}</p>}{action.tips && <p><strong>Orientações:</strong> {action.tips}</p>}{statuses[action.id] === 'Participante' && action.date > today() && <button type="button" disabled={busyId === action.id} onClick={() => withdraw(action)}>{busyId === action.id ? 'Cancelando…' : 'Cancelar participação'}</button>}</article>)}</section>}</main>;
+  return <main className={styles.page}><header><p>Área do voluntário</p><h1>Minhas ações</h1><span>{volunteer?.fullName ?? user.displayName}</span></header>{error && <p className={styles.error}>{error}</p>}{loading ? <p>Carregando…</p> : actions.length === 0 ? <p>Você ainda não está inscrito em nenhuma ação.</p> : <section className={styles.list}>{actions.map(action => <article key={action.id}><div><h2>{action.name}</h2><strong className={styles[statuses[action.id]?.toLowerCase()]}>{statuses[action.id]}</strong></div><p>{actionScheduleSummary(action)} · {action.address.city}/{action.address.state}</p><p>{action.address.street}, {action.address.number}</p>{action.description && <p><strong>Descrição:</strong> {action.description}</p>}{action.whatToBring && <p><strong>O que levar:</strong> {action.whatToBring}</p>}{action.tips && <p><strong>Orientações:</strong> {action.tips}</p>}<ActionPhotoGallery action={action} />{statuses[action.id] === 'Participante' && action.date > today() && <button type="button" disabled={busyId === action.id} onClick={() => withdraw(action)}>{busyId === action.id ? 'Cancelando…' : 'Cancelar participação'}</button>}</article>)}</section>}</main>;
 }

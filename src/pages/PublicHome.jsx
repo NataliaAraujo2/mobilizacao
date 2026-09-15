@@ -29,14 +29,6 @@ export default function PublicHome() {
           <img className={`${styles.brandDetail} ${styles.brandDetailTree}`} src={treeElement} alt="" aria-hidden="true" />
           <p className={styles.eyebrow}>2ª edição</p>
           <h1 id="page-title" className={styles.srOnly}>MobilizAÇÃO</h1>
-          <img
-            className={styles.campaignLogo}
-            src={logoMobilizacao}
-            alt="MobilizAÇÃO — Semeando e Cultivando o Futuro"
-            width="1400"
-            height="1466"
-            fetchPriority="high"
-          />
           <p className={styles.intro}>Encontre ações, orientações e avisos em todo o Brasil.</p>
         </div>
 
@@ -49,18 +41,21 @@ export default function PublicHome() {
           onBlur={handleMapBlur}
         >
           <button
-            className={styles.mapLauncher}
+            className={styles.mapLogoLauncher}
             type="button"
             aria-expanded={mapVisible}
             aria-controls="interactive-map"
             onClick={() => setMapOpen((current) => !current)}
           >
-            <span className={styles.mapLauncherIcon} aria-hidden="true">⌖</span>
-            <span>
-              <small>Explore por região</small>
-              <strong>{mapOpen ? "Fechar mapa" : "Ver mapa de ações"}</strong>
-            </span>
-            <span className={styles.mapLauncherArrow} aria-hidden="true">{mapVisible ? "↑" : "↓"}</span>
+            <img
+              className={styles.campaignLogo}
+              src={logoMobilizacao}
+              alt="MobilizAÇÃO — Semeando e Cultivando o Futuro"
+              width="1400"
+              height="1466"
+              fetchPriority="high"
+            />
+            <span className={styles.mapLogoHint}>{mapOpen ? "Fechar mapa" : "Passe o mouse ou toque para escolher uma ação"}</span>
           </button>
 
           {mapVisible && (

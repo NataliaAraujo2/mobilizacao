@@ -7,6 +7,7 @@ async function call(name, data) {
 }
 
 export function listPublicActions(state) { return call('publicVolunteerActions', { state }); }
+export function getPublicAction(actionId) { return call('publicVolunteerActions', { actionId }); }
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }
 

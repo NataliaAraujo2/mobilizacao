@@ -161,7 +161,7 @@ export default function BranchViewersPage() {
 
   function shareCredentials() {
     if (!credentials) return;
-    const url = whatsappUrl(credentials.contactPhone, `Olá, ${credentials.branchName}!\n\nSeu acesso à MobilizAÇÃO foi criado.\nUsuário: ${credentials.username}\nSenha temporária: ${credentials.password}\n\nAcesse: ${window.location.origin}/login`);
+    const url = whatsappUrl(credentials.contactPhone, `Novidades na MobilizAÇÃO!\n\nAgora a Coordenação poderá acompanhar as inscrições dos voluntários e visualizar as informações do seu Estado.\n\nAcesse: ${window.location.origin}/login\n\nLogin: ${credentials.username}\nSenha Inicial: ${credentials.password} (alterar a senha no 1º acesso)`);
     if (!url) { setError('Cadastre o telefone do responsável antes de compartilhar pelo WhatsApp.'); return; }
     window.open(url, '_blank', 'noopener,noreferrer');
   }

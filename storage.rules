@@ -40,7 +40,10 @@ service firebase.storage {
     }
 
     match /branches/{branchId}/actions/{actionId}/{phase}/{fileName} {
-      allow read: if isSuperAdmin() || belongsToBranch(branchId);
+      // Fotos de mobilizações são parte da divulgação da ação e podem aparecer
+      // no mapa e no link/QR Code público. Documentos e dados de voluntários
+      // continuam fora deste caminho e seguem protegidos.
+      allow read: if true;
       allow create, update: if isSuperAdmin()
         && phase in ['before', 'during', 'after']
         && fileName.matches('^[-a-zA-Z0-9_]+\\.webp$')

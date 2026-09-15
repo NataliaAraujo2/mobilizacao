@@ -20,6 +20,10 @@
 .actionChoices label { display: flex; grid-template-columns: none; align-items: center; gap: .55rem; }
 .actionChoices input { width: 1.2rem; min-height: 1.2rem; }
 .actionChoices p { margin: 0; color: var(--text-muted); }
+.addressGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.addressGrid label { display: grid; align-items: initial; gap: .4rem; }
+.addressGrid input, .addressGrid select { width: 100%; }
+.wideDocument { grid-column: 1 / -1; }
 .report { margin-top: 1.5rem; overflow-x: auto; }
 .report table { width: 100%; border-collapse: collapse; }
 .report th, .report td { padding: .6rem; text-align: left; border: 1px solid var(--border); }
@@ -58,7 +62,7 @@
 @media (max-width: 620px) {
   .page { width: min(100% - 1rem, 72rem); }
   .title, .sectionHeading { align-items: start; flex-direction: column; }
-  .card form, .documents { grid-template-columns: 1fr; }
+  .card form, .documents, .addressGrid { grid-template-columns: 1fr; }
   .wide, .formActions, .documents .textButton { grid-column: 1; }
   .formActions, .actions { flex-direction: column; }
   .formActions button, .actions button, .textButton, .sectionHeading > button { width: 100%; min-height: 3.1rem; }

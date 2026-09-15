@@ -2,13 +2,18 @@
 .actions { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
 .actions article { padding: 1rem; background: #f5f8fa; border-radius: .75rem; }
 .actions h4 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.municipality { margin: 0 0 .2rem !important; color: var(--brand-orange); font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
 .actions p { margin: .35rem 0; }
 .panel button { min-height: 2.7rem; padding: .55rem .8rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
 .signup { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
 .signup form { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
 .signup label { display: grid; gap: .3rem; font-weight: 750; }
-.signup input { min-height: 2.8rem; padding: .6rem; font: inherit; border: 1px solid var(--border); border-radius: .55rem; }
+.signup input, .signup select { min-height: 2.8rem; padding: .6rem; font: inherit; border: 1px solid var(--border); border-radius: .55rem; }
+.address { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; padding: 1rem; border: 1px solid var(--border); border-radius: .65rem; }
+.address legend { padding: 0 .3rem; font-weight: 800; }
+.acceptance { grid-column: 1 / -1; display: flex !important; align-items: start; gap: .55rem !important; font-size: .9rem; }
+.acceptance input { width: 1.15rem; min-height: 1.15rem; margin-top: .15rem; }
 .signup form > button { grid-column: 1 / -1; }
 .error { color: #a22b2b; font-weight: 750; }
-@media (max-width: 600px) { .panel { padding: .85rem; } .actions { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form { grid-template-columns: 1fr; } .signup form > button, .panel button { width: 100%; min-height: 3rem; grid-column: 1; } }
+@media (max-width: 600px) { .panel { padding: .85rem; } .actions { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button, .panel button { width: 100%; min-height: 3rem; grid-column: 1; } }

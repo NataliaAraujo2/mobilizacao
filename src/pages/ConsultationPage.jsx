@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import * as XLSX from "xlsx";
 import { useAuth } from "../auth/useAuth";
 import AttendancePage from './AttendancePage';
 import { getBranch } from "../services/branchesService";
@@ -6,6 +7,8 @@ import { listCoordinationActionVolunteers } from "../services/volunteersService"
 import { listActionsByBranch } from '../services/actionsService';
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import ListSearch from '../components/ListSearch';
+import ActionPhotoGallery from '../components/ActionPhotoGallery';
+import { actionScheduleSummary, formatActionDate } from '../domain/actions/actionSchedule';
 import styles from "./ConsultationPage.module.css";
 
 export default function ConsultationPage() {
@@ -30,7 +33,7 @@ export default function ConsultationPage() {
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {loading ? <p>Carregando ações…</p> : <section className={styles.list} aria-label="Ações cadastradas">
       {!error && actions.length === 0 && <p className={styles.empty}>Nenhuma ação cadastrada nesta coordenação estadual.</p>}
-      {actions.map(action => <article className={styles.actions} key={action.id}><div><h2>{action.name}</h2><p>{action.date?.split('-').reverse().join('/')} · {action.address?.city}</p></div><button type="button" onClick={() => setSelected(action)}>Abrir ação</button></article>)}
+      {actions.map(action => <article className={styles.actions} key={action.id}><div><h2>{action.name}</h2><p>{actionScheduleSummary(action)} · {action.address?.city}</p></div><button type="button" onClick={() => setSelected(action)}>Abrir ação</button></article>)}
     </section>}
   </main>;
 }
@@ -46,13 +49,18 @@ function ActionDetails({ action, branch, user, onBack }) {
     <header className={styles.header}><div><p>{branch?.name}</p><h1>{action.name}</h1></div></header>
     <section className={styles.details} aria-labelledby="action-details-title">
       <div className={styles.detailsHeading}><p>Informações do evento</p><h2 id="action-details-title">Dados da ação</h2></div><dl>
-        <div><dt>Data</dt><dd>{action.date?.split('-').reverse().join('/') || 'Não informada'}</dd></div>
+        <div><dt>Data de início</dt><dd>{formatActionDate(action.startDate ?? action.date)}</dd></div>
+        <div><dt>Hora de início</dt><dd>{action.startTime || 'Não informada'}</dd></div>
+        <div><dt>Data de fim</dt><dd>{formatActionDate(action.endDate ?? action.startDate ?? action.date)}</dd></div>
+        <div><dt>Hora de fim</dt><dd>{action.endTime || 'Não informada'}</dd></div>
+        {action.scheduleText && <div className={styles.detailWide}><dt>Informações de data e horário</dt><dd>{action.scheduleText}</dd></div>}
         <div><dt>Situação</dt><dd>{statuses[action.status] ?? action.status ?? 'Não informada'}</dd></div>
         <div className={styles.detailWide}><dt>Local</dt><dd>{[address.street, address.number, address.complement, address.neighborhood, address.city, address.state].filter(Boolean).join(', ')}</dd></div>
         {address.cep && <div><dt>CEP</dt><dd>{address.cep}</dd></div>}
+        {action.description && <div className={styles.detailWide}><dt>Descrição</dt><dd>{action.description}</dd></div>}
         <div className={styles.detailWide}><dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd></div>
         <div className={styles.detailWide}><dt>Orientações</dt><dd>{action.tips || 'Nenhuma orientação adicional.'}</dd></div>
-      </dl></section>
+      </dl><ActionPhotoGallery action={action} /></section>
     <nav className={`${styles.actions} ${styles.detailActions}`} aria-label="Participantes da ação">
       <button type="button" onClick={() => setView('volunteers')}>Voluntários inscritos e impressão</button>
       <button type="button" onClick={() => setView('attendance')}>Lista de presença</button>
@@ -65,9 +73,9 @@ function ActionVolunteers({ action, branch, user, onBack }) {
   const loading = false;
   const [error, setError] = useState("");
   const [preparingPrint, setPreparingPrint] = useState(false);
-  const [printReady, setPrintReady] = useState(false);
   const preparingRef = useRef(false);
   const mountedRef = useRef(true);
+  const volunteersRef = useRef([]);
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => listCoordinationActionVolunteers({
     actionId: action.id, search: filtros.search, cursor, pageSize,
@@ -76,17 +84,12 @@ function ActionVolunteers({ action, branch, user, onBack }) {
 
 
   useEffect(() => { recarregar({ search }); }, [recarregar, search]);
+  useEffect(() => { volunteersRef.current = volunteers; }, [volunteers]);
 
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
-  useEffect(() => {
-    if (!printReady) return;
-    setPrintReady(false);
-    window.print();
-  }, [printReady]);
-
-  async function printAll() {
+  async function exportAll() {
     if (preparingRef.current || loadingVolunteers) return;
-    if (!window.confirm("Carregar os voluntários restantes desta ação, respeitando a busca atual, e imprimir?")) return;
+    if (!window.confirm("Carregar todos os voluntários desta ação, respeitando a busca atual, e baixar uma planilha Excel?")) return;
     preparingRef.current = true; setPreparingPrint(true); setError("");
     try {
       let remaining = hasMore;
@@ -95,7 +98,14 @@ function ActionVolunteers({ action, branch, user, onBack }) {
         if (!result || result.error || result.skipped || result.ignored) throw new Error("Não foi possível carregar a lista completa. Tente novamente; os registros já carregados foram mantidos.");
         remaining = result.hasMore;
       }
-      if (mountedRef.current) setPrintReady(true);
+      if (mountedRef.current) {
+        const rows = volunteersRef.current.map((volunteer) => ({ Nome: volunteer.fullName }));
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Voluntários");
+        const fileName = `voluntarios-${action.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+      }
     } catch (err) { if (mountedRef.current) setError(err.message); }
     finally { preparingRef.current = false; if (mountedRef.current) setPreparingPrint(false); }
   }
@@ -104,18 +114,17 @@ function ActionVolunteers({ action, branch, user, onBack }) {
     <main className={styles.page}>
       <button className={styles.back} type="button" disabled={preparingPrint} onClick={onBack}>← Voltar aos detalhes da ação</button>
       <header className={styles.header}>
-        <div><p>{branch?.name}</p><h1>{action.name}</h1><span>{action.date?.split('-').reverse().join('/')} · Usuário: {user.displayName ?? user.email}</span></div>
+        <div><p>{branch?.name}</p><h1>{action.name}</h1><span>{actionScheduleSummary(action)} · Usuário: {user.displayName ?? user.email}</span></div>
         <span className={styles.readOnly}>Somente consulta</span>
       </header>
 
       <section className={styles.actions} aria-labelledby="list-title">
         <div><h2 id="list-title">Listagem de voluntários</h2><p>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</p></div>
         <ListSearch placeholder="Nome do voluntário" initialValue={search} disabled={preparingPrint} onSearch={value => { if (!preparingRef.current) setSearch(value); }} />
-        <button type="button" disabled={loading || loadingVolunteers || preparingPrint || !!listError || volunteers.length === 0} onClick={() => window.print()}>Imprimir carregados ({volunteers.length})</button>
-        <button type="button" disabled={loading || loadingVolunteers || preparingPrint || !!listError || volunteers.length === 0} onClick={printAll}>{preparingPrint ? "Carregando para impressão…" : "Carregar todos e imprimir"}</button>
+        <button type="button" disabled={loading || loadingVolunteers || preparingPrint || !!listError || volunteers.length === 0} onClick={exportAll}>{preparingPrint ? "Carregando lista…" : "Carregar todos e baixar planilha"}</button>
       </section>
 
-      <p className={styles.safety}>A lista e a impressão mostram somente os nomes dos voluntários desta ação.</p>
+      <p className={styles.safety}>A planilha contém somente os nomes dos voluntários desta ação.</p>
       <p role="status">{preparingPrint ? `Preparando lista: ${volunteers.length} voluntários carregados…` : `${volunteers.length} voluntários carregados. ${hasMore ? "Lista parcial: existem mais registros para carregar." : "Todos os resultados da busca foram carregados."}`}{search && ` Busca aplicada: ${search}.`}</p>
       {(error || listError) && <p className={styles.error} role="alert">{error || "Não foi possível carregar a listagem."}</p>}
 

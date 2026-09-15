@@ -15,6 +15,7 @@ const REGION = "southamerica-east1";
 const VIEWER_ROLE = "branchViewer";
 const VIEWER_EMAIL_DOMAIN = "acesso.mobilizacao.invalid";
 const VOLUNTEER_ROLE = "volunteer";
+const BRAZIL_STATE_CODES = new Set('AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' '));
 const REPORT_YEAR = "2025";
 const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
 const MAX_REPORT_SIZE = 25 * 1024 * 1024;
@@ -97,11 +98,19 @@ export const listCoordinationActionVolunteers = onCall(ADMIN_FUNCTION_OPTIONS, a
 });
 
 export const publicVolunteerActions = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  const actionId = String(request.data?.actionId ?? '').trim();
+  if (actionId) {
+    const item = await getFirestore().collection('actions').doc(actionId).get();
+    if (!item.exists) throw new HttpsError('not-found', 'A ação não foi encontrada.');
+    const action = item.data();
+    if (action.status === 'closed' || action.date < new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })) throw new HttpsError('failed-precondition', 'Esta ação não está mais disponível para inscrição.');
+    return [{ id: item.id, name: action.name, date: action.date, startDate: action.startDate, endDate: action.endDate, startTime: action.startTime, endTime: action.endTime, scheduleText: action.scheduleText, description: action.description, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status }];
+  }
   const state = requiredText(request.data?.state, 'state', 2, 2).toUpperCase();
   const snapshot = await getFirestore().collection('actions').where('address.state', '==', state).limit(50).get();
   return snapshot.docs.map(item => {
     const action = item.data();
-    return { id: item.id, name: action.name, date: action.date, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status };
+    return { id: item.id, name: action.name, date: action.date, startDate: action.startDate, endDate: action.endDate, startTime: action.startTime, endTime: action.endTime, scheduleText: action.scheduleText, description: action.description, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status };
   }).filter(action => action.status !== 'closed' && action.date >= new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }));
 });
 
@@ -145,14 +154,19 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   const cpf = digits(profile.cpf);
   const rg = requiredText(profile.rg, 'RG', 3, 20).toUpperCase().replace(/[^0-9A-Z]/g, '');
   const birthDate = requiredText(profile.birthDate, 'nascimento', 10, 10);
+  const addressInput = profile.address ?? {};
+  const address = { cep: digits(addressInput.cep), street: requiredText(addressInput.street, 'logradouro', 2, 160), number: requiredText(addressInput.number, 'número', 1, 30), complement: String(addressInput.complement ?? '').trim(), neighborhood: requiredText(addressInput.neighborhood, 'bairro', 2, 120), city: requiredText(addressInput.city, 'cidade', 2, 120), state: requiredText(addressInput.state, 'estado', 2, 2).toUpperCase() };
+  const shirtSize = requiredText(profile.shirtSize, 'tamanho da camiseta', 1, 10).toUpperCase();
+  const ngoRelationship = requiredText(profile.ngoRelationship, 'vínculo com a ONG', 2, 120);
   if (!validCpf(cpf)) throw new HttpsError('invalid-argument', 'CPF inválido.');
   if (phone && !isValidPhone(phone, 13)) throw new HttpsError('invalid-argument', 'Telefone inválido.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new HttpsError('invalid-argument', 'Data de nascimento inválida.');
+  if (!/^\d{8}$/.test(address.cep) || !BRAZIL_STATE_CODES.has(address.state) || !['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO'].includes(shirtSize) || !['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família'].includes(ngoRelationship) || profile.lgpdAccepted !== true || profile.regulationAccepted !== true) throw new HttpsError('invalid-argument', 'Dados complementares do voluntário inválidos.');
   const duplicateCpf = await db.collection('volunteerPrivate').where('cpf', '==', cpf).limit(1).get();
   if (!duplicateCpf.empty) throw new HttpsError('already-exists', 'Este CPF já possui cadastro. Entre com sua conta ou solicite nova senha.');
   const batch = db.batch();
   batch.set(volunteerRef, { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'active', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   await batch.commit();
   await getAuth().updateUser(request.auth.uid, { displayName: fullName });
   await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });

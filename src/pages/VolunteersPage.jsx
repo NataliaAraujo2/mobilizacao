@@ -3,18 +3,21 @@ import ContactInput from '../components/ContactInput';
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
-import { createVolunteerRecords, maskCpf } from "../domain/volunteers/volunteerModel";
+import { createVolunteerRecords, maskCpf, NGO_RELATIONSHIPS, SHIRT_SIZES } from "../domain/volunteers/volunteerModel";
+import { BRAZIL_STATES } from '../domain/locations/brazilStates';
 import { getActionsByIds, listActionsByBranch } from '../services/actionsService';
 import { getBranch, listBranches } from "../services/branchesService";
 import { createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import styles from "./VolunteersPage.module.css";
 
-const EMPTY_FORM = { fullName: "", email: "", phone: "", cpf: "", rg: "", birthDate: "", actionIds: [], status: "active", accessStatus: "none" };
+const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
+const EMPTY_FORM = { fullName: "", email: "", phone: "", cpf: "", rg: "", birthDate: "", address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, actionIds: [], status: "active", accessStatus: "none" };
 
 function formatCpf(value) {
   return value.replace(/\D/g, "").slice(0, 11).replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
+function formatCep(value) { return String(value ?? '').replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2'); }
 
 
 
@@ -41,7 +44,7 @@ export default function VolunteersPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [credentials, setCredentials] = useState(null);
-  const [reportFilter, setReportFilter] = useState({ branchId: '', actionId: '' });
+  const [reportFilter, setReportFilter] = useState({ branchId: 'all', actionId: 'all' });
   const [reportRows, setReportRows] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportReady, setReportReady] = useState(false);
@@ -67,7 +70,7 @@ export default function VolunteersPage() {
   }, [actionBranchId]);
 
   useEffect(() => {
-    if (!reportFilter.branchId) { setReportActions([]); return; }
+    if (!reportFilter.branchId || reportFilter.branchId === 'all') { setReportActions([]); return; }
     let current = true;
     listActionsByBranch(reportFilter.branchId).then(items => { if (current) setReportActions(items); }).catch(() => { if (current) setError('Não foi possível carregar as ações do relatório.'); });
     return () => { current = false; };
@@ -132,7 +135,7 @@ export default function VolunteersPage() {
       let savedId = editingId;
       if (editingId) {
         await updateVolunteer(editingId, volunteerInput);
-        setPrivateData((current) => ({ ...current, [editingId]: { cpf: form.cpf.replace(/\D/g, ""), rg: form.rg.replace(/[^0-9a-z]/gi, "").toUpperCase(), birthDate: form.birthDate } }));
+        setPrivateData((current) => ({ ...current, [editingId]: { cpf: form.cpf.replace(/\D/g, ""), rg: form.rg.replace(/[^0-9a-z]/gi, "").toUpperCase(), birthDate: form.birthDate, address: form.address, shirtSize: form.shirtSize, ngoRelationship: form.ngoRelationship, lgpdAccepted: form.lgpdAccepted, regulationAccepted: form.regulationAccepted } }));
         setMessage("Cadastro atualizado com sucesso.");
       } else {
         savedId = await createVolunteer(volunteerInput);
@@ -180,7 +183,7 @@ export default function VolunteersPage() {
       setShowForm(true);
       setForm({
         fullName: volunteer.fullName, email: volunteer.email, phone: formatPhone(volunteer.phone),
-        cpf: formatCpf(documents.cpf), rg: documents.rg, birthDate: documents.birthDate,
+        cpf: formatCpf(documents.cpf), rg: documents.rg, birthDate: documents.birthDate, address: { ...EMPTY_ADDRESS, ...(documents.address ?? {}) }, shirtSize: documents.shirtSize ?? '', ngoRelationship: documents.ngoRelationship ?? '', lgpdAccepted: documents.lgpdAccepted === true, regulationAccepted: documents.regulationAccepted === true,
         actionIds: volunteer.actionIds ?? [], status: volunteer.status, accessStatus: volunteer.accessStatus ?? 'none',
       });
       setActionBranchId(volunteer.regionalIds?.[0] ?? ownBranchId);
@@ -232,7 +235,7 @@ export default function VolunteersPage() {
     try {
       const rows = await listVolunteerReport(reportFilter);
       setReportRows(rows); setReportReady(true);
-      if (!rows.length) setMessage('Nenhum voluntário encontrado para esta coordenação estadual e ação.');
+      if (!rows.length) setMessage('Nenhum voluntário encontrado para o filtro selecionado.');
     } catch { setError('Não foi possível preparar o relatório protegido.'); }
     finally { setReportLoading(false); }
   }
@@ -255,6 +258,10 @@ export default function VolunteersPage() {
           <label>CPF<input required inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={form.cpf} onChange={(event) => setForm({ ...form, cpf: formatCpf(event.target.value) })} /></label>
           <label>RG<input required minLength="3" maxLength="20" autoComplete="off" value={form.rg} onChange={(event) => setForm({ ...form, rg: event.target.value })} /></label>
           <label>Data de nascimento<input required type="date" autoComplete="bday" max={new Date().toISOString().slice(0, 10)} value={form.birthDate} onChange={(event) => setForm({ ...form, birthDate: event.target.value })} /></label>
+          <fieldset className={styles.actionChoices}><legend>Endereço do voluntário</legend><div className={styles.addressGrid}><label>CEP<input required inputMode="numeric" placeholder="00000-000" value={formatCep(form.address.cep)} onChange={event => setForm({ ...form, address: { ...form.address, cep: formatCep(event.target.value) } })} /></label><label>Logradouro<input required value={form.address.street} onChange={event => setForm({ ...form, address: { ...form.address, street: event.target.value } })} /></label><label>Número<input required value={form.address.number} onChange={event => setForm({ ...form, address: { ...form.address, number: event.target.value } })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={event => setForm({ ...form, address: { ...form.address, complement: event.target.value } })} /></label><label>Bairro<input required value={form.address.neighborhood} onChange={event => setForm({ ...form, address: { ...form.address, neighborhood: event.target.value } })} /></label><label>Cidade<input required value={form.address.city} onChange={event => setForm({ ...form, address: { ...form.address, city: event.target.value } })} /></label><label>Estado<select required value={form.address.state} onChange={event => setForm({ ...form, address: { ...form.address, state: event.target.value } })}><option value="">Selecione</option>{BRAZIL_STATES.map(state => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label></div></fieldset>
+          <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={event => setForm({ ...form, shirtSize: event.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label>
+          <label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={event => setForm({ ...form, ngoRelationship: event.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
+          <fieldset className={styles.actionChoices}><legend>Confirmações</legend><label><input required type="checkbox" checked={form.lgpdAccepted} onChange={event => setForm({ ...form, lgpdAccepted: event.target.checked })} />Li e aceito o tratamento dos meus dados pessoais conforme a LGPD.</label><label><input required type="checkbox" checked={form.regulationAccepted} onChange={event => setForm({ ...form, regulationAccepted: event.target.checked })} />Li e aceito o regulamento da ação.</label></fieldset>
           <label>Coordenação estadual para localizar ações<select required disabled={!isSuperAdmin} value={actionBranchId} onChange={(event) => setActionBranchId(event.target.value)}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
           <fieldset className={styles.actionChoices} disabled={!actionBranchId || loadingActions}><legend>Ações <small>(selecione uma ou mais; você pode trocar a coordenação estadual)</small></legend>{loadingActions ? <p>Carregando ações…</p> : actions.length ? actions.map(action => <label key={action.id}><input type="checkbox" checked={form.actionIds.includes(action.id)} onChange={event => setForm({ ...form, actionIds: event.target.checked ? [...new Set([...form.actionIds, action.id])] : form.actionIds.filter(id => id !== action.id) })} />{action.name}</label>) : <p>{actionBranchId ? 'Esta coordenação estadual ainda não possui ações cadastradas.' : 'Selecione uma coordenação estadual para localizar ações.'}</p>}<p><strong>{form.actionIds.length}</strong> ação(ões) selecionada(s) no total.</p></fieldset>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>}
@@ -268,7 +275,7 @@ export default function VolunteersPage() {
         {credentials && <div className={styles.credentials} role="status"><strong>Credenciais de {credentials.fullName}</strong><span>Usuário: <code>{credentials.username}</code></span><span>Senha inicial: <code>{credentials.password}</code></span><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar credenciais</button><small>A senha não será exibida novamente.</small></div>}
       </section>}
 
-      {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido para impressão</h2><p>CPF e RG são carregados somente ao preparar este relatório. Escolha uma coordenação estadual para localizar a ação.</p><form onSubmit={prepareReport}><label>Coordenação estadual da ação<select required value={reportFilter.branchId} onChange={event => { setReportFilter({ branchId: event.target.value, actionId: '' }); setReportReady(false); }}><option value="">Selecione</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select required value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="">Selecione</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Preparar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários por coordenação estadual e ação</h2><p>Coordenação estadual: {branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportActions.find(action => action.id === reportFilter.actionId)?.name}</p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
+      {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido de voluntários</h2><p>CPF e RG são carregados somente ao preparar este relatório. Você pode escolher uma ação específica ou todos os voluntários.</p><form onSubmit={prepareReport}><label>Coordenação estadual<select value={reportFilter.branchId} onChange={event => { const branchId = event.target.value; setReportFilter({ branchId, actionId: 'all' }); setReportReady(false); }}><option value="all">Todas as coordenações estaduais</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select disabled={reportFilter.branchId === 'all'} value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="all">{reportFilter.branchId === 'all' ? 'Todas as ações' : 'Todas as ações desta coordenação'}</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Gerar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários cadastrados</h2><p>Coordenação estadual: {reportFilter.branchId === 'all' ? 'Todas' : branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportFilter.actionId === 'all' ? 'Todas' : reportActions.find(action => action.id === reportFilter.actionId)?.name}</p><p><strong>Total: {reportRows.length} voluntário{reportRows.length === 1 ? '' : 's'}</strong></p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
 
       <section className={styles.card} aria-labelledby="volunteer-list-title">
         <h2 id="volunteer-list-title">Voluntários cadastrados</h2>
@@ -282,7 +289,7 @@ export default function VolunteersPage() {
               {expandedId === volunteer.id && documents && <div className={styles.documents}>
                 <div><span>CPF</span><strong>{showFullCpf ? formatCpf(documents.cpf) : maskCpf(documents.cpf)}</strong></div>
                 <div><span>RG</span><strong>{documents.rg}</strong></div>
-                <div><span>Nascimento</span><strong>{documents.birthDate.split("-").reverse().join("/")}</strong></div>
+                <div><span>Nascimento</span><strong>{documents.birthDate.split("-").reverse().join("/")}</strong></div><div><span>Camiseta</span><strong>{documents.shirtSize || 'Não informado'}</strong></div><div><span>Vínculo com a ONG</span><strong>{documents.ngoRelationship || 'Não informado'}</strong></div>{documents.address && <div className={styles.wideDocument}><span>Endereço</span><strong>{[documents.address.street, documents.address.number, documents.address.complement, documents.address.neighborhood, documents.address.city, documents.address.state, documents.address.cep && `CEP ${formatCep(documents.address.cep)}`].filter(Boolean).join(', ')}</strong></div>}
                 <button type="button" className={styles.textButton} onClick={() => setShowFullCpf((current) => !current)}>{showFullCpf ? "Ocultar CPF" : "Mostrar CPF completo"}</button>
               </div>}
               <div className={styles.actions}><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && (volunteer.accessStatus === 'active' || volunteer.accessStatus === 'blocked' ? <button type="button" disabled={saving} onClick={() => manageAccess(volunteer, true)}>Gerar nova senha</button> : <button type="button" disabled={saving} onClick={() => manageAccess(volunteer)}>Criar acesso individual</button>)}{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>

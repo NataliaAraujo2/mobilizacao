@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { addAction, deleteAction, listActionsPage, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
 import { findAddressByCep } from "../services/cepService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import ListSearch from '../components/ListSearch';
+import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import styles from "./ActionsPage.module.css";
 
 const EMPTY_ADDRESS = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", source: "manual" };
-const EMPTY_FORM = { name: "", branchId: "", date: "", address: EMPTY_ADDRESS, whatToBring: "", tips: "", status: "planning" };
+const EMPTY_FORM = { name: "", branchId: "", startDate: "", endDate: "", startTime: "", endTime: "", scheduleText: "", address: EMPTY_ADDRESS, description: "", whatToBring: "", tips: "", status: "planning" };
 const EMPTY_PHOTOS = { before: [], during: [], after: [] };
 
 function formatCep(value) {
@@ -25,6 +27,8 @@ export default function ActionsPage() {
   const [photoActionId, setPhotoActionId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [qrAction, setQrAction] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listActionsPage({ search: filtros.search, cursor, pageSize })
@@ -147,6 +151,17 @@ export default function ActionsPage() {
     }
   }
 
+  async function showQrCode(action) {
+    const url = `${window.location.origin}/participar/${action.id}`;
+    setQrAction({ ...action, publicUrl: url });
+    setQrDataUrl(await QRCode.toDataURL(url, { width: 320, margin: 2, errorCorrectionLevel: "M" }));
+  }
+
+  function downloadQrCode() {
+    if (!qrDataUrl || !qrAction) return;
+    const link = document.createElement("a"); link.href = qrDataUrl; link.download = `qr-${qrAction.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`; link.click();
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.title}><div><p>Administração nacional</p><h1>Ações</h1></div><span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span></header>
@@ -157,8 +172,13 @@ export default function ActionsPage() {
         <form onSubmit={handleSubmit}>
           <fieldset><legend>Informações principais</legend><div className={styles.grid}>
             <label className={styles.wide}>Nome da ação<input required minLength="3" maxLength="160" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
+            <label className={styles.wide}>Descrição <small>(opcional)</small><textarea rows="4" maxLength="1500" placeholder="Explique o objetivo e como será a ação." value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
             <label>Coordenação estadual responsável<select required value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
-            <label>Data da ação<input required type="date" value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
+            <label>Data de início<input required type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value, endDate: form.endDate || event.target.value })} /></label>
+            <label>Hora de início<input required type="time" value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></label>
+            <label>Data de fim<input required type="date" min={form.startDate || undefined} value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} /></label>
+            <label>Hora de fim<input required type="time" value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></label>
+            <label className={styles.wide}>Informações de data e horário <small>(opcional)</small><textarea rows="3" maxLength="500" placeholder="Ex.: concentração às 8h30; atividade sujeita às condições climáticas." value={form.scheduleText} onChange={(event) => setForm({ ...form, scheduleText: event.target.value })} /></label>
           </div></fieldset>
 
           <fieldset><legend>Endereço</legend><p>Busque pelo CEP ou preencha qualquer campo manualmente.</p><div className={styles.grid}>
@@ -188,9 +208,10 @@ export default function ActionsPage() {
       </section>
 
       <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
-        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
-        {photoActionId === action.id && <form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form>}
+        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
+        {photoActionId === action.id && <><ActionPhotoGallery action={action} /><form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form></>}
       </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
+      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
     </main>
   );
 }

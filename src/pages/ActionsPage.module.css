@@ -45,4 +45,12 @@
 .actionSummary > .deleteAction { color: #922f2f; border-color: #d99b9b; }
 .morePhotos { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .morePhotos > p { color: var(--text-muted); }
+.qrBackdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(9 31 48 / 58%); }
+.qrModal { width: min(100%, 30rem); padding: 1.5rem; text-align: center; background: white; border-radius: 1rem; box-shadow: 0 1rem 3rem rgb(0 0 0 / 25%); }
+.qrModal h2, .qrModal h3 { margin: 0 0 .5rem; }
+.qrModal img { display: block; width: min(100%, 20rem); margin: 1rem auto; }
+.qrModal p { color: var(--text-muted); }
+.qrModal input { width: 100%; padding: .65rem; border: 1px solid var(--border); border-radius: .5rem; }
+.qrModal > div { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: 1rem; }
+.qrModal button { min-height: 2.7rem; padding: .6rem .8rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
 @media (max-width: 680px) { .title, .listHeading { align-items: start; flex-direction: column; } .grid, .photoGrid, .actionSummary { grid-template-columns: 1fr; } .wide { grid-column: 1; } .cepRow { grid-template-columns: 1fr; } .cepRow button, .submit, .actionSummary > button, .searchForm { width: 100%; min-height: 3.2rem; } .searchForm { align-items: stretch; flex-direction: column; } .searchForm label { width: 100%; } .card fieldset { padding: .8rem; } .actionSummary > span { justify-self: start; } }

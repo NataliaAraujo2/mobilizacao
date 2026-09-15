@@ -35,9 +35,8 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: min(100%, 30rem);
+  width: min(100%, 19rem);
   height: auto;
-  margin: -1.4rem auto -2.2rem;
   filter: drop-shadow(0 0.8rem 1.2rem rgb(0 97 168 / 12%));
 }
 
@@ -74,54 +73,46 @@
 }
 
 .mapExperience {
-  width: min(100%, 48rem);
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: clamp(0.85rem, 3vw, 1.5rem);
+  width: min(100%, 65rem);
+  margin: 1.2rem auto 0;
   border-radius: 1.25rem;
 }
 
-.mapLauncher {
+.mapLogoLauncher {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.9rem;
+  place-items: center;
+  gap: 0.55rem;
   width: 100%;
-  padding: 0.9rem 1rem;
-  color: white;
-  text-align: left;
-  background: linear-gradient(125deg, var(--brand-blue), #0878c7);
-  border: 0;
-  border-radius: 1rem;
-  box-shadow: 0 0.8rem 1.8rem rgb(0 97 168 / 22%);
+  min-height: 19rem;
+  padding: 1rem;
+  color: var(--text);
+  text-align: center;
+  background: linear-gradient(145deg, #f6fbfe, #eaf6fd);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: 0 0.8rem 1.8rem rgb(0 97 168 / 12%);
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.mapLauncher:hover,
-.mapLauncher:focus-visible {
+.mapLogoLauncher:hover,
+.mapLogoLauncher:focus-visible {
   box-shadow: 0 1rem 2.2rem rgb(0 97 168 / 30%);
   transform: translateY(-2px);
+  outline: none;
 }
 
-.mapLauncherIcon {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  color: var(--brand-blue);
-  font-size: 1.65rem;
-  background: white;
-  border-radius: 50%;
-}
-
-.mapLauncher small,
-.mapLauncher strong { display: block; }
-.mapLauncher small { margin-bottom: 0.1rem; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.84; }
-.mapLauncher strong { font-size: clamp(1rem, 3vw, 1.2rem); }
-.mapLauncherArrow { font-size: 1.2rem; }
+.mapLogoLauncher:hover .campaignLogo,
+.mapLogoLauncher:focus-visible .campaignLogo { filter: drop-shadow(0 1rem 1.4rem rgb(244 131 43 / 32%)); transform: scale(1.03); }
+.mapLogoHint { max-width: 15rem; color: var(--brand-blue); font-size: .85rem; font-weight: 800; line-height: 1.35; }
 
 .mapReveal {
-  margin-top: 0.7rem;
+  margin: 0;
   padding: clamp(1rem, 4vw, 2rem);
   background:
     linear-gradient(rgb(255 255 255 / 92%), rgb(255 255 255 / 96%)),
@@ -192,16 +183,17 @@
 }
 
 @media (max-width: 520px) {
-  .campaignLogo { width: min(100%, 22rem); margin-block: -0.8rem -1.3rem; }
+  .campaignLogo { width: min(100%, 16rem); }
   .brandDetail { display: none; }
-  .mapLauncher { padding: 0.8rem; }
-  .mapLauncherIcon { width: 2.35rem; height: 2.35rem; font-size: 1.35rem; }
+  .mapExperience { grid-template-columns: 1fr; }
+  .mapLogoLauncher { min-height: 14rem; padding: .85rem; }
   .quickAccess { grid-template-columns: 1fr; margin-top: 1.5rem; padding-top: 1.5rem; }
   .quickAccess a { min-height: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .quickAccess a,
-  .mapLauncher { transition: none; }
+  .mapLogoLauncher,
+  .campaignLogo { transition: none; }
   .mapReveal { animation: none; }
 }

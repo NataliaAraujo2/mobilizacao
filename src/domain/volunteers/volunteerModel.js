@@ -1,5 +1,8 @@
 import { isValidEmail, isValidPhone, normalizeEmail, normalizePhone, normalizeSearchText } from '../../../functions/contactFields.js';
+import { isBrazilStateCode } from '../locations/brazilStates.js';
 const CPF_LENGTH = 11;
+export const NGO_RELATIONSHIPS = Object.freeze(['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família']);
+export const SHIRT_SIZES = Object.freeze(['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO']);
 
 function digits(value) {
   return String(value ?? "").replace(/\D/g, "");
@@ -33,6 +36,14 @@ export function createVolunteerRecords(input) {
   const cpf = digits(input.cpf);
   const rg = String(input.rg ?? "").trim().toUpperCase().replace(/[^0-9A-Z]/g, "");
   const birthDate = String(input.birthDate ?? "").trim();
+  const addressInput = input.address ?? {};
+  const address = {
+    cep: digits(addressInput.cep), street: String(addressInput.street ?? '').trim(), number: String(addressInput.number ?? '').trim(),
+    complement: String(addressInput.complement ?? '').trim(), neighborhood: String(addressInput.neighborhood ?? '').trim(),
+    city: String(addressInput.city ?? '').trim(), state: String(addressInput.state ?? '').trim().toUpperCase(),
+  };
+  const shirtSize = String(input.shirtSize ?? '').trim().toUpperCase();
+  const ngoRelationship = String(input.ngoRelationship ?? '').trim();
 
   if (fullName.length < 2 || fullName.length > 120) throw new Error("Informe o nome completo.");
   if (actionIds.length < 1 || actionIds.length > 20) throw new Error("Selecione de 1 a 20 ações.");
@@ -46,9 +57,13 @@ export function createVolunteerRecords(input) {
     throw new Error("Informe uma data de nascimento válida.");
   }
   if (new Date(`${birthDate}T00:00:00`) > new Date()) throw new Error("A data de nascimento não pode estar no futuro.");
+  if (!/^\d{8}$/.test(address.cep) || !address.street || !address.number || !address.neighborhood || !address.city || !isBrazilStateCode(address.state)) throw new Error('Preencha o endereço completo do voluntário.');
+  if (!SHIRT_SIZES.includes(shirtSize)) throw new Error('Selecione o tamanho da camiseta.');
+  if (!NGO_RELATIONSHIPS.includes(ngoRelationship)) throw new Error('Selecione o vínculo com a ONG.');
+  if (input.lgpdAccepted !== true || input.regulationAccepted !== true) throw new Error('É necessário aceitar a LGPD e o regulamento.');
 
   return {
     publicData: { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds, regionalIds, participationDates, status: input.status ?? "active", accessStatus: input.accessStatus ?? "none", createdAt: null, updatedAt: null },
-    privateData: { cpf, rg, birthDate, createdAt: null, updatedAt: null },
+    privateData: { cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, createdAt: null, updatedAt: null },
   };
 }

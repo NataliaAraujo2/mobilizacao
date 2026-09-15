@@ -107,19 +107,24 @@ export async function updateVolunteer(id, input) {
     updatedAt: timestamp,
   });
   batch.update(doc(db, "volunteerPrivate", id), {
-    cpf: records.privateData.cpf,
-    rg: records.privateData.rg,
-    birthDate: records.privateData.birthDate,
+    cpf: records.privateData.cpf, rg: records.privateData.rg, birthDate: records.privateData.birthDate,
+    address: records.privateData.address, shirtSize: records.privateData.shirtSize, ngoRelationship: records.privateData.ngoRelationship,
+    lgpdAccepted: records.privateData.lgpdAccepted, regulationAccepted: records.privateData.regulationAccepted,
     updatedAt: timestamp,
   });
   await batch.commit();
 }
 
-export async function listVolunteerReport({ actionId }) {
+export async function listVolunteerReport({ branchId = 'all', actionId = 'all' } = {}) {
   const { db, collection, getDoc, getDocs, doc, query, where } = await getDbService([
     'collection', 'getDoc', 'getDocs', 'doc', 'query', 'where',
   ]);
-  const snapshot = await getDocs(query(collection(db, 'volunteers'), where('actionIds', 'array-contains', actionId)));
+  const volunteers = collection(db, 'volunteers');
+  const snapshot = actionId !== 'all'
+    ? await getDocs(query(volunteers, where('actionIds', 'array-contains', actionId)))
+    : branchId !== 'all'
+      ? await getDocs(query(volunteers, where('regionalIds', 'array-contains', branchId)))
+      : await getDocs(volunteers);
   const rows = await Promise.all(snapshot.docs.map(async item => {
     const privateSnapshot = await getDoc(doc(db, 'volunteerPrivate', item.id));
     if (!privateSnapshot.exists()) return null;
