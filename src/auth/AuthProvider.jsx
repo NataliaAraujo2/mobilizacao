@@ -65,6 +65,13 @@ export default function AuthProvider({ children }) {
       const service = await getAuthService();
       await service.signOut(service.auth);
     },
+    async refreshClaims() {
+      if (!session.user) return null;
+      const service = await getAuthService();
+      const token = await service.getIdTokenResult(session.user, true);
+      setSession(current => ({ ...current, claims: token.claims, loading: false, checked: true }));
+      return token.claims;
+    },
   }), [needsSession, session]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

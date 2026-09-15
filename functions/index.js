@@ -226,7 +226,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
     try {
       await auth.createUser({ uid, displayName: username, email, password });
       createdAuthUser = true;
-      await auth.setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId, status: "active" });
+      await auth.setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId, status: "active", mustChangePassword: true });
       await db.collection("users").doc(uid).set({
         displayName: username,
         email,
@@ -278,11 +278,17 @@ export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
   }
 });
 
-export const completeSuperAdminPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
-  if (!request.auth || request.auth.token.role !== "superAdmin" || request.auth.token.status !== "active") throw new HttpsError("permission-denied", "Acesso negado.");
-  const password = requiredText(request.data?.password, "password", 10, 128);
+export const completeInitialPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  const { role, status, branchId, mustChangePassword } = request.auth?.token ?? {};
+  if (!request.auth || !["superAdmin", VIEWER_ROLE].includes(role) || status !== "active" || !mustChangePassword) {
+    throw new HttpsError("permission-denied", "Acesso negado.");
+  }
+  const password = request.data?.password;
+  if (typeof password !== "string" || password.length < 6) {
+    throw new HttpsError("invalid-argument", "A senha precisa ter pelo menos 6 caracteres.");
+  }
   await getAuth().updateUser(request.auth.uid, { password });
-  await getAuth().setCustomUserClaims(request.auth.uid, { role: "superAdmin", status: "active", mustChangePassword: false });
+  await getAuth().setCustomUserClaims(request.auth.uid, { role, status, ...(role === VIEWER_ROLE ? { branchId } : {}), mustChangePassword: false });
   return { ok: true };
 });
 
@@ -344,6 +350,7 @@ export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   }
   const password = generateFriendlyPassword();
   await getAuth().updateUser(uid, { password });
+  await getAuth().setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId: profile.data().branchId, status: profile.data().status, mustChangePassword: true });
   return { uid, username: profile.data().displayName, password };
 });
 
