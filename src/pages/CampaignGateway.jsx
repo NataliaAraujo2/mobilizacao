@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../auth/useAuth";
+import BrazilMap from "../components/BrazilMap/BrazilMap";
+import PublicActionsPanel from "../components/PublicActionsPanel";
+import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
 import logo2026 from "../assets/brand/mobilizacao-logo-colorido.webp";
 import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
@@ -89,6 +93,16 @@ function VolunteerChoicesCountdown() {
 }
 
 export default function CampaignGateway() {
+  const [selectedState, setSelectedState] = useState("");
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapPreview, setMapPreview] = useState(false);
+  const { user, claims } = useAuth();
+  const mapVisible = mapOpen || mapPreview;
+
+  function closePreviewWhenLeaving(event) {
+    if (!event.currentTarget.contains(event.relatedTarget)) setMapPreview(false);
+  }
+
   return (
     <main className={styles.page}>
       <section className={styles.intro} aria-labelledby="editions-title">
@@ -99,7 +113,7 @@ export default function CampaignGateway() {
         <p>Conheça nossas edições e acompanhe o que estamos preparando.</p>
       </section>
 
-      <Link className={styles.mapTeaser} to="/2026" aria-labelledby="map-teaser-title">
+      <section className={styles.mapTeaser} aria-labelledby="map-teaser-title" onMouseEnter={() => setMapPreview(true)} onMouseLeave={() => setMapPreview(false)} onFocus={() => setMapPreview(true)} onBlur={closePreviewWhenLeaving}>
         <img className={`${styles.kitElement} ${styles.kitLeaves}`} src={leavesElement} alt="" aria-hidden="true" />
         <img className={`${styles.kitElement} ${styles.kitGrowing}`} src={growingElement} alt="" aria-hidden="true" />
         <img className={`${styles.kitElement} ${styles.kitSprout}`} src={sproutElement} alt="" aria-hidden="true" />
@@ -108,10 +122,19 @@ export default function CampaignGateway() {
           <h2 id="map-teaser-title">Em 21 de outubro, escolha sua ação!</h2>
           <p>Em breve, você poderá escolher a ação em que deseja atuar como voluntário e acompanhar as mobilizações em cada estado.</p>
           <VolunteerChoicesCountdown />
-          <span>Escolhas de voluntariado em breve <b aria-hidden="true">→</b></span>
+          <Link className={styles.teaserLink} to="/2026">Conhecer a edição 2026 <b aria-hidden="true">→</b></Link>
         </div>
-        <img className={styles.mapLogo} src={logo2026} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" width="1400" height="1466" />
-      </Link>
+        <button className={styles.mapLogoButton} type="button" aria-expanded={mapVisible} aria-controls="mapa-acoes-publico" onClick={() => setMapOpen(current => !current)}>
+          <img className={styles.mapLogo} src={logo2026} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" width="1400" height="1466" />
+          <span>{mapOpen ? "Fechar mapa" : "Passe o mouse ou toque no mapa"}</span>
+        </button>
+        {mapVisible && <div id="mapa-acoes-publico" className={styles.publicMap}>
+          <div><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
+          <BrazilMap selectedState={selectedState} onSelectState={setSelectedState} />
+          <p className={styles.mapResult} aria-live="polite">{selectedState ? <>Estado selecionado: <strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name} ({selectedState})</strong></> : "Nenhum estado selecionado."}</p>
+          <PublicActionsPanel state={selectedState} user={user} claims={claims} />
+        </div>}
+      </section>
 
       <section className={styles.previousEditions} aria-labelledby="previous-editions-title">
         <div className={styles.previousHeading}>

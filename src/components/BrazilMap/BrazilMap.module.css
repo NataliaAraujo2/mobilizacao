@@ -38,14 +38,14 @@
 .map :global(.estado):focus-visible path {
   fill: #1597d3;
   stroke: white;
-  stroke-width: 2.4px;
-  filter: drop-shadow(0 5px 6px rgb(0 61 106 / 35%));
-  transform: scale(1.07);
+  stroke-width: 2.8px;
+  filter: drop-shadow(0 0.55rem 0.4rem rgb(0 47 82 / 42%));
+  transform: translateY(-0.42rem) scale(1.11);
 }
 .map :global(.estado):hover :global(.circle),
 .map :global(.estado):focus-visible :global(.circle) { fill: #ffb30f; }
 .map :global(.estado):focus-visible path { stroke: var(--focus); stroke-width: 3px; }
-.map :global(.estado):active path { transform: scale(1.025); filter: none; }
+.map :global(.estado):active path { transform: translateY(-0.15rem) scale(1.04); filter: drop-shadow(0 0.2rem 0.2rem rgb(0 47 82 / 25%)); }
 .map .selected path { fill: var(--map-state-selected); }
 .map .selected :global(.circle) { fill: var(--brand-green); }
 .map[aria-disabled="true"] :global(.estado) { cursor: not-allowed; opacity: 0.58; }

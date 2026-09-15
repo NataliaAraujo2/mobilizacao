@@ -15,22 +15,30 @@
 .associatesCounter strong { margin: .15rem 0; font-size: clamp(1.65rem, 4vw, 2.25rem); line-height: 1; }
 .associatesCounter span { font-size: .72rem; font-weight: 800; text-transform: uppercase; }
 .mapTeaser { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(15rem, .65fr); align-items: center; gap: clamp(1rem, 5vw, 4rem); width: min(100%, 68rem); min-height: 24rem; margin: 2.5rem auto; padding: clamp(1.5rem, 4vw, 3rem); color: var(--text); text-decoration: none; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #fff7ef 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.75rem; box-shadow: 0 1.25rem 3rem rgb(0 97 168 / 13%); overflow: hidden; transition: transform 180ms ease, box-shadow 180ms ease; }
-.mapTeaser:hover, .mapTeaser:focus-visible { box-shadow: 0 1.5rem 3.5rem rgb(0 97 168 / 25%); transform: translateY(-3px); outline: 3px solid rgb(237 133 54 / 45%); }
 .mapTeaserCopy, .mapLogo { position: relative; z-index: 1; }
 .mapTeaser .eyebrow { color: var(--brand-orange); }
 .mapTeaserCopy h2 { max-width: 38rem; margin: .5rem 0; color: var(--brand-blue); font-size: clamp(1.8rem, 5vw, 3.4rem); line-height: 1.06; letter-spacing: -.04em; }
 .mapTeaserCopy > p:not(.eyebrow) { max-width: 36rem; color: var(--text-muted); line-height: 1.6; }
-.mapTeaserCopy > span { display: inline-flex; align-items: center; gap: .55rem; margin-top: .75rem; padding: .75rem 1rem; color: white; font-size: .86rem; font-weight: 800; background: var(--brand-blue); border-radius: .75rem; box-shadow: 0 .45rem 1rem rgb(0 97 168 / 16%); }
+.teaserLink { display: inline-flex; align-items: center; gap: .55rem; margin-top: .75rem; padding: .75rem 1rem; color: white; font-size: .86rem; font-weight: 800; text-decoration: none; background: var(--brand-blue); border-radius: .75rem; box-shadow: 0 .45rem 1rem rgb(0 97 168 / 16%); }
 .countdown { display: flex; gap: .5rem; margin-top: 1.1rem; }
 .countdown span { display: grid; min-width: 4.5rem; padding: .45rem .55rem; text-align: center; background: rgb(255 255 255 / 86%); border: 1px solid #c9dfed; border-radius: .65rem; box-shadow: 0 .3rem .8rem rgb(0 97 168 / 7%); }
 .countdown strong { color: var(--brand-blue); font-size: 1.35rem; line-height: 1; }
 .countdown small { margin-top: .18rem; color: var(--text-muted); font-size: .67rem; font-weight: 800; text-transform: uppercase; }
 .openNotice { margin: 1rem 0 0; color: var(--brand-green); font-weight: 800; }
 .mapLogo { justify-self: center; width: min(100%, 19.5rem); height: auto; filter: drop-shadow(0 1rem 1.4rem rgb(0 97 168 / 15%)); }
+.mapLogoButton { position: relative; z-index: 1; display: grid; justify-items: center; gap: .45rem; padding: .5rem; color: var(--brand-blue); font: inherit; font-size: .8rem; font-weight: 800; background: transparent; border: 0; border-radius: 1rem; cursor: pointer; transition: transform 180ms ease, filter 180ms ease; }
+.mapLogoButton:hover, .mapLogoButton:focus-visible { outline: 3px solid rgb(237 133 54 / 45%); transform: scale(1.035); }
+.mapLogoButton:hover .mapLogo, .mapLogoButton:focus-visible .mapLogo { filter: drop-shadow(0 1.25rem 1.6rem rgb(244 131 43 / 30%)); }
+.publicMap { z-index: 2; grid-column: 1 / -1; display: grid; justify-items: center; margin-top: .25rem; padding: clamp(1rem, 3vw, 1.75rem); background: rgb(255 255 255 / 92%); border: 1px solid #c9dfed; border-radius: 1.25rem; box-shadow: inset 0 0 0 .25rem rgb(0 97 168 / 3%); animation: showMap 220ms ease-out both; }
+.publicMap > div { text-align: center; }
+.publicMap h3 { margin: .25rem 0; color: var(--brand-blue); font-size: clamp(1.35rem, 3vw, 1.8rem); }
+.publicMap > div > p:last-child, .mapResult { margin: .35rem 0 .75rem; color: var(--text-muted); }
+.mapResult strong { color: var(--text); }
 .kitElement { position: absolute; width: auto; height: auto; pointer-events: none; opacity: .075; }
 .kitLeaves { top: -2rem; left: 38%; max-width: 9rem; transform: rotate(18deg); }
 .kitGrowing { right: 23%; bottom: -3.5rem; max-width: 12rem; transform: rotate(-8deg); }
 .kitSprout { right: -1.5rem; top: -2rem; max-width: 9rem; transform: rotate(16deg); }
+@keyframes showMap { from { opacity: 0; transform: translateY(-.5rem); } to { opacity: 1; transform: translateY(0); } }
 .previousEditions { width: min(100%, 64rem); margin: 3rem auto 0; }
 .previousHeading { margin-bottom: 1rem; text-align: center; }
 .previousHeading h2 { margin: .35rem 0 0; color: var(--brand-blue); font-size: clamp(1.5rem, 4vw, 2.25rem); }
@@ -68,6 +76,8 @@
   .mapTeaserCopy h2, .mapTeaserCopy > p:not(.eyebrow) { margin-inline: auto; }
   .countdown { justify-content: center; }
   .mapLogo { grid-row: 1; width: min(60vw, 15rem); }
+  .mapLogoButton { grid-row: 1; }
+  .publicMap { grid-column: 1; }
   .kitLeaves { left: -2rem; }
   .kitGrowing { right: -3rem; bottom: 18%; }
   .kitSprout { display: none; }
@@ -91,4 +101,4 @@
   .soonHero { border-radius: 1.25rem; }
   .legacyActions { flex-direction: column; }
 }
-@media (prefers-reduced-motion: reduce) { .mapTeaser, .previousCard { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .mapLogoButton, .previousCard { transition: none; } .publicMap { animation: none; } }
