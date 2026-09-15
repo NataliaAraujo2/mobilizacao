@@ -186,9 +186,9 @@ async function getBranch(branchId) {
   return snapshot;
 }
 
-async function nextBranchViewerIdentity(state, reservedUsernames = new Set()) {
+async function nextBranchViewerIdentity(code, state, reservedUsernames = new Set()) {
   const snapshot = await getFirestore().collection("users").where("role", "==", VIEWER_ROLE).get();
-  const username = nextBranchViewerUsername(state, snapshot.docs.map((item) => item.data().displayName), reservedUsernames);
+  const username = nextBranchViewerUsername(code, state, snapshot.docs.map((item) => item.data().displayName), reservedUsernames);
   return { username, email: `${username.toLowerCase()}@${VIEWER_EMAIL_DOMAIN}` };
 }
 
@@ -207,6 +207,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   }
   const branch = await getBranch(branchId);
   const state = requiredText(branch.data().state, "state", 2, 2).toUpperCase();
+  const code = requiredText(branch.data().code, "code", 1, 40);
   const uid = `branch-viewer-${branchId}`;
   const auth = getAuth();
   const db = getFirestore();
@@ -220,7 +221,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   // sufixo. Em caso de colisão de e-mail, tentamos o próximo identificador;
   // nunca excluímos uma conta que já existia.
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const { username, email } = await nextBranchViewerIdentity(state, reservedUsernames);
+    const { username, email } = await nextBranchViewerIdentity(code, state, reservedUsernames);
     const password = generateFriendlyPassword();
     let createdAuthUser = false;
     try {
