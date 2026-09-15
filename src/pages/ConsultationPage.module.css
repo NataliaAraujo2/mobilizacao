@@ -17,10 +17,16 @@
 .safety { padding: .8rem 1rem; color: #6f4a17; background: #fff2dc; border-radius: .65rem; }
 .error { color: #a22b2b; font-weight: 700; }
 .list { display: grid; gap: .75rem; }
-.details { padding: 1.5rem; margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
-.details h2 { margin-top: 0; }
-.details dt { font-weight: 800; margin-top: 1rem; }
-.details dd { margin: .3rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.details { padding: clamp(1rem, 3vw, 1.75rem); margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #f7fbfe); border: 1px solid var(--border); border-radius: 1rem; box-shadow: 0 .65rem 1.5rem rgb(0 97 168 / 5%); }
+.detailsHeading { margin-bottom: 1rem; padding-bottom: .9rem; border-bottom: 1px solid var(--border); }
+.detailsHeading p { margin: 0 0 .25rem; color: var(--accent); font-size: .72rem; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
+.details h2 { margin: 0; }
+.details dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0; }
+.details dl > div { min-width: 0; padding: .85rem 1rem; background: white; border: 1px solid #e2ecf2; border-radius: .75rem; }
+.details dt { color: var(--text-muted); font-size: .72rem; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
+.details dd { margin: .35rem 0 0; font-weight: 750; line-height: 1.5; white-space: pre-wrap; }
+.detailWide { grid-column: 1 / -1; }
+.detailActions { justify-content: flex-start; }
 .actions { flex-wrap: wrap; }
 .back { margin-bottom: 1rem; padding: .7rem 1rem; background: white; color: var(--brand-blue); border: 1px solid var(--border); border-radius: .6rem; cursor: pointer; }
 .volunteer { display: grid; grid-template-columns: auto minmax(14rem, 1.5fr) repeat(2, minmax(8rem, 1fr)); align-items: center; gap: .8rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: .85rem; }
@@ -37,6 +43,8 @@
   .volunteer { grid-template-columns: auto 1fr; align-items: start; }
   .volunteer > div { grid-column: 2; }
   .number { grid-row: 1 / span 3; }
+  .details dl { grid-template-columns: 1fr; }
+  .detailWide { grid-column: auto; }
 }
 @media print {
   .back, .actions a, .actions form { display: none; }

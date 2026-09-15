@@ -41,6 +41,8 @@
   --focus: var(--brand-orange);
 }
 * { box-sizing: border-box; }
+html { overflow-x: hidden; }
+img, svg { max-width: 100%; }
 body {
   margin: 0;
   min-width: 0;
@@ -49,7 +51,9 @@ body {
     radial-gradient(circle at 94% 30%, rgb(237 133 54 / 6%) 0 .45rem, transparent .5rem),
     #f5f8fa;
 }
-button, input, textarea, select { font: inherit; }
+button, input, textarea, select { max-width: 100%; font: inherit; }
+h1, h2, h3, p, dd, strong { overflow-wrap: anywhere; }
 h1, h2, h3, strong { font-family: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 70%, white); outline-offset: 3px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 65%, transparent); outline-offset: 1px; }

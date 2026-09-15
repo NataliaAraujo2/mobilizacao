@@ -11,4 +11,4 @@
 .signup input { min-height: 2.8rem; padding: .6rem; font: inherit; border: 1px solid var(--border); border-radius: .55rem; }
 .signup form > button { grid-column: 1 / -1; }
 .error { color: #a22b2b; font-weight: 750; }
-@media (max-width: 600px) { .signup form { grid-template-columns: 1fr; } .signup form > button { grid-column: 1; } }
+@media (max-width: 600px) { .panel { padding: .85rem; } .actions { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form { grid-template-columns: 1fr; } .signup form > button, .panel button { width: 100%; min-height: 3rem; grid-column: 1; } }

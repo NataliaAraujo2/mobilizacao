@@ -16,5 +16,5 @@
 .sheet input { width: 1.35rem; height: 1.35rem; }
 .sheet li span { color: var(--text-muted); }
 .error { color: #a22b2b; font-weight: 750; }
-@media (max-width: 650px) { .filters, .sheet header { align-items: stretch; flex-direction: column; } }
+@media (max-width: 650px) { .filters, .sheet header { align-items: stretch; flex-direction: column; } .filters button { width: 100%; } .sheet { padding: .9rem; } .sheet li label { grid-template-columns: auto minmax(0, 1fr); } .sheet li span { grid-column: 2; } }
 @media print { body * { visibility: hidden; } .sheet, .sheet * { visibility: visible; } .sheet { position: absolute; inset: 0; margin: 0; border: 0; } .sheet input, .sheet li span { display: none; } .sheet li label { grid-template-columns: 1fr; } }

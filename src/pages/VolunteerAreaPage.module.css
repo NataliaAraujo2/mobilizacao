@@ -13,3 +13,10 @@
 .ausente { color: #922f2f; background: #fde6e6; }
 .error { color: #a22b2b; font-weight: 750; }
 .list article > button { min-height: 2.7rem; padding: .55rem .8rem; color: #922f2f; font-weight: 800; background: white; border: 1px solid #d99b9b; border-radius: .55rem; cursor: pointer; }
+@media (max-width: 560px) {
+  .page { width: min(100% - 1rem, 65rem); }
+  .list article { padding: 1rem; }
+  .list article > div { align-items: start; flex-direction: column; }
+  .list strong[class], .list article > button { width: 100%; text-align: center; }
+  .list article > button { min-height: 3.1rem; }
+}

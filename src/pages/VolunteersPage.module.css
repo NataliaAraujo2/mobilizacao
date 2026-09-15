@@ -57,11 +57,11 @@
 .documents .textButton { grid-column: 1 / -1; justify-self: start; }
 @media (max-width: 620px) {
   .page { width: min(100% - 1rem, 72rem); }
-  .title { align-items: start; flex-direction: column; }
+  .title, .sectionHeading { align-items: start; flex-direction: column; }
   .card form, .documents { grid-template-columns: 1fr; }
   .wide, .formActions, .documents .textButton { grid-column: 1; }
   .formActions, .actions { flex-direction: column; }
-  .formActions button, .actions button, .textButton { width: 100%; min-height: 3.1rem; }
+  .formActions button, .actions button, .textButton, .sectionHeading > button { width: 100%; min-height: 3.1rem; }
   .listError { align-items: stretch; flex-direction: column; }
   .listError button { width: 100%; min-height: 3.1rem; }
 }

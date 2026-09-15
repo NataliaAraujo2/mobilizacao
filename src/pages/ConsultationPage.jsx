@@ -45,15 +45,15 @@ function ActionDetails({ action, branch, user, onBack }) {
     <button className={styles.back} type="button" onClick={onBack}>← Voltar às ações</button>
     <header className={styles.header}><div><p>{branch?.name}</p><h1>{action.name}</h1></div></header>
     <section className={styles.details} aria-labelledby="action-details-title">
-      <h2 id="action-details-title">Dados da ação</h2><dl>
-        <dt>Data</dt><dd>{action.date?.split('-').reverse().join('/') || 'Não informada'}</dd>
-        <dt>Situação</dt><dd>{statuses[action.status] ?? action.status ?? 'Não informada'}</dd>
-        <dt>Local</dt><dd>{[address.street, address.number, address.complement, address.neighborhood, address.city, address.state].filter(Boolean).join(', ')}</dd>
-        {address.cep && <><dt>CEP</dt><dd>{address.cep}</dd></>}
-        <dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd>
-        <dt>Orientações</dt><dd>{action.tips || 'Nenhuma orientação adicional.'}</dd>
+      <div className={styles.detailsHeading}><p>Informações do evento</p><h2 id="action-details-title">Dados da ação</h2></div><dl>
+        <div><dt>Data</dt><dd>{action.date?.split('-').reverse().join('/') || 'Não informada'}</dd></div>
+        <div><dt>Situação</dt><dd>{statuses[action.status] ?? action.status ?? 'Não informada'}</dd></div>
+        <div className={styles.detailWide}><dt>Local</dt><dd>{[address.street, address.number, address.complement, address.neighborhood, address.city, address.state].filter(Boolean).join(', ')}</dd></div>
+        {address.cep && <div><dt>CEP</dt><dd>{address.cep}</dd></div>}
+        <div className={styles.detailWide}><dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd></div>
+        <div className={styles.detailWide}><dt>Orientações</dt><dd>{action.tips || 'Nenhuma orientação adicional.'}</dd></div>
       </dl></section>
-    <nav className={styles.actions} aria-label="Participantes da ação">
+    <nav className={`${styles.actions} ${styles.detailActions}`} aria-label="Participantes da ação">
       <button type="button" onClick={() => setView('volunteers')}>Voluntários inscritos e impressão</button>
       <button type="button" onClick={() => setView('attendance')}>Lista de presença</button>
     </nav>

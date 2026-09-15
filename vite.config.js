@@ -11,4 +11,17 @@ function deploymentVersion() {
   };
 }
 
-export default defineConfig({ plugins: [react(), deploymentVersion()], build: { outDir: "dist" } });
+export default defineConfig({
+  plugins: [react(), deploymentVersion()],
+  build: {
+    outDir: "dist",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          firebaseApp: ["firebase/app"],
+          reactVendor: ["react", "react-dom", "react-router-dom"],
+        },
+      },
+    },
+  },
+});

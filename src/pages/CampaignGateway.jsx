@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
 import logo2026 from "../assets/brand/mobilizacao-logo-colorido.webp";
@@ -10,21 +10,40 @@ import { getNewAssociatesCount } from "../services/associationStatsService";
 import styles from "./CampaignGateway.module.css";
 
 function AssociatesCounter() {
+  const counterRef = useRef(null);
+  const [visible, setVisible] = useState(false);
   const [count, setCount] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {
+    const target = counterRef.current;
+    if (!target) return undefined;
+    if (!("IntersectionObserver" in window)) {
+      setVisible(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setVisible(true);
+      observer.disconnect();
+    }, { rootMargin: "160px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return undefined;
     let active = true;
     getNewAssociatesCount()
       .then((value) => { if (active) setCount(value); })
       .catch(() => { if (active) setUnavailable(true); });
     return () => { active = false; };
-  }, []);
+  }, [visible]);
 
   return (
-    <div className={styles.associatesCounter} aria-live="polite" aria-busy={count === null}>
+    <div ref={counterRef} className={styles.associatesCounter} aria-live="polite" aria-busy={visible && count === null}>
       <small>Já somos</small>
-      <strong>{count === null ? "—" : count.toLocaleString("pt-BR")}</strong>
+      <strong>{!visible || count === null ? "—" : count.toLocaleString("pt-BR")}</strong>
       <span>{unavailable ? "contador em atualização" : "novos associados"}</span>
     </div>
   );

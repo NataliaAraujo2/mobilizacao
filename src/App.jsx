@@ -2,11 +2,11 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import RequireAuth from "./auth/RequireAuth";
 import AppLayout from "./layout/AppLayout";
-import AccessMessagePage from "./pages/AccessMessagePage";
-import LoginPage from "./pages/LoginPage";
-import CampaignGateway from "./pages/CampaignGateway";
-import Campaign2025Page from "./pages/Campaign2025Page";
 
+const AccessMessagePage = lazy(() => import("./pages/AccessMessagePage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const CampaignGateway = lazy(() => import("./pages/CampaignGateway"));
+const Campaign2025Page = lazy(() => import("./pages/Campaign2025Page"));
 const PublicHome = lazy(() => import("./pages/PublicHome"));
 const ReportViewerPage = lazy(() => import("./pages/ReportViewerPage"));
 const BranchesPage = lazy(() => import("./pages/BranchesPage"));
