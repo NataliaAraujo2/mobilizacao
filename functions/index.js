@@ -278,7 +278,7 @@ export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
   }
 });
 
-export const completeInitialPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+export const completeSuperAdminPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   const { role, status, branchId, mustChangePassword } = request.auth?.token ?? {};
   if (!request.auth || !["superAdmin", VIEWER_ROLE].includes(role) || status !== "active" || !mustChangePassword) {
     throw new HttpsError("permission-denied", "Acesso negado.");

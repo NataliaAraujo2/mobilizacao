@@ -77,5 +77,5 @@ export async function createSuperAdmin(input) {
 }
 
 export async function completeInitialPasswordChange(password) {
-  return callFunction("completeInitialPasswordChange", { password });
+  return callFunction("completeSuperAdminPasswordChange", { password });
 }
