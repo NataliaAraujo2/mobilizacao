@@ -2,6 +2,7 @@ import { createAction } from "../domain/actions/actionModel";
 import { compressImage } from "../utils/imageCompression";
 import { getDbService } from "./firebaseDb";
 import { getStorageService } from "./firebaseStorage";
+import { getFunctionsService } from "./firebaseFunctions";
 import { normalizeSearchText } from '../../functions/contactFields.js';
 
 async function removeOrphanedPhoto(deleteObject, fileRef) {
@@ -24,6 +25,11 @@ export async function addAction(input) {
   const data = createAction(input);
   const reference = await addDoc(collection(db, "actions"), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
   return { id: reference.id, ...data };
+}
+
+export async function deleteAction(actionId) {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, "deleteAction")({ actionId })).data;
 }
 
 export async function listActionsPage({ search = "", cursor = null, pageSize = 20 } = {}) {

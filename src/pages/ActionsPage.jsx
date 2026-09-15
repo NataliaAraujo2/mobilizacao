@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { addAction, listActionsPage, uploadActionPhotos } from "../services/actionsService";
+import { addAction, deleteAction, listActionsPage, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
 import { findAddressByCep } from "../services/cepService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
@@ -127,6 +127,26 @@ export default function ActionsPage() {
     }
   }
 
+  async function removeAction(action) {
+    if (!window.confirm(`Excluir permanentemente a ação “${action.name}”? Voluntários deixarão de estar vinculados a ela, e as fotos e presenças serão removidas.`)) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+    setProgress("Excluindo ação, vínculos e fotos...");
+    try {
+      await deleteAction(action.id);
+      if (photoActionId === action.id) setPhotoActionId("");
+      setPhotos(EMPTY_PHOTOS);
+      await recarregar({ search });
+      setMessage("Ação excluída com sucesso.");
+    } catch (deleteError) {
+      setError(deleteError.message || "Não foi possível excluir a ação.");
+    } finally {
+      setProgress("");
+      setSaving(false);
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.title}><div><p>Administração nacional</p><h1>Ações</h1></div><span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span></header>
@@ -168,7 +188,7 @@ export default function ActionsPage() {
       </section>
 
       <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
-        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button></div>
+        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
         {photoActionId === action.id && <form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form>}
       </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
     </main>

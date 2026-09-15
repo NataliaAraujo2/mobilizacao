@@ -76,6 +76,14 @@ export async function createSuperAdmin(input) {
   return callFunction("createSuperAdmin", input);
 }
 
+export async function listSuperAdmins() {
+  const { db, collection, getDocs, query, where } = await getDbService(["collection", "getDocs", "query", "where"]);
+  const snapshot = await getDocs(query(collection(db, "users"), where("role", "==", "superAdmin")));
+  return snapshot.docs
+    .map((item) => ({ id: item.id, ...item.data() }))
+    .sort((first, second) => String(first.displayName ?? "").localeCompare(String(second.displayName ?? ""), "pt-BR"));
+}
+
 export async function completeInitialPasswordChange(password) {
   return callFunction("completeSuperAdminPasswordChange", { password });
 }

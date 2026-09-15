@@ -192,14 +192,18 @@ export default function BranchViewersPage() {
       </section>
 
       {credentials && (
-        <section className={styles.credentials} aria-live="polite">
-          <div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div>
-          <div><span>Usuário</span><strong>{credentials.username}</strong></div>
-          <div><span>Senha temporária</span><strong>{credentials.password}</strong></div>
-          <button type="button" onClick={copyCredentials}>Copiar usuário e senha</button>
-          <button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button>
-          <p>Guarde agora: por segurança, a senha não fica salva para consulta.</p>
-        </section>
+        <div className={styles.modalBackdrop} role="presentation">
+          <section className={styles.credentials} role="dialog" aria-modal="true" aria-labelledby="credentials-title" aria-live="polite">
+            <p className={styles.credentialsEyebrow}>Acesso criado</p>
+            <h2 id="credentials-title">Guarde as credenciais agora</h2>
+            <div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div>
+            <div><span>Usuário</span><strong>{credentials.username}</strong></div>
+            <div><span>Senha temporária</span><strong>{credentials.password}</strong></div>
+            <div className={styles.credentialsActions}><button type="button" onClick={copyCredentials}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button></div>
+            <p>Por segurança, a senha não fica salva para consulta. Depois de copiar ou compartilhar, feche esta janela.</p>
+            <button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar após guardar</button>
+          </section>
+        </div>
       )}
 
       {error && <p className={styles.error} role="alert">{error}</p>}

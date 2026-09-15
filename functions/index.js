@@ -354,6 +354,42 @@ export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   return { uid, username: profile.data().displayName, password };
 });
 
+export const deleteAction = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const actionId = requiredText(request.data?.actionId, "actionId", 1, 128);
+  if (actionId.includes("/")) throw new HttpsError("invalid-argument", "Identificador inválido.");
+
+  const db = getFirestore();
+  const actionRef = db.collection("actions").doc(actionId);
+  const action = await actionRef.get();
+  if (!action.exists) throw new HttpsError("not-found", "Ação não encontrada.");
+
+  const branchId = action.data().branchId;
+  const [volunteers, attendance] = await Promise.all([
+    db.collection("volunteers").where("actionIds", "array-contains", actionId).get(),
+    db.collection("attendance").where("actionId", "==", actionId).get(),
+  ]);
+  const volunteerUpdates = await Promise.all(volunteers.docs.map(async (item) => {
+    const remainingActionIds = (item.data().actionIds ?? []).filter((id) => id !== actionId);
+    const remainingActions = remainingActionIds.length ? await db.getAll(...remainingActionIds.map((id) => db.collection("actions").doc(id))) : [];
+    return {
+      ref: item.ref,
+      actionIds: remainingActionIds,
+      regionalIds: [...new Set(remainingActions.filter((item) => item.exists).map((item) => item.data().branchId))],
+    };
+  }));
+  const writer = db.bulkWriter();
+  volunteerUpdates.forEach((item) => writer.update(item.ref, { actionIds: item.actionIds, regionalIds: item.regionalIds, updatedAt: FieldValue.serverTimestamp() }));
+  attendance.docs.forEach((item) => writer.delete(item.ref));
+  writer.delete(db.collection("attendanceSessions").doc(actionId));
+  await writer.close();
+
+  const [files] = await getStorage().bucket().getFiles({ prefix: `branches/${branchId}/actions/${actionId}/` });
+  await Promise.all(files.map((file) => file.delete()));
+  await actionRef.delete();
+  return { ok: true, removedVolunteers: volunteers.size, removedAttendance: attendance.size };
+});
+
 export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   requireSuperAdmin(request);
   const volunteerId = requiredText(request.data?.volunteerId, 'volunteerId', 1, 128);
