@@ -11,6 +11,12 @@ export default function BrazilMap({ selectedState, onSelectState, disabled = fal
     const states = mapElement?.querySelectorAll("a.estado") ?? [];
 
     states.forEach((state) => {
+      if (!state.querySelector(":scope > .state-content")) {
+        const content = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        content.setAttribute("class", "state-content");
+        while (state.firstChild) content.appendChild(state.firstChild);
+        state.appendChild(content);
+      }
       const name = state.getAttribute("name");
       const code = BRAZIL_STATE_BY_NORMALIZED_NAME[normalizeBrazilStateName(name)]?.code;
       const isSelected = code === selectedState;
