@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { nextBranchViewerUsername } from "./viewerIdentity.js";
 
 test("gera identificador sequencial por UF", () => {
-  assert.equal(nextBranchViewerUsername("TESTE", "SP"), "USUARIO_01_SP");
-  assert.equal(nextBranchViewerUsername("TESTE", "SP", ["USUARIO_01_SP"]), "USUARIO_02_SP");
-  assert.equal(nextBranchViewerUsername("TESTE", "SP", ["USUARIO_TESTE_SP", "USUARIO_TESTE_SP_02", "USUARIO_02_SP"]), "USUARIO_04_SP");
+  assert.deepEqual(nextBranchViewerUsername("TO", "TO"), { username: "USUARIO-TO-01-01", coordinationNumber: 1, userNumber: 1 });
+  assert.deepEqual(nextBranchViewerUsername("TO", "TO", ["USUARIO-TO-01-01"]), { username: "USUARIO-TO-01-02", coordinationNumber: 1, userNumber: 2 });
+  assert.deepEqual(nextBranchViewerUsername("TO_02", "TO"), { username: "USUARIO-TO-02-01", coordinationNumber: 2, userNumber: 1 });
 });
 
 test("conflito temporário de e-mail reserva o próximo número", () => {
-  assert.equal(nextBranchViewerUsername("MOB 2026", "RJ", ["USUARIO_01_RJ"], ["USUARIO_02_RJ"]), "USUARIO_03_RJ");
+  assert.deepEqual(nextBranchViewerUsername("RJ", "RJ", ["USUARIO-RJ-01-01"], ["USUARIO-RJ-01-02"]), { username: "USUARIO-RJ-01-03", coordinationNumber: 1, userNumber: 3 });
 });

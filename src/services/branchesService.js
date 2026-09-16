@@ -75,3 +75,20 @@ export async function editBranch(id, input) {
   clearBranchesCache();
   return { id, ...data };
 }
+
+export async function deleteBranch(id) {
+  const { db, collection, deleteDoc, doc, getDocs, limit, query, where } = await getDbService([
+    "collection", "deleteDoc", "doc", "getDocs", "limit", "query", "where",
+  ]);
+  const [actions, viewers] = await Promise.all([
+    getDocs(query(collection(db, "actions"), where("branchId", "==", id), limit(1))),
+    getDocs(query(collection(db, "users"), where("branchId", "==", id), limit(1))),
+  ]);
+  if (!actions.empty || !viewers.empty) {
+    const error = new Error("Exclua primeiro as ações e os usuários vinculados a esta coordenação.");
+    error.code = "branch/has-linked-records";
+    throw error;
+  }
+  await deleteDoc(doc(db, "branches", id));
+  clearBranchesCache();
+}

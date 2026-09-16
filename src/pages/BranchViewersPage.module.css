@@ -19,6 +19,10 @@
 .credentialsActions { grid-column: 1 / -1; display: flex !important; grid-template-columns: none !important; flex-wrap: wrap; gap: .6rem !important; }
 .closeCredentials { grid-column: 1 / -1; color: var(--map-state) !important; background: white !important; border: 1px solid var(--border) !important; }
 .list { display: grid; gap: .75rem; }
+.viewerList { grid-column: 1 / -1; display: grid; gap: .6rem; }
+.viewer { display: grid; grid-template-columns: minmax(13rem, 1fr) repeat(5, auto); align-items: center; gap: .55rem; padding: .75rem; background: white; border: 1px solid var(--border); border-radius: .65rem; }
+.viewer p { margin: .15rem 0; color: var(--map-state); font-weight: 800; }
+.viewer small { color: var(--text-muted); overflow-wrap: anywhere; }
 .item { display: grid; grid-template-columns: minmax(14rem, 1fr) repeat(4, auto); align-items: center; gap: .75rem; padding: 1rem; background: #f7faf8; border: 1px solid var(--border); border-radius: .8rem; }
 .item h3, .item p { margin: 0; }
 .item p { margin-top: .25rem; color: var(--text-muted); }
@@ -36,5 +40,5 @@
 .contactForm > div button:last-child { color: var(--map-state); background: white; border: 1px solid var(--border); }
 .error { color: #a22b2b; font-weight: 700; }
 .success { color: var(--brand-green); font-weight: 700; }
-@media (max-width: 850px) { .credentials { grid-template-columns: 1fr 1fr; } .item { grid-template-columns: 1fr auto; } }
-@media (max-width: 600px) { .page { width: min(100% - 1rem, 72rem); } .title { align-items: start; flex-direction: column; } .credentials, .item, .contactForm { grid-template-columns: 1fr; } .credentials button, .item > button, .confirm, .contactForm > div { width: 100%; } .credentialsActions { flex-direction: column; } .confirm, .contactForm > div { flex-direction: column; } .contactForm, .contactForm > div { grid-column: 1; } .contactForm button, .confirm button { width: 100%; min-height: 3.1rem; } }
+@media (max-width: 850px) { .credentials { grid-template-columns: 1fr 1fr; } .item, .viewer { grid-template-columns: 1fr auto; } .viewerList { grid-column: 1 / -1; } }
+@media (max-width: 600px) { .page { width: min(100% - 1rem, 72rem); } .title { align-items: start; flex-direction: column; } .credentials, .item, .viewer, .contactForm { grid-template-columns: 1fr; } .credentials button, .item > button, .viewer > button, .confirm, .contactForm > div { width: 100%; } .credentialsActions { flex-direction: column; } .confirm, .contactForm > div { flex-direction: column; } .contactForm, .contactForm > div, .viewerList { grid-column: 1; } .contactForm button, .confirm button { width: 100%; min-height: 3.1rem; } }

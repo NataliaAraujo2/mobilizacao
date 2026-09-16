@@ -41,10 +41,11 @@ async function loadBranchViewers() {
 }
 
 export async function getBranchViewerByBranch(branchId) {
-  if (viewersCache?.expiresAt > Date.now()) return viewersCache.data.find(viewer => viewer.branchId === branchId) ?? null;
-  const { db, doc, getDoc } = await getDbService(['doc', 'getDoc']);
-  const snapshot = await getDoc(doc(db, 'users', `branch-viewer-${branchId}`));
-  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+  if (viewersCache?.expiresAt > Date.now()) return viewersCache.data.find(viewer => viewer.branchId === branchId && viewer.status === 'active') ?? null;
+  const { db, collection, getDocs, query, where } = await getDbService(['collection', 'getDocs', 'query', 'where']);
+  const snapshot = await getDocs(query(collection(db, 'users'), where('branchId', '==', branchId)));
+  const viewers = snapshot.docs.map((item) => ({ id: item.id, ...item.data() })).filter((viewer) => viewer.role === 'branchViewer');
+  return viewers.find((viewer) => viewer.status === 'active') ?? viewers[0] ?? null;
 }
 
 async function callFunction(name, data) {

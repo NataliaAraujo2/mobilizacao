@@ -15,4 +15,5 @@
 .passwordToggle:hover { background: #edf5fa; }
 .passwordToggle:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .error { margin: 0.5rem 0 0; color: #a22b2b; font-weight: 700; }
+.notice { margin: 1rem 0 0; padding: .75rem; color: #285e43; background: #eaf6ed; border: 1px solid #b7dec1; border-radius: .65rem; font-weight: 700; }
 .devNote { margin: 1.25rem 0 0; color: var(--text-muted); font-size: 0.82rem; }

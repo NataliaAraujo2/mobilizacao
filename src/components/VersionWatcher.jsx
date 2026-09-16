@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import styles from "./VersionWatcher.module.css";
 
 const STORAGE_KEY = "mobilizacao.deployment-version";
+const AUTO_UPDATE_PATHS = new Set(["/", "/2025", "/2025/relatorio", "/2026"]);
 
 export default function VersionWatcher() {
+  const { pathname } = useLocation();
   const [availableVersion, setAvailableVersion] = useState(null);
   useEffect(() => {
     let checking = false;
@@ -21,6 +24,11 @@ export default function VersionWatcher() {
         if (!active || !["string", "number"].includes(typeof version) || !String(version).trim()) return;
         const nextVersion = String(version);
         if (currentVersion && currentVersion !== nextVersion) {
+          if (AUTO_UPDATE_PATHS.has(pathname)) {
+            try { sessionStorage.setItem(STORAGE_KEY, nextVersion); } catch { /* Atualizar funciona mesmo sem storage. */ }
+            window.location.reload();
+            return;
+          }
           setAvailableVersion(nextVersion);
           return;
         }
@@ -33,15 +41,17 @@ export default function VersionWatcher() {
     }
     checkVersion();
     function onVisibilityChange() { if (!document.hidden) checkVersion(); }
+    const interval = window.setInterval(checkVersion, 60_000);
     window.addEventListener("focus", checkVersion);
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       active = false;
       controller.abort();
+      window.clearInterval(interval);
       window.removeEventListener("focus", checkVersion);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, []);
+  }, [pathname]);
   function updateNow() {
     if (!window.confirm("Atualizar a página agora? Alterações e respostas ainda não salvas serão perdidas. Para continuar preenchendo, clique em Cancelar.")) return;
     try { sessionStorage.setItem(STORAGE_KEY, availableVersion); } catch { /* Atualizar funciona mesmo sem storage. */ }

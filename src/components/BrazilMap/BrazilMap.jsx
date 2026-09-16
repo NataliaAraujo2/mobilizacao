@@ -36,10 +36,33 @@ export default function BrazilMap({ selectedState, onSelectState, disabled = fal
 
     mapElement?.addEventListener("click", activateState);
     mapElement?.addEventListener("keydown", activateState);
+    const originalPositions = new Map();
+    const elevateState = (event) => {
+      const state = event.currentTarget;
+      if (!state.parentNode || originalPositions.has(state)) return;
+      originalPositions.set(state, { parent: state.parentNode, next: state.nextSibling });
+      state.parentNode.appendChild(state);
+    };
+    const restoreState = (event) => {
+      const state = event.currentTarget;
+      const position = originalPositions.get(state);
+      if (!position) return;
+      if (position.next?.parentNode === position.parent) position.parent.insertBefore(state, position.next);
+      else position.parent.appendChild(state);
+      originalPositions.delete(state);
+    };
+    states.forEach((state) => {
+      state.addEventListener("pointerenter", elevateState);
+      state.addEventListener("pointerleave", restoreState);
+    });
 
     return () => {
       mapElement?.removeEventListener("click", activateState);
       mapElement?.removeEventListener("keydown", activateState);
+      states.forEach((state) => {
+        state.removeEventListener("pointerenter", elevateState);
+        state.removeEventListener("pointerleave", restoreState);
+      });
     };
   }, [disabled, onSelectState, selectedState]);
 

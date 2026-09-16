@@ -202,8 +202,8 @@ async function getBranch(branchId) {
 
 async function nextBranchViewerIdentity(code, state, reservedUsernames = new Set()) {
   const snapshot = await getFirestore().collection("users").where("role", "==", VIEWER_ROLE).get();
-  const username = nextBranchViewerUsername(code, state, snapshot.docs.map((item) => item.data().displayName), reservedUsernames);
-  return { username, email: `${username.toLowerCase()}@${VIEWER_EMAIL_DOMAIN}` };
+  const identity = nextBranchViewerUsername(code, state, snapshot.docs.map((item) => item.data().displayName), reservedUsernames);
+  return { ...identity, email: `${identity.username.toLowerCase()}@${VIEWER_EMAIL_DOMAIN}` };
 }
 
 export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
@@ -222,25 +222,20 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   const branch = await getBranch(branchId);
   const state = requiredText(branch.data().state, "state", 2, 2).toUpperCase();
   const code = requiredText(branch.data().code, "code", 1, 40);
-  const uid = `branch-viewer-${branchId}`;
   const auth = getAuth();
   const db = getFirestore();
   const reservedUsernames = new Set();
-
-  if ((await db.collection("users").doc(uid).get()).exists) {
-    throw new HttpsError("already-exists", "Esta coordenação estadual já possui um acesso de consulta.");
-  }
 
   // Duas solicitações simultâneas para a mesma UF podem escolher o mesmo
   // sufixo. Em caso de colisão de e-mail, tentamos o próximo identificador;
   // nunca excluímos uma conta que já existia.
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const { username, email } = await nextBranchViewerIdentity(code, state, reservedUsernames);
+    const { username, email, coordinationNumber, userNumber } = await nextBranchViewerIdentity(code, state, reservedUsernames);
     const password = generateFriendlyPassword();
-    let createdAuthUser = false;
+    let createdAuthUser = null;
     try {
-      await auth.createUser({ uid, displayName: username, email, password });
-      createdAuthUser = true;
+      createdAuthUser = await auth.createUser({ displayName: username, email, password });
+      const uid = createdAuthUser.uid;
       await auth.setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId, status: "active", mustChangePassword: true });
       await db.collection("users").doc(uid).set({
         displayName: username,
@@ -251,18 +246,17 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
         contactNameSearch: normalizeSearchText(contactName),
         contactEmail,
         contactPhone,
+        coordinationNumber,
+        userNumber,
         status: "active",
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
-      return { uid, username, password };
+      return { uid, username, password, coordinationNumber, userNumber };
     } catch (error) {
       // Só remove a conta criada por esta própria tentativa após uma falha
       // posterior. Conflitos nunca excluem uma conta que já existia.
-      if (createdAuthUser) await auth.deleteUser(uid).catch(() => {});
-      if (error.code === "auth/uid-already-exists") {
-        throw new HttpsError("already-exists", "Esta coordenação estadual já possui um acesso de consulta.");
-      }
+      if (createdAuthUser) await auth.deleteUser(createdAuthUser.uid).catch(() => {});
       if (error.code === "auth/email-already-exists") {
         reservedUsernames.add(username);
         continue;

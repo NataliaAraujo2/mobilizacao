@@ -33,6 +33,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [expiredByInactivity] = useState(() => {
+    try {
+      const expired = sessionStorage.getItem("mobilizacao.superadmin-idle-expired") === "true";
+      if (expired) sessionStorage.removeItem("mobilizacao.superadmin-idle-expired");
+      return expired;
+    } catch {
+      return false;
+    }
+  });
 
   const destination = destinationForRole(claims?.role);
   if (user) return <Navigate to={destination} replace />;
@@ -58,6 +67,7 @@ export default function LoginPage() {
         <p className={styles.eyebrow}>Área restrita</p>
         <h1 id="login-title">Entrar</h1>
         <p>Use uma conta autorizada para acessar sua área.</p>
+        {expiredByInactivity && <p className={styles.notice} role="status">Sua sessão foi encerrada após 1 hora de inatividade.</p>}
 
         <form onSubmit={handleSubmit}>
           <label htmlFor="email">Usuário ou e-mail</label>

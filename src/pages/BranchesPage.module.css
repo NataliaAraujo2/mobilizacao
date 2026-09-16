@@ -16,6 +16,7 @@
 .actions button, .rowActions button { min-height: 2.7rem; padding: 0.6rem 0.9rem; font-weight: 750; border-radius: 0.6rem; cursor: pointer; }
 .primary { color: white; background: var(--map-state); border: 1px solid var(--map-state); }
 .secondary, .rowActions button { color: var(--map-state); background: white; border: 1px solid var(--border); }
+.rowActions .deleteButton { color: #a22b2b; border-color: #d99797; }
 .error { color: #a22b2b; font-weight: 700; }
 .success { color: var(--brand-green); font-weight: 700; }
 .list { display: grid; gap: 0.75rem; }

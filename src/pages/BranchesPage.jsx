@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BRANCH_STATUSES } from "../domain/access/access";
 import { BRAZIL_STATES } from "../domain/locations/brazilStates";
-import { addBranch, editBranch, listBranches } from "../services/branchesService";
+import { addBranch, deleteBranch, editBranch, listBranches } from "../services/branchesService";
 import styles from "./BranchesPage.module.css";
 
 const EMPTY_FORM = { name: "", code: "", state: "", status: BRANCH_STATUSES.ACTIVE };
@@ -37,7 +37,7 @@ export default function BranchesPage() {
   }
 
   function changeState(state) {
-    setForm((current) => ({ ...current, state, code: editingId ? current.code : state }));
+    setForm((current) => ({ ...current, state, code: editingId ? current.code : state ? `${state}_01` : "" }));
   }
 
   async function handleSubmit(event) {
@@ -82,6 +82,19 @@ export default function BranchesPage() {
     }
   }
 
+  async function removeBranch(branch) {
+    if (!window.confirm(`Excluir a coordenação ${branch.name}? Isso só será possível se ela não tiver ações ou usuários vinculados.`)) return;
+    setSaving(true); setError(""); setMessage("");
+    try {
+      await deleteBranch(branch.id);
+      setBranches((current) => current.filter((item) => item.id !== branch.id));
+      if (editingId === branch.id) cancelEdit();
+      setMessage("Coordenação estadual excluída.");
+    } catch (deleteError) {
+      setError(deleteError.code === "branch/has-linked-records" ? deleteError.message : "Não foi possível excluir a coordenação estadual.");
+    } finally { setSaving(false); }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.title}>
@@ -93,7 +106,7 @@ export default function BranchesPage() {
         <h2 id="branch-form-title">{editingId ? "Editar coordenação estadual" : "Cadastrar coordenação estadual"}</h2>
         <form onSubmit={handleSubmit}>
           <label>Nome<input required minLength="2" maxLength="120" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
-          <label>Código<input required minLength="2" maxLength="30" disabled={Boolean(editingId)} placeholder="Ex.: SP ou SP_02" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })} /><small>Preenchido pela UF; ajuste apenas se houver outra coordenação estadual no estado.</small></label>
+          <label>Código<input required minLength="2" maxLength="30" disabled={Boolean(editingId)} placeholder="Ex.: TO_01 ou TO_02" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value.toUpperCase() })} /><small>Use UF_01 para a primeira coordenação do estado, UF_02 para a segunda.</small></label>
           <label>Estado<select required value={form.state} onChange={(event) => changeState(event.target.value)}><option value="">Selecione</option>{BRAZIL_STATES.map((state) => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativa</option><option value="inactive">Inativa</option></select></label>}
           <div className={styles.actions}>
@@ -116,6 +129,7 @@ export default function BranchesPage() {
                 <div className={styles.rowActions}>
                   <button type="button" onClick={() => startEdit(branch)}>Editar</button>
                   <button type="button" onClick={() => toggleStatus(branch)}>{branch.status === "active" ? "Inativar" : "Reativar"}</button>
+                  <button className={styles.deleteButton} type="button" disabled={saving} onClick={() => removeBranch(branch)}>Excluir</button>
                 </div>
               </article>
             ))}

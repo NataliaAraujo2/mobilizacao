@@ -3,6 +3,9 @@ import { useLocation } from "react-router-dom";
 import { getAuthService } from "../services/firebaseAuth";
 import { AuthContext } from "./AuthContext";
 
+const SUPERADMIN_IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+const SUPERADMIN_IDLE_NOTICE_KEY = "mobilizacao.superadmin-idle-expired";
+
 export default function AuthProvider({ children }) {
   const { pathname } = useLocation();
   const [session, setSession] = useState({ user: null, claims: null, loading: true, checked: false });
@@ -45,6 +48,46 @@ export default function AuthProvider({ children }) {
       unsubscribe();
     };
   }, [needsSession]);
+
+  useEffect(() => {
+    if (!session.user || session.claims?.role !== "superAdmin") return undefined;
+
+    let timer;
+    let signedOut = false;
+    let lastActivityAt = Date.now();
+    const activityEvents = ["pointerdown", "pointermove", "keydown", "touchstart", "scroll", "focus"];
+
+    async function endIdleSession() {
+      if (signedOut) return;
+      signedOut = true;
+      try { sessionStorage.setItem(SUPERADMIN_IDLE_NOTICE_KEY, "true"); } catch { /* O logout continua mesmo sem storage. */ }
+      try {
+        const service = await getAuthService();
+        await service.signOut(service.auth);
+      } finally {
+        setSession({ user: null, claims: null, loading: false, checked: true });
+      }
+    }
+
+    function scheduleLogout() {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(endIdleSession, SUPERADMIN_IDLE_TIMEOUT_MS);
+    }
+
+    function registerActivity() {
+      const now = Date.now();
+      if (now - lastActivityAt < 1_000) return;
+      lastActivityAt = now;
+      scheduleLogout();
+    }
+
+    scheduleLogout();
+    activityEvents.forEach((eventName) => window.addEventListener(eventName, registerActivity, { passive: true }));
+    return () => {
+      window.clearTimeout(timer);
+      activityEvents.forEach((eventName) => window.removeEventListener(eventName, registerActivity));
+    };
+  }, [session.claims?.role, session.user]);
 
   const value = useMemo(() => ({
     ...session,
