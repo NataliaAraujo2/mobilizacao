@@ -3,9 +3,7 @@
 .map :global(.estado) { cursor: pointer; outline: none; transition: filter 180ms ease; }
 .map :global(.estado) path {
   fill: var(--map-state);
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: fill 160ms ease, transform 180ms ease;
+  transition: fill 160ms ease, filter 180ms ease;
 }
 .map :global(.estado) text {
   fill: white;
@@ -17,9 +15,6 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   pointer-events: none;
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 180ms ease;
 }
 .map :global(.estado) :global(.circle) {
   fill: var(--brand-orange);
@@ -46,16 +41,12 @@
   fill: #1597d3;
   stroke: white;
   stroke-width: 2.8px;
-  transform: translateY(-0.38rem) scale(1.1);
+  filter: drop-shadow(0 0.6rem 0.4rem rgb(0 47 82 / 42%));
 }
-.map :global(.estado):hover text,
-.map :global(.estado):focus-visible text { transform: translateY(-0.38rem) scale(1.1); }
 .map :global(.estado):hover :global(.circle),
 .map :global(.estado):focus-visible :global(.circle) { fill: #ffb30f; }
 .map :global(.estado):focus-visible path { stroke: var(--focus); stroke-width: 3px; }
 .map :global(.estado):active { filter: drop-shadow(0 0.2rem 0.2rem rgb(0 47 82 / 25%)); }
-.map :global(.estado):active path,
-.map :global(.estado):active text { transform: translateY(-0.14rem) scale(1.04); }
 .map .selected path { fill: var(--map-state-selected); }
 .map .selected :global(.circle) { fill: var(--brand-green); }
 .map[aria-disabled="true"] :global(.estado) { cursor: not-allowed; opacity: 0.58; }
