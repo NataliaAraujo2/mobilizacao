@@ -293,6 +293,31 @@ export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
   }
 });
 
+export const deleteSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const uid = requiredText(request.data?.uid, "uid", 1, 128);
+  if (uid.includes("/")) throw new HttpsError("invalid-argument", "Identificador inválido.");
+  if (uid === request.auth.uid) {
+    throw new HttpsError("failed-precondition", "Você não pode excluir o próprio acesso.");
+  }
+
+  const profileRef = getFirestore().collection("users").doc(uid);
+  const profile = await profileRef.get();
+  if (!profile.exists || profile.data().role !== "superAdmin") {
+    throw new HttpsError("not-found", "Superadmin não encontrado.");
+  }
+
+  try {
+    await getAuth().deleteUser(uid);
+  } catch (error) {
+    if (error.code !== "auth/user-not-found") {
+      throw new HttpsError("internal", "Não foi possível excluir o acesso. Tente novamente.");
+    }
+  }
+  await profileRef.delete();
+  return { ok: true };
+});
+
 export const completeSuperAdminPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   const { role, status, branchId, mustChangePassword } = request.auth?.token ?? {};
   if (!request.auth || !["superAdmin", VIEWER_ROLE].includes(role) || status !== "active" || !mustChangePassword) {

@@ -27,7 +27,7 @@ export default function ConsultationPage() {
       .finally(() => { if (current) setLoading(false); });
     return () => { current = false; };
   }, [claims.branchId]);
-  if (selected) return <ActionDetails key={selected.id} action={selected} branch={branch} user={user} onBack={() => setSelected(null)} />;
+  if (selected) return <CoordinationActionDetails key={selected.id} action={selected} branch={branch} user={user} onBack={() => setSelected(null)} />;
   return <main className={styles.page}>
     <header className={styles.header}><div><p>Minha coordenação estadual</p><h1>{branch?.name ?? 'Ações cadastradas'}</h1><span>Selecione uma ação para consultar os voluntários inscritos.</span></div></header>
     {error && <p role="alert" className={styles.error}>{error}</p>}
@@ -38,7 +38,7 @@ export default function ConsultationPage() {
   </main>;
 }
 
-function ActionDetails({ action, branch, user, onBack }) {
+export function CoordinationActionDetails({ action, branch, user, onBack }) {
   const [view, setView] = useState('details');
   if (view === 'volunteers') return <ActionVolunteers action={action} branch={branch} user={user} onBack={() => setView('details')} />;
   if (view === 'attendance') return <><div className={styles.page}><button className={styles.back} type="button" onClick={() => setView('details')}>← Voltar aos detalhes da ação</button></div><AttendancePage fixedAction={action} /></>;

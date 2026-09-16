@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { useAuth } from "../auth/useAuth";
 import { addAction, deleteAction, listActionsPage, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
+import { getBranchViewerByBranch } from "../services/branchViewersService";
 import { findAddressByCep } from "../services/cepService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import ListSearch from '../components/ListSearch';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
+import { CoordinationActionDetails } from './ConsultationPage';
+import { whatsappUrl } from '../utils/whatsapp';
 import styles from "./ActionsPage.module.css";
 
 const EMPTY_ADDRESS = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", source: "manual" };
@@ -17,6 +21,7 @@ function formatCep(value) {
 }
 
 export default function ActionsPage() {
+  const { user } = useAuth();
   const [branches, setBranches] = useState([]);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
@@ -29,6 +34,9 @@ export default function ActionsPage() {
   const [error, setError] = useState("");
   const [qrAction, setQrAction] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState("");
+  const [sharingQr, setSharingQr] = useState(false);
+  const [detailsAction, setDetailsAction] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listActionsPage({ search: filtros.search, cursor, pageSize })
@@ -44,6 +52,8 @@ export default function ActionsPage() {
   }, []);
 
   useEffect(() => { recarregar({ search }); }, [recarregar, search]);
+
+  if (detailsAction) return <CoordinationActionDetails action={detailsAction} branch={branches.find((branch) => branch.id === detailsAction.branchId)} user={user} onBack={() => setDetailsAction(null)} />;
 
   function updateAddress(field, value) {
     setForm((current) => ({ ...current, address: { ...current.address, [field]: value, source: field === "cep" ? current.address.source : "manual" } }));
@@ -96,6 +106,7 @@ export default function ActionsPage() {
       setPhotos(EMPTY_PHOTOS);
       setProgress("");
       setMessage("Ação cadastrada com sucesso.");
+      setShowForm(false);
     } catch (saveError) {
       setError(saveError.message || "Não foi possível cadastrar a ação.");
       setProgress("");
@@ -162,11 +173,27 @@ export default function ActionsPage() {
     const link = document.createElement("a"); link.href = qrDataUrl; link.download = `qr-${qrAction.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`; link.click();
   }
 
+  async function shareQrWithCoordinator() {
+    if (!qrAction) return;
+    setSharingQr(true);
+    setError("");
+    try {
+      const viewer = await getBranchViewerByBranch(qrAction.branchId);
+      const url = whatsappUrl(viewer?.contactPhone, `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction.name}”. Ele abre diretamente o cadastro/login do voluntário para esta ação.\n\nLink da ação: ${qrAction.publicUrl}`);
+      if (!url) throw new Error('Cadastre o telefone do responsável da coordenação estadual para enviar o QR Code pelo WhatsApp.');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (shareError) {
+      setError(shareError.message || 'Não foi possível preparar o envio ao coordenador.');
+    } finally {
+      setSharingQr(false);
+    }
+  }
+
   return (
     <main className={styles.page}>
-      <header className={styles.title}><div><p>Administração nacional</p><h1>Ações</h1></div><span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span></header>
+      <header className={styles.title}><div><p>Administração nacional</p><h1>Ações</h1></div><div className={styles.titleActions}><span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span><button type="button" className={styles.newAction} onClick={() => setShowForm((current) => !current)}>{showForm ? 'Cancelar nova ação' : 'Nova ação'}</button></div></header>
 
-      <section className={styles.card} aria-labelledby="action-form-title">
+      {showForm && <section className={styles.card} aria-labelledby="action-form-title">
         <h2 id="action-form-title">Cadastrar ação</h2>
         <p className={styles.help}>Comece com as informações disponíveis. As fotos de durante e depois poderão ser acrescentadas posteriormente.</p>
         <form onSubmit={handleSubmit}>
@@ -205,13 +232,13 @@ export default function ActionsPage() {
         </form>
         {error && <p className={styles.error} role="alert">{error}</p>}
         {message && <p className={styles.success} role="status">{message}</p>}
-      </section>
+      </section>}
 
       <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
-        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
+        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
         {photoActionId === action.id && <><ActionPhotoGallery action={action} /><form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form></>}
       </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
-      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
+      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={shareQrWithCoordinator}>{sharingQr ? 'Preparando envio…' : 'Enviar ao coordenador'}</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
     </main>
   );
 }
