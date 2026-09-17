@@ -27,6 +27,11 @@
 .sectionHeading h2 { margin: .3rem 0 0; font-size: clamp(1.45rem, 3vw, 2rem); letter-spacing: -.025em; }
 .publicLink { flex: 0 0 auto; color: var(--brand-blue); font-size: .85rem; font-weight: 800; text-decoration: none; }
 .publicLink:hover { text-decoration: underline; }
+.actionSections { display: grid; gap: 2rem; }
+.actionSection { display: grid; gap: .85rem; }
+.actionSectionHeading { display: grid; gap: .2rem; }
+.actionSectionHeading h3 { margin: 0; color: var(--brand-blue); font-size: 1.1rem; }
+.actionSectionHeading p { margin: 0; color: var(--text-muted); font-size: .82rem; }
 .actionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
 .action, .featuredAction { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .85rem; min-height: 8rem; padding: 1rem; color: var(--text); text-decoration: none; background: #f5f9fc; border: 1px solid var(--border); border-radius: 1rem; transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
 .featuredAction { background: #fff8f2; border-color: #f4c8a7; }

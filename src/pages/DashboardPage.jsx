@@ -3,16 +3,34 @@ import { useAuth } from "../auth/useAuth";
 import growingPlant from "../assets/brand/elements/elemento-03.webp";
 import styles from "./DashboardPage.module.css";
 
-const ADMIN_ACTIONS = [
-  { to: "/admin/formularios", code: "FO", title: "Formulários por link", description: "Crie formulários, envie links e revise respostas individualmente." },
-  { to: "/admin/contador-associados", code: "+1", title: "Novos associados", description: "Atualize o contador exibido na pré-home.", featured: true },
-  { to: "/admin/relatorio-2025", code: "PDF", title: "Relatório 2025", description: "Arquive a versão comprimida para leitura e impressão pública." },
-  { to: "/admin/acoes", code: "AC", title: "Ações", description: "Cadastre locais, orientações, fotos e informações de cada mobilização.", featured: true },
-  { to: "/admin/voluntarios", code: "VO", title: "Voluntários", description: "Cadastre e organize os dados das pessoas participantes." },
-  { to: "/admin/presencas", code: "✓", title: "Listas de presença", description: "Consulte presenças e ausências por coordenação estadual e ação." },
-  { to: "/admin/regionais", code: "RE", title: "Coordenações estaduais", description: "Gerencie as coordenações estaduais e seus estados de atuação." },
-  { to: "/admin/acessos-consulta", code: "PE", title: "Acessos das coordenações estaduais", description: "Crie e acompanhe os acessos de consulta de cada coordenação estadual." },
-  { to: "/admin/superadmins", code: "SA", title: "SuperAdmins", description: "Autorize novos administradores nacionais." },
+const ADMIN_SECTIONS = [
+  {
+    title: "Comunicação",
+    description: "Formulários e materiais para compartilhar informações.",
+    actions: [
+      { to: "/admin/formularios", code: "FO", title: "Formulários por link", description: "Crie formulários, envie links e revise respostas individualmente." },
+      { to: "/admin/relatorio-2025", code: "PDF", title: "Relatório 2025", description: "Arquive a versão comprimida para leitura e impressão pública." },
+    ],
+  },
+  {
+    title: "Mobilização",
+    description: "Organize ações, pessoas participantes e resultados.",
+    actions: [
+      { to: "/admin/acoes", code: "AC", title: "Ações", description: "Cadastre locais, orientações, fotos e informações de cada mobilização.", featured: true },
+      { to: "/admin/voluntarios", code: "VO", title: "Voluntários", description: "Cadastre e organize os dados das pessoas participantes." },
+      { to: "/admin/presencas", code: "✓", title: "Listas de presença", description: "Consulte presenças e ausências por coordenação estadual e ação." },
+      { to: "/admin/contador-associados", code: "+1", title: "Novos associados", description: "Atualize o contador exibido na pré-home.", featured: true },
+    ],
+  },
+  {
+    title: "Administração",
+    description: "Gerencie a estrutura nacional, coordenações e acessos.",
+    actions: [
+      { to: "/admin/regionais", code: "RE", title: "Coordenações estaduais", description: "Gerencie as coordenações estaduais e seus estados de atuação." },
+      { to: "/admin/acessos-consulta", code: "PE", title: "Acessos das coordenações estaduais", description: "Crie e acompanhe os acessos de consulta de cada coordenação estadual." },
+      { to: "/admin/superadmins", code: "SA", title: "SuperAdmins", description: "Autorize novos administradores nacionais." },
+    ],
+  },
 ];
 
 function friendlyName(user, isSuperAdmin) {
@@ -46,23 +64,33 @@ export default function DashboardPage({ area }) {
             <div className={styles.sectionHeading}>
               <div>
                 <p className={styles.eyebrow}>Acessos rápidos</p>
-                <h2 id="resources-title">O que deseja fazer?</h2>
+                <h2 id="resources-title">Painel de gestão</h2>
               </div>
               <Link className={styles.publicLink} to="/">Ver página pública <span aria-hidden="true">↗</span></Link>
             </div>
 
-            <nav className={styles.actionGrid} aria-label="Recursos administrativos">
-              {ADMIN_ACTIONS.map((action) => (
-                <Link key={action.to} className={action.featured ? styles.featuredAction : styles.action} to={action.to}>
-                  <span className={styles.actionIcon} aria-hidden="true">{action.code}</span>
-                  <span className={styles.actionCopy}>
-                    <strong>{action.title}</strong>
-                    <small>{action.description}</small>
-                  </span>
-                  <span className={styles.arrow} aria-hidden="true">→</span>
-                </Link>
+            <div className={styles.actionSections}>
+              {ADMIN_SECTIONS.map((section) => (
+                <section key={section.title} className={styles.actionSection} aria-labelledby={`section-${section.title}`}>
+                  <header className={styles.actionSectionHeading}>
+                    <h3 id={`section-${section.title}`}>{section.title}</h3>
+                    <p>{section.description}</p>
+                  </header>
+                  <nav className={styles.actionGrid} aria-label={section.title}>
+                    {section.actions.map((action) => (
+                      <Link key={action.to} className={action.featured ? styles.featuredAction : styles.action} to={action.to}>
+                        <span className={styles.actionIcon} aria-hidden="true">{action.code}</span>
+                        <span className={styles.actionCopy}>
+                          <strong>{action.title}</strong>
+                          <small>{action.description}</small>
+                        </span>
+                        <span className={styles.arrow} aria-hidden="true">→</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </section>
               ))}
-            </nav>
+            </div>
           </section>
         ) : (
           <section className={styles.emptyState}>
