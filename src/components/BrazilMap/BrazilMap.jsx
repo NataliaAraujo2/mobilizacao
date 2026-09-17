@@ -1,84 +1,80 @@
-import { useEffect, useRef } from "react";
-import mapSvg from "../../assets/brasil-map.svg?raw";
-import { BRAZIL_STATE_BY_NORMALIZED_NAME, normalizeBrazilStateName } from "../../domain/locations/brazilStates";
+import React, { useEffect, useRef } from "react";
 import styles from "./BrazilMap.module.css";
+import brasilMap from "../../assets/brasil-map.svg?raw";
+import { BRAZIL_STATE_BY_CODE, BRAZIL_STATE_BY_NORMALIZED_NAME, normalizeBrazilStateName } from "../../domain/locations/brazilStates";
 
-export default function BrazilMap({ selectedState, onSelectState, disabled = false }) {
+const BrazilMap = ({
+  onSelectState,
+  selectedState,
+  disabled,
+  onMouseEnter,
+  onMouseLeave,
+}) => {
   const mapRef = useRef(null);
 
   useEffect(() => {
-    const mapElement = mapRef.current;
-    const states = mapElement?.querySelectorAll("a.estado") ?? [];
+    if (!mapRef.current) return;
 
-    states.forEach((state) => {
-      if (!state.querySelector(":scope > .state-content")) {
-        const content = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        content.setAttribute("class", "state-content");
-        while (state.firstChild) content.appendChild(state.firstChild);
-        state.appendChild(content);
-      }
-      const name = state.getAttribute("name");
-      const code = BRAZIL_STATE_BY_NORMALIZED_NAME[normalizeBrazilStateName(name)]?.code;
-      const isSelected = code === selectedState;
-      if (!code) return;
+    const prev = mapRef.current.querySelector(`.estado.${styles.active}`);
+    if (prev) prev.classList.remove(styles.active);
 
-      state.setAttribute("data-state", code);
-      state.setAttribute("href", "#");
-      state.setAttribute("role", "button");
-      state.setAttribute("tabindex", disabled ? "-1" : "0");
-      state.setAttribute("aria-label", `Selecionar ${name}`);
-      state.setAttribute("aria-pressed", String(isSelected));
-      state.classList.toggle(styles.selected, isSelected);
-    });
+    const selectedStateName = BRAZIL_STATE_BY_CODE[selectedState]?.name;
+    if (selectedStateName) {
+      const el =
+        mapRef.current.querySelector(`.estado[name="${selectedStateName}"]`) ||
+        mapRef.current.querySelector(`.estado[id="${selectedStateName}"]`);
+      if (el) el.classList.add(styles.active);
+    }
+  }, [selectedState]);
 
-    const activateState = (event) => {
-      const state = event.target.closest?.("a.estado");
-      if (!state || disabled || (event.type === "keydown" && event.key !== "Enter" && event.key !== " ")) return;
-      const code = BRAZIL_STATE_BY_NORMALIZED_NAME[normalizeBrazilStateName(state.getAttribute("name"))]?.code;
-      if (!code) return;
-      event.preventDefault();
-      onSelectState?.(code);
+  useEffect(() => {
+    const pernambuco = mapRef.current?.querySelector('a.estado[name="Pernambuco"]');
+    if (!pernambuco?.parentNode) return undefined;
+
+    let originalPosition;
+    const bringToFront = () => {
+      if (originalPosition) return;
+      originalPosition = { parent: pernambuco.parentNode, next: pernambuco.nextSibling };
+      pernambuco.parentNode.appendChild(pernambuco);
+    };
+    const restorePosition = () => {
+      if (!originalPosition) return;
+      const { parent, next } = originalPosition;
+      if (next?.parentNode === parent) parent.insertBefore(pernambuco, next);
+      else parent.appendChild(pernambuco);
+      originalPosition = undefined;
     };
 
-    mapElement?.addEventListener("click", activateState);
-    mapElement?.addEventListener("keydown", activateState);
-    const originalPositions = new Map();
-    const elevateState = (event) => {
-      const state = event.currentTarget;
-      if (!state.parentNode || originalPositions.has(state)) return;
-      originalPositions.set(state, { parent: state.parentNode, next: state.nextSibling });
-      state.parentNode.appendChild(state);
-    };
-    const restoreState = (event) => {
-      const state = event.currentTarget;
-      const position = originalPositions.get(state);
-      if (!position) return;
-      if (position.next?.parentNode === position.parent) position.parent.insertBefore(state, position.next);
-      else position.parent.appendChild(state);
-      originalPositions.delete(state);
-    };
-    states.forEach((state) => {
-      state.addEventListener("pointerenter", elevateState);
-      state.addEventListener("pointerleave", restoreState);
-    });
-
+    pernambuco.addEventListener("pointerenter", bringToFront);
+    pernambuco.addEventListener("pointerleave", restorePosition);
     return () => {
-      mapElement?.removeEventListener("click", activateState);
-      mapElement?.removeEventListener("keydown", activateState);
-      states.forEach((state) => {
-        state.removeEventListener("pointerenter", elevateState);
-        state.removeEventListener("pointerleave", restoreState);
-      });
+      pernambuco.removeEventListener("pointerenter", bringToFront);
+      pernambuco.removeEventListener("pointerleave", restorePosition);
+      restorePosition();
     };
-  }, [disabled, onSelectState, selectedState]);
+  }, []);
+
+  const handleClick = (event) => {
+    let element = event.target;
+    if (["path", "text"].includes(element.tagName.toLowerCase())) element = element.closest("a.estado");
+    if (disabled || !element?.classList.contains("estado")) return;
+
+    const stateName = element.getAttribute("name") || element.getAttribute("id");
+    const stateCode = BRAZIL_STATE_BY_NORMALIZED_NAME[normalizeBrazilStateName(stateName)]?.code;
+    if (stateCode && onSelectState) onSelectState(stateCode);
+  };
 
   return (
     <div
       ref={mapRef}
-      className={styles.map}
-      aria-label="Mapa interativo do Brasil"
+      className={styles.mapWrapper}
+      onClick={handleClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       aria-disabled={disabled}
-      dangerouslySetInnerHTML={{ __html: mapSvg }}
+      dangerouslySetInnerHTML={{ __html: brasilMap }}
     />
   );
-}
+};
+
+export default BrazilMap;

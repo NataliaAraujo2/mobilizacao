@@ -1,60 +1,93 @@
-.map { width: min(100%, 42rem); margin-inline: auto; }
-.map svg { display: block; width: 100%; height: auto; }
-.map :global(.estado) { cursor: pointer; outline: none; transition: filter 180ms ease; }
-.map :global(.estado) > :global(.state-content) { transform-box: fill-box; transform-origin: center; transition: filter 180ms ease, transform 180ms ease; }
-.map :global(.estado) path {
-  fill: var(--map-state);
-  transition: fill 160ms ease, filter 180ms ease;
+/* Container do mapa */
+.mapWrapper {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow-x: hidden;
+  position: relative;
 }
-.map :global(.estado) text {
-  fill: white;
-  stroke: rgb(0 61 106 / 42%);
-  stroke-width: 1.2px;
-  paint-order: stroke fill;
-  font-family: "Poppins", "Segoe UI", sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+
+/* Estados (paths) */
+:global(.estado) path {
+  fill: var(--color-primary, var(--map-state));
+  transition: fill 0.2s ease;
+  cursor: pointer;
+}
+
+:global(.estado) {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.2s ease;
+}
+
+/* Hover */
+:global(.estado:hover),
+:global(.estado:focus-visible) {
+  transform: translateY(-0.42rem) scale(1.02);
+}
+
+:global(.estado[name="Pernambuco"]:hover),
+:global(.estado[name="Pernambuco"]:focus-visible),
+:global(.estado[name="Sergipe"]:hover),
+:global(.estado[name="Sergipe"]:focus-visible) {
+  transform: translateY(0.42rem) scale(1.02);
+}
+
+:global(.estado:hover) path,
+:global(.estado:focus-visible) path {
+  fill: var(--brand-orange);
+}
+
+/* Textos dos estados */
+:global(.estado text) {
+  font-size: 12px;
   pointer-events: none;
 }
-.map :global(.estado) :global(.circle) {
-  fill: var(--brand-orange);
-  stroke: white;
-  stroke-width: 1.6px;
-  filter: drop-shadow(0 1px 2px rgb(23 50 77 / 24%));
+
+/* Estado selecionado */
+.active path {
+  fill: var(--color-secondary, var(--map-state-selected)) !important;
 }
-.map :global(.estado[name="Sergipe"]) text,
-.map :global(.estado[name="Alagoas"]) text,
-.map :global(.estado[name="Rio Grande do Norte"]) text,
-.map :global(.estado[name="Paraíba"]) text,
-.map :global(.estado[name="Espírito Santo"]) text,
-.map :global(.estado[name="Distrito Federal"]) text {
-  stroke-width: 0.8px;
-  font-size: 10.5px;
-  letter-spacing: -0.05em;
+
+/* SVG do mapa */
+:global(.mapWrapper svg) {
+  width: 30%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
-.map :global(.estado):hover > :global(.state-content),
-.map :global(.estado):focus-visible > :global(.state-content) { filter: drop-shadow(0 0.72rem 0.44rem rgb(0 47 82 / 45%)); transform: translateY(-0.28rem) scale(1.12); }
-.map :global(.estado):hover path,
-.map :global(.estado):focus-visible path {
-  fill: #1597d3;
-  stroke: white;
-  stroke-width: 2.8px;
+
+/* ===== Responsividade ===== */
+@media (max-width: 1024px) {
+  .mapWrapper { max-width: 900px; }
+
+  :global(.mapWrapper svg) {
+    width: 110%;
+    transform: translateX(-5%);
+  }
+
+  :global(.estado text) { font-size: 11px; }
 }
-.map :global(.estado):hover :global(.circle),
-.map :global(.estado):focus-visible :global(.circle) { fill: #ffb30f; }
-.map :global(.estado):focus-visible path { stroke: var(--focus); stroke-width: 3px; }
-.map :global(.estado):active > :global(.state-content) { transform: translateY(-0.12rem) scale(1.06); filter: drop-shadow(0 0.25rem 0.2rem rgb(0 47 82 / 25%)); }
-.map .selected path { fill: var(--map-state-selected); }
-.map .selected :global(.circle) { fill: var(--brand-green); }
-.map[aria-disabled="true"] :global(.estado) { cursor: not-allowed; opacity: 0.58; }
-@media (max-width: 520px) {
-  .map :global(.estado) text { font-size: 12px; }
-  .map :global(.estado[name="Sergipe"]) text,
-  .map :global(.estado[name="Alagoas"]) text,
-  .map :global(.estado[name="Rio Grande do Norte"]) text,
-  .map :global(.estado[name="Paraíba"]) text,
-  .map :global(.estado[name="Espírito Santo"]) text,
-  .map :global(.estado[name="Distrito Federal"]) text { font-size: 9.5px; }
+
+@media (max-width: 768px) {
+  .mapWrapper {
+    max-width: none;
+    overflow-x: visible;
+  }
+
+  :global(.mapWrapper svg) {
+    width: 130%;
+    transform: translateX(-15%);
+  }
+
+  :global(.estado text) { font-size: 12px; }
 }
-@media (prefers-reduced-motion: reduce) { .map :global(.estado) path { transition: none; } }
+
+@media (max-width: 480px) {
+  :global(.mapWrapper svg) {
+    width: 150%;
+    transform: translateX(-25%);
+  }
+
+  :global(.estado text) { font-size: 13px; }
+}
