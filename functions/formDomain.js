@@ -54,8 +54,10 @@ export function validateRecipients(recipients) {
   ensure(Array.isArray(recipients) && recipients.length > 0 && recipients.length <= LIMITS.recipients, `Informe de 1 a ${LIMITS.recipients} destinatários.`);
   return recipients.map(r => {
     const phone = text(r.phone ?? '', 30, false).replace(/\D/g, '');
+    const email = text(r.email ?? '', 254, false).toLowerCase();
     ensure(!phone || /^\d{10,15}$/.test(phone), 'Telefone deve ter de 10 a 15 dígitos.');
-    return { name: text(r.name, 120), phone };
+    ensure(!email || isValidEmail(email), 'E-mail inválido.');
+    return { name: text(r.name, 120), phone, email };
   });
 }
 export function requireManager(auth) {

@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { createBranchViewer, deleteBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
 import { listBranches } from "../services/branchesService";
 import { whatsappUrl } from "../utils/whatsapp";
+import { gmailComposeUrl } from "../utils/email";
 import styles from "./BranchViewersPage.module.css";
 
 const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contactPhone: "" };
@@ -73,7 +74,7 @@ export default function BranchViewersPage() {
       const input = { ...contactForm, branchId: branch.id, contactPhone: contactForm.contactPhone.replace(/\D/g, "") };
       const result = await createBranchViewer(input);
       setViewers((current) => [...current, { id: result.uid, displayName: result.username, coordinationNumber: result.coordinationNumber, userNumber: result.userNumber, ...input, role: "branchViewer", status: "active" }]);
-      setCredentials({ ...result, branchName: branch.name, contactPhone: input.contactPhone });
+      setCredentials({ ...result, branchName: branch.name, contactPhone: input.contactPhone, contactEmail: input.contactEmail, contactName: input.contactName });
       cancelContactForm();
       setMessage("Acesso individual criado. Copie os dados antes de sair desta tela.");
       setBusy("");
@@ -104,7 +105,7 @@ export default function BranchViewersPage() {
     beginAction(`reset-${viewer.id}`);
     try {
       const result = await resetBranchViewerPassword(viewer.id);
-      setCredentials({ ...result, branchName: branch.name, contactPhone: viewer.contactPhone });
+      setCredentials({ ...result, branchName: branch.name, contactPhone: viewer.contactPhone, contactEmail: viewer.contactEmail, contactName: viewer.contactName });
       setPendingReset(""); setMessage("Nova senha criada. A senha anterior não funciona mais."); setBusy("");
     } catch (actionError) { fail(actionError, "Não foi possível gerar uma nova senha."); }
   }
@@ -120,17 +121,28 @@ export default function BranchViewersPage() {
     } catch (actionError) { fail(actionError, "Não foi possível excluir o acesso."); }
   }
 
+  function credentialsMessage() {
+    return `Olá, ${credentials?.contactName || 'Coordenação'}!\n\nNovidades na MobilizAÇÃO!\n\nAgora a Coordenação poderá acompanhar as inscrições dos voluntários e visualizar as informações do seu Estado.\n\nAcesse: ${window.location.origin}/login\n\nLogin: ${credentials?.username}\nSenha Inicial: ${credentials?.password} (alterar a senha no 1º acesso)`;
+  }
+
   function shareCredentials() {
     if (!credentials) return;
-    const url = whatsappUrl(credentials.contactPhone, `Novidades na MobilizAÇÃO!\n\nAgora a Coordenação poderá acompanhar as inscrições dos voluntários e visualizar as informações do seu Estado.\n\nAcesse: ${window.location.origin}/login\n\nLogin: ${credentials.username}\nSenha Inicial: ${credentials.password} (alterar a senha no 1º acesso)`);
+    const url = whatsappUrl(credentials.contactPhone, credentialsMessage());
     if (!url) { setError("Cadastre o telefone da pessoa responsável antes de compartilhar."); return; }
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function emailCredentials() {
+    if (!credentials) return;
+    const url = gmailComposeUrl(credentials.contactEmail, "Seu acesso à MobilizAÇÃO", credentialsMessage());
+    if (!url) { setError("Cadastre o e-mail da pessoa responsável antes de compartilhar."); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
   return <main className={styles.page}>
     <header className={styles.title}><div><p>Administração nacional</p><h1>Usuários das coordenações estaduais</h1></div><span>{viewers.length} acesso{viewers.length === 1 ? "" : "s"}</span></header>
     <section className={styles.intro}><h2>Acessos individuais por coordenação</h2><p>Cada pessoa tem usuário e senha próprios. O código segue o padrão <strong>USUARIO-UF-COORDENAÇÃO-USUÁRIO</strong>, como USUARIO-TO-01-01.</p></section>
-    {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><div className={styles.credentialsActions}><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha: ${credentials.password}`)}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button></div><p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
+    {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><div className={styles.credentialsActions}><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha: ${credentials.password}`)}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button><button type="button" onClick={emailCredentials}>Enviar por e-mail</button></div><p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success} role="status">{message}</p>}
     <section className={styles.card}><h2>Coordenações estaduais</h2>{loading ? <p aria-busy="true">Carregando...</p> : branches.map((branch) => {
       const branchViewers = viewersByBranch.get(branch.id) ?? [];

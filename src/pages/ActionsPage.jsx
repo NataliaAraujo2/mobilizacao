@@ -10,6 +10,7 @@ import ListSearch from '../components/ListSearch';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import { CoordinationActionDetails } from './ConsultationPage';
 import { whatsappUrl } from '../utils/whatsapp';
+import { gmailComposeUrl } from '../utils/email';
 import styles from "./ActionsPage.module.css";
 
 const EMPTY_ADDRESS = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", source: "manual" };
@@ -173,14 +174,20 @@ export default function ActionsPage() {
     const link = document.createElement("a"); link.href = qrDataUrl; link.download = `qr-${qrAction.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`; link.click();
   }
 
-  async function shareQrWithCoordinator() {
+  function qrMessage(viewer) {
+    return `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction?.name}”. Ele abre diretamente o cadastro/login do voluntário para esta ação.\n\nLink da ação: ${qrAction?.publicUrl}`;
+  }
+
+  async function shareQrWithCoordinator(channel) {
     if (!qrAction) return;
     setSharingQr(true);
     setError("");
     try {
       const viewer = await getBranchViewerByBranch(qrAction.branchId);
-      const url = whatsappUrl(viewer?.contactPhone, `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction.name}”. Ele abre diretamente o cadastro/login do voluntário para esta ação.\n\nLink da ação: ${qrAction.publicUrl}`);
-      if (!url) throw new Error('Cadastre o telefone do responsável da coordenação estadual para enviar o QR Code pelo WhatsApp.');
+      const url = channel === 'email'
+        ? gmailComposeUrl(viewer?.contactEmail, `QR Code da ação: ${qrAction.name}`, qrMessage(viewer))
+        : whatsappUrl(viewer?.contactPhone, qrMessage(viewer));
+      if (!url) throw new Error(channel === 'email' ? 'Cadastre o e-mail do responsável da coordenação estadual para enviar o QR Code.' : 'Cadastre o telefone do responsável da coordenação estadual para enviar o QR Code pelo WhatsApp.');
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (shareError) {
       setError(shareError.message || 'Não foi possível preparar o envio ao coordenador.');
@@ -238,7 +245,7 @@ export default function ActionsPage() {
         <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span>Planejamento</span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
         {photoActionId === action.id && <><ActionPhotoGallery action={action} /><form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form></>}
       </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
-      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={shareQrWithCoordinator}>{sharingQr ? 'Preparando envio…' : 'Enviar ao coordenador'}</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
+      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('whatsapp')}>{sharingQr ? 'Preparando envio…' : 'Enviar pelo WhatsApp'}</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('email')}>Enviar por e-mail</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
     </main>
   );
 }
