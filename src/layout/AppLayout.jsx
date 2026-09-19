@@ -29,6 +29,7 @@ export default function AppLayout() {
           {user ? (
             <>
               <Link to={accountPath}>Minha área</Link>
+              <AdminInstall />
               <button type="button" onClick={logout}>Sair</button>
             </>
           ) : (
@@ -36,7 +37,6 @@ export default function AppLayout() {
           )}
         </nav>
       </header>
-      <AdminInstall />
       {derivedAccountPage && <BackButton fallback={accountPath} />}
       <Outlet />
     </>

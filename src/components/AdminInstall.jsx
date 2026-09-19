@@ -35,9 +35,8 @@ export default function AdminInstall() {
       if (choice.outcome === "dismissed") setMessage("Instalação cancelada. Você pode tentar novamente pelo menu do navegador.");
     } catch { setPrompt(null); setMessage("Não foi possível abrir a instalação. Tente pelo menu do navegador."); }
   }
-  return <aside className={styles.panel} aria-label="Instalação do aplicativo">
-    <div><strong>MobilizAÇÃO — Minha área</strong><p>Use em uma janela própria no computador. Requer internet e login.</p></div>
-    <button type="button" onClick={install}>Instalar aplicativo</button>
+  return <div className={styles.control} aria-label="Instalação do aplicativo">
+    <button type="button" onClick={install}>Instalar app</button>
     {message && <p className={styles.message} role="status">{message}</p>}
-  </aside>;
+  </div>;
 }

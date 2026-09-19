@@ -1,8 +1,8 @@
-.page { width: min(100% - 2rem, 72rem); margin: 0 auto; padding: clamp(1.5rem, 4vw, 3.5rem) 0; }
-.title { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+.page { width: min(100% - 2rem, 72rem); margin: 0 auto; padding: clamp(.75rem, 2vw, 1.5rem) 0 2.5rem; }
+.title { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .title p { margin: 0; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.title h1 { margin: .25rem 0 0; font-size: clamp(2rem, 4vw, 2.9rem); letter-spacing: -.035em; }
-.title small { display: block; margin-top: .45rem; color: var(--text-muted); font-size: .9rem; font-weight: 650; }
+.title h1 { margin: .2rem 0 0; font-size: clamp(1.75rem, 3.2vw, 2.4rem); letter-spacing: -.03em; }
+.title small { display: block; margin-top: .3rem; color: var(--text-muted); font-size: .84rem; font-weight: 650; }
 .title span, .active, .blocked { padding: .4rem .7rem; font-weight: 800; border-radius: 999px; white-space: nowrap; }
 .title span { color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); }
 .intro, .card { margin-bottom: 1.25rem; padding: clamp(1.25rem, 4vw, 2rem); border-radius: 1rem; }
