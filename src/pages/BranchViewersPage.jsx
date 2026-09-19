@@ -12,6 +12,7 @@ const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contact
 const ERROR_MESSAGES = {
   "functions/not-found": "A coordenação estadual ou o acesso não foi encontrado.",
   "functions/permission-denied": "Você não tem permissão para gerenciar estes acessos.",
+  "functions/already-exists": "Este e-mail já está cadastrado.",
 };
 
 export default function BranchViewersPage() {
@@ -21,6 +22,7 @@ export default function BranchViewersPage() {
   const [branches, setBranches] = useState([]);
   const [viewers, setViewers] = useState([]);
   const [credentials, setCredentials] = useState(null);
+  const [credentialsCopied, setCredentialsCopied] = useState(false);
   const [contactForm, setContactForm] = useState(EMPTY_CONTACT);
   const [editingContact, setEditingContact] = useState("");
   const [pendingReset, setPendingReset] = useState("");
@@ -58,7 +60,7 @@ export default function BranchViewersPage() {
     navigate(location.pathname, { replace: true, state: null });
   }, [loading, branches, responsibleDraft, location.pathname, navigate]);
 
-  function beginAction(key) { setBusy(key); setError(""); setMessage(""); setCredentials(null); }
+  function beginAction(key) { setBusy(key); setError(""); setMessage(""); setCredentials(null); setCredentialsCopied(false); }
   function fail(actionError, fallback) { setError(ERROR_MESSAGES[actionError.code] ?? fallback); setBusy(""); }
   function cancelContactForm() { setEditingContact(""); setContactForm(EMPTY_CONTACT); }
 
@@ -74,9 +76,9 @@ export default function BranchViewersPage() {
       const input = { ...contactForm, branchId: branch.id, contactPhone: contactForm.contactPhone.replace(/\D/g, "") };
       const result = await createBranchViewer(input);
       setViewers((current) => [...current, { id: result.uid, displayName: result.username, coordinationNumber: result.coordinationNumber, userNumber: result.userNumber, ...input, role: "branchViewer", status: "active" }]);
-      setCredentials({ ...result, branchName: branch.name, contactPhone: input.contactPhone, contactEmail: input.contactEmail, contactName: input.contactName });
+      setCredentials({ ...result, branchName: branch.name, contactPhone: input.contactPhone, contactEmail: input.contactEmail, contactName: input.contactName }); setCredentialsCopied(false);
       cancelContactForm();
-      setMessage("Acesso individual criado. Copie os dados antes de sair desta tela.");
+      setMessage("");
       setBusy("");
     } catch (actionError) { fail(actionError, "Não foi possível gerar o acesso."); }
   }
@@ -105,7 +107,7 @@ export default function BranchViewersPage() {
     beginAction(`reset-${viewer.id}`);
     try {
       const result = await resetBranchViewerPassword(viewer.id);
-      setCredentials({ ...result, branchName: branch.name, contactPhone: viewer.contactPhone, contactEmail: viewer.contactEmail, contactName: viewer.contactName });
+      setCredentials({ ...result, branchName: branch.name, contactPhone: viewer.contactPhone, contactEmail: viewer.contactEmail, contactName: viewer.contactName }); setCredentialsCopied(false);
       setPendingReset(""); setMessage("Nova senha criada. A senha anterior não funciona mais."); setBusy("");
     } catch (actionError) { fail(actionError, "Não foi possível gerar uma nova senha."); }
   }
@@ -139,9 +141,19 @@ export default function BranchViewersPage() {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
+  async function copyCredentials() {
+    if (!credentials) return;
+    try {
+      await navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha: ${credentials.password}`);
+      setCredentialsCopied(true);
+    } catch {
+      setError("Não foi possível copiar os dados. Selecione e copie manualmente.");
+    }
+  }
+
   return <main className={styles.page}>
-    <header className={styles.title}><div><p>Administração nacional</p><h1>Usuários das coordenações estaduais</h1></div><span>{viewers.length} acesso{viewers.length === 1 ? "" : "s"}</span></header>
-    {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><div className={styles.credentialsActions}><button type="button" onClick={() => navigator.clipboard.writeText(`Usuário: ${credentials.username}\nSenha: ${credentials.password}`)}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button><button type="button" onClick={emailCredentials}>Enviar por e-mail</button></div><p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
+    <header className={styles.title}><div><p>Administração nacional</p><h1>Acessos das coordenações</h1><small>Gerencie usuários, senhas e contatos por estado.</small></div><span>{viewers.length} acesso{viewers.length === 1 ? "" : "s"}</span></header>
+    {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><div className={styles.credentialsActions}><button type="button" onClick={copyCredentials}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button><button type="button" onClick={emailCredentials}>Enviar por e-mail</button></div>{credentialsCopied && <p className={styles.copied} role="status">Usuário e senha copiados.</p>}<p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success} role="status">{message}</p>}
     <section className={styles.card}><h2>Coordenações estaduais</h2>{loading ? <p aria-busy="true">Carregando...</p> : branches.map((branch) => {
       const branchViewers = viewersByBranch.get(branch.id) ?? [];
