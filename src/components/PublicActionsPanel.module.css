@@ -14,6 +14,9 @@
 .address legend { padding: 0 .3rem; font-weight: 800; }
 .acceptance { grid-column: 1 / -1; display: flex !important; align-items: start; gap: .55rem !important; font-size: .9rem; }
 .acceptance input { width: 1.15rem; min-height: 1.15rem; margin-top: .15rem; }
+.regulationAcceptance { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.regulationAcceptance .acceptance { flex: 1 1 16rem; }
+.regulationButton { min-height: 2.45rem !important; padding: .45rem .7rem !important; color: var(--map-state) !important; background: white !important; border: 1px solid var(--border) !important; }
 .signup form > button { grid-column: 1 / -1; }
 .error { color: #a22b2b; font-weight: 750; }
 @media (max-width: 600px) { .panel { padding: .85rem; } .actions { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button, .panel button { width: 100%; min-height: 3rem; grid-column: 1; } }

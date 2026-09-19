@@ -1,6 +1,7 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
 import PageHeading from '../components/PageHeading';
+import VolunteerRegulation from '../components/VolunteerRegulation';
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
@@ -49,6 +50,7 @@ export default function VolunteersPage() {
   const [reportRows, setReportRows] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportReady, setReportReady] = useState(false);
+  const [showRegulation, setShowRegulation] = useState(false);
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listVolunteersPage({ branchId: filtros.branchId, cursor, pageSize })
@@ -259,7 +261,7 @@ export default function VolunteersPage() {
           <fieldset className={styles.actionChoices}><legend>Endereço do voluntário</legend><div className={styles.addressGrid}><label>CEP<input required inputMode="numeric" placeholder="00000-000" value={formatCep(form.address.cep)} onChange={event => setForm({ ...form, address: { ...form.address, cep: formatCep(event.target.value) } })} /></label><label>Logradouro<input required value={form.address.street} onChange={event => setForm({ ...form, address: { ...form.address, street: event.target.value } })} /></label><label>Número<input required value={form.address.number} onChange={event => setForm({ ...form, address: { ...form.address, number: event.target.value } })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={event => setForm({ ...form, address: { ...form.address, complement: event.target.value } })} /></label><label>Bairro<input required value={form.address.neighborhood} onChange={event => setForm({ ...form, address: { ...form.address, neighborhood: event.target.value } })} /></label><label>Cidade<input required value={form.address.city} onChange={event => setForm({ ...form, address: { ...form.address, city: event.target.value } })} /></label><label>Estado<select required value={form.address.state} onChange={event => setForm({ ...form, address: { ...form.address, state: event.target.value } })}><option value="">Selecione</option>{BRAZIL_STATES.map(state => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label></div></fieldset>
           <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={event => setForm({ ...form, shirtSize: event.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label>
           <label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={event => setForm({ ...form, ngoRelationship: event.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
-          <fieldset className={styles.actionChoices}><legend>Confirmações</legend><label><input required type="checkbox" checked={form.lgpdAccepted} onChange={event => setForm({ ...form, lgpdAccepted: event.target.checked })} />Li e aceito o tratamento dos meus dados pessoais conforme a LGPD.</label><label><input required type="checkbox" checked={form.regulationAccepted} onChange={event => setForm({ ...form, regulationAccepted: event.target.checked })} />Li e aceito o regulamento da ação.</label></fieldset>
+          <fieldset className={styles.actionChoices}><legend>Confirmações</legend><label><input required type="checkbox" checked={form.lgpdAccepted} onChange={event => setForm({ ...form, lgpdAccepted: event.target.checked })} />Li e aceito o tratamento dos meus dados pessoais conforme a LGPD.</label><div className={styles.regulationAcceptance}><label><input required type="checkbox" checked={form.regulationAccepted} onChange={event => setForm({ ...form, regulationAccepted: event.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.textButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div></fieldset>
           <label>Coordenação estadual para localizar ações<select required disabled={!isSuperAdmin} value={actionBranchId} onChange={(event) => setActionBranchId(event.target.value)}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
           <fieldset className={styles.actionChoices} disabled={!actionBranchId || loadingActions}><legend>Ações <small>(selecione uma ou mais; você pode trocar a coordenação estadual)</small></legend>{loadingActions ? <p>Carregando ações…</p> : actions.length ? actions.map(action => <label key={action.id}><input type="checkbox" checked={form.actionIds.includes(action.id)} onChange={event => setForm({ ...form, actionIds: event.target.checked ? [...new Set([...form.actionIds, action.id])] : form.actionIds.filter(id => id !== action.id) })} />{action.name}</label>) : <p>{actionBranchId ? 'Esta coordenação estadual ainda não possui ações cadastradas.' : 'Selecione uma coordenação estadual para localizar ações.'}</p>}<p><strong>{form.actionIds.length}</strong> ação(ões) selecionada(s) no total.</p></fieldset>
           {editingId && <label>Situação<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="active">Ativo</option><option value="blocked">Bloqueado</option></select></label>}
@@ -296,6 +298,7 @@ export default function VolunteersPage() {
         )}
         {volunteers.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loadingVolunteers || saving} onClick={carregarMais}>{loadingVolunteers ? "Carregando..." : "Carregar mais voluntários"}</button>}
       </section>
+      <VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
     </main>
   );
 }
