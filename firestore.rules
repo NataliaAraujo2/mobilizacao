@@ -331,6 +331,13 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // Projetos são exibidos publicamente. Alterações continuam exclusivas das
+    // rotinas administrativas com Admin SDK, sem escrita direta pelo cliente.
+    match /projects/{projectId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
     // Formulários são acessados exclusivamente por Functions: autenticação,
     // isolamento, validação do snapshot e resposta única em transação.
     match /formAccounts/{document=**} {
