@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStorageService } from "../services/firebaseStorage";
+import ImageFrame from "./ImageFrame";
 import styles from "./ActionPhotoGallery.module.css";
 
 const PHASES = [
@@ -28,6 +29,6 @@ export default function ActionPhotoGallery({ action }) {
   if (!files.length) return null;
   return <section className={styles.gallery} aria-label="Fotos da ação">
     <h3>Fotos da ação</h3>
-    {error ? <p>Não foi possível carregar as fotos agora.</p> : photos.length === 0 ? <p>Carregando fotos…</p> : <div>{photos.map((photo) => <figure key={photo.path}><img src={photo.url} loading="lazy" alt={`${photo.label}: ${photo.name || action.name}`} /><figcaption>{photo.label}</figcaption></figure>)}</div>}
+    {error ? <p>Não foi possível carregar as fotos agora.</p> : photos.length === 0 ? <p>Carregando fotos…</p> : <div>{photos.map((photo) => <figure key={photo.path}><ImageFrame src={photo.url} alt={`${photo.label}: ${photo.name || action.name}`} /><figcaption>{photo.label}</figcaption></figure>)}</div>}
   </section>;
 }
