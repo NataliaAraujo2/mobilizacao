@@ -1,5 +1,6 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
+import PageHeading from '../components/PageHeading';
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
@@ -242,10 +243,7 @@ export default function VolunteersPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.title}>
-        <div><p>{isSuperAdmin ? "Administração nacional" : "Minha coordenação estadual"}</p><h1>Voluntários</h1></div>
-        <span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>
-      </header>
+      <PageHeading eyebrow={isSuperAdmin ? "Administração nacional" : "Minha coordenação estadual"} title="Voluntários" meta={<span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>} />
 
       {!showForm && <button className={styles.formToggle} type="button" onClick={() => setShowForm(true)}>Cadastrar voluntário manualmente</button>}
       {showForm && <section className={styles.card} aria-labelledby="volunteer-form-title">

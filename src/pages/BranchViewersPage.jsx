@@ -1,5 +1,6 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
+import PageHeading from '../components/PageHeading';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createBranchViewer, deleteBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
@@ -152,7 +153,7 @@ export default function BranchViewersPage() {
   }
 
   return <main className={styles.page}>
-    <header className={styles.title}><div><p>Administração nacional</p><h1>Acessos das coordenações</h1><small>Gerencie usuários, senhas e contatos por estado.</small></div><span>{viewers.length} acesso{viewers.length === 1 ? "" : "s"}</span></header>
+    <PageHeading eyebrow="Administração nacional" title="Acessos das coordenações" description="Gerencie usuários, senhas e contatos por estado." meta={<span>{viewers.length} acesso{viewers.length === 1 ? "" : "s"}</span>} />
     {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><div className={styles.credentialsActions}><button type="button" onClick={copyCredentials}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button><button type="button" onClick={emailCredentials}>Enviar por e-mail</button></div>{credentialsCopied && <p className={styles.copied} role="status">Usuário e senha copiados.</p>}<p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success} role="status">{message}</p>}
     <section className={styles.card}><h2>Coordenações estaduais</h2>{loading ? <p aria-busy="true">Carregando...</p> : branches.map((branch) => {

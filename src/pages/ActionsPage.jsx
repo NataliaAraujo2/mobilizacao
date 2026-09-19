@@ -12,6 +12,7 @@ import { CoordinationActionDetails } from './ConsultationPage';
 import { whatsappUrl } from '../utils/whatsapp';
 import { gmailComposeUrl } from '../utils/email';
 import styles from "./ActionsPage.module.css";
+import PageHeading from "../components/PageHeading";
 
 const EMPTY_ADDRESS = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", source: "manual" };
 const EMPTY_FORM = { name: "", branchId: "", startDate: "", endDate: "", startTime: "", endTime: "", scheduleText: "", address: EMPTY_ADDRESS, description: "", whatToBring: "", tips: "", status: "planning" };
@@ -198,7 +199,7 @@ export default function ActionsPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.title}><div><p>Administração nacional</p><h1>Ações</h1></div><div className={styles.titleActions}><span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span><button type="button" className={styles.newAction} onClick={() => setShowForm((current) => !current)}>{showForm ? 'Cancelar nova ação' : 'Nova ação'}</button></div></header>
+      <PageHeading eyebrow="Administração nacional" title="Ações" meta={<span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span>} actions={<button type="button" className={styles.newAction} onClick={() => setShowForm((current) => !current)}>{showForm ? 'Cancelar nova ação' : 'Nova ação'}</button>} />
 
       {showForm && <section className={styles.card} aria-labelledby="action-form-title">
         <h2 id="action-form-title">Cadastrar ação</h2>

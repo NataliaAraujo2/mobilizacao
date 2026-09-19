@@ -1,4 +1,4 @@
-.page { width: min(100% - 2rem, 72rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 3.5rem) 0; }
+.page { width: min(100% - 2rem, 72rem); margin: 0 auto; padding: clamp(.75rem, 2vw, 1.5rem) 0 2.5rem; }
 .title { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }
 .title p { margin: 0; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .title h1 { margin: .25rem 0 0; font-size: clamp(2.2rem, 7vw, 4rem); }

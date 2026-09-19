@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BRANCH_STATUSES } from "../domain/access/access";
 import { BRAZIL_STATES } from "../domain/locations/brazilStates";
 import { addBranch, deleteBranch, editBranch, listBranches } from "../services/branchesService";
+import PageHeading from "../components/PageHeading";
 import styles from "./BranchesPage.module.css";
 
 const EMPTY_FORM = { name: "", code: "", state: "", status: BRANCH_STATUSES.ACTIVE };
@@ -97,10 +98,7 @@ export default function BranchesPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.title}>
-        <div><p>Administração nacional</p><h1>Coordenações estaduais</h1></div>
-        <span>{branches.length} cadastrada{branches.length === 1 ? "" : "s"}</span>
-      </header>
+      <PageHeading eyebrow="Administração nacional" title="Coordenações estaduais" meta={<span>{branches.length} cadastrada{branches.length === 1 ? "" : "s"}</span>} />
 
       <section className={styles.formCard} aria-labelledby="branch-form-title">
         <h2 id="branch-form-title">{editingId ? "Editar coordenação estadual" : "Cadastrar coordenação estadual"}</h2>

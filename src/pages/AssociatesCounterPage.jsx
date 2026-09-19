@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/useAuth";
 import { getNewAssociatesCount, updateNewAssociatesCount } from "../services/associationStatsService";
+import PageHeading from "../components/PageHeading";
 import styles from "./AssociatesCounterPage.module.css";
 
 export default function AssociatesCounterPage() {
@@ -36,9 +37,7 @@ export default function AssociatesCounterPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.title}>
-        <div><p>Administração nacional</p><h1>Novos associados</h1></div>
-      </header>
+      <PageHeading eyebrow="Administração nacional" title="Novos associados" />
 
       <section className={styles.card} aria-labelledby="counter-title">
         <div className={styles.preview}>
