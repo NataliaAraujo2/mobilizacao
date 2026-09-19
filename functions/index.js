@@ -461,8 +461,8 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   const snapshot = await reference.get();
   if (!snapshot.exists) throw new HttpsError('not-found', 'Voluntário não encontrado.');
   const auth = getAuth();
-  const username = `vol-${volunteerId.slice(0, 10).toLowerCase()}`;
-  const email = `${username}@${VIEWER_EMAIL_DOMAIN}`;
+  const email = String(snapshot.data().email ?? '').trim().toLowerCase();
+  if (['create', 'resetPassword'].includes(action) && !/^\S+@\S+\.\S+$/.test(email)) throw new HttpsError('failed-precondition', 'Cadastre um e-mail válido para gerar o acesso do voluntário.');
 
   if (action === 'create') {
     if (snapshot.data().accessStatus !== 'none') throw new HttpsError('already-exists', 'Este voluntário já possui acesso.');
@@ -473,7 +473,7 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
       createdAuthUser = true;
       await auth.setCustomUserClaims(volunteerId, { role: VOLUNTEER_ROLE, status: 'active' });
       await reference.update({ accessStatus: 'active', status: 'active', updatedAt: FieldValue.serverTimestamp() });
-      return { username, password };
+      return { username: email, password };
     } catch (error) {
       if (createdAuthUser) await auth.deleteUser(volunteerId).catch(() => {});
       if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') throw new HttpsError('already-exists', 'Este voluntário já possui acesso.');
@@ -495,8 +495,8 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   }
   if (action === 'resetPassword') {
     const password = generateFriendlyPassword();
-    await auth.updateUser(account.uid, { password });
-    return { username, password };
+    await auth.updateUser(account.uid, { email, password });
+    return { username: email, password };
   }
   const status = action === 'activate' ? 'active' : 'blocked';
   await auth.updateUser(account.uid, { disabled: status === 'blocked' });
