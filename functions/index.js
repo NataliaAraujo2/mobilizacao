@@ -30,6 +30,17 @@ function requireSuperAdmin(request) {
   }
 }
 
+function actionPhase(action, now = new Date()) {
+  const startDate = action.startDate || action.date;
+  const endDate = action.endDate || startDate;
+  const start = new Date(`${startDate}T${action.startTime || '00:00'}:00-03:00`);
+  const end = new Date(`${endDate}T${action.endTime || '23:59'}:00-03:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 'planning';
+  if (now < start) return 'planning';
+  if (now <= end) return 'ongoing';
+  return 'completed';
+}
+
 function requiredText(value, field, min = 2, max = 120) {
   if (typeof value !== "string" || value.trim().length < min || value.trim().length > max) {
     throw new HttpsError("invalid-argument", `Campo inválido: ${field}.`);
@@ -103,15 +114,19 @@ export const publicVolunteerActions = onCall(PUBLIC_FUNCTION_OPTIONS, async (req
     const item = await getFirestore().collection('actions').doc(actionId).get();
     if (!item.exists) throw new HttpsError('not-found', 'A ação não foi encontrada.');
     const action = item.data();
-    if (action.status === 'closed' || action.date < new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })) throw new HttpsError('failed-precondition', 'Esta ação não está mais disponível para inscrição.');
+    if (actionPhase(action) === 'completed') throw new HttpsError('failed-precondition', 'Esta ação não está mais disponível para inscrição.');
     return [{ id: item.id, name: action.name, date: action.date, startDate: action.startDate, endDate: action.endDate, startTime: action.startTime, endTime: action.endTime, scheduleText: action.scheduleText, description: action.description, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status }];
   }
   const state = requiredText(request.data?.state, 'state', 2, 2).toUpperCase();
-  const snapshot = await getFirestore().collection('actions').where('address.state', '==', state).limit(50).get();
+  const db = getFirestore();
+  const branches = await db.collection('branches').where('state', '==', state).get();
+  const branchIds = branches.docs.filter(item => item.data().status === 'active').map(item => item.id).slice(0, 30);
+  if (!branchIds.length) return [];
+  const snapshot = await db.collection('actions').where('branchId', 'in', branchIds).limit(50).get();
   return snapshot.docs.map(item => {
     const action = item.data();
     return { id: item.id, name: action.name, date: action.date, startDate: action.startDate, endDate: action.endDate, startTime: action.startTime, endTime: action.endTime, scheduleText: action.scheduleText, description: action.description, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status };
-  }).filter(action => action.status !== 'closed' && action.date >= new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }));
+  }).filter(action => actionPhase(action) !== 'completed');
 });
 
 export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
@@ -121,8 +136,7 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   const actionSnapshot = await db.collection('actions').doc(actionId).get();
   if (!actionSnapshot.exists) throw new HttpsError('not-found', 'A ação não existe.');
   const action = actionSnapshot.data();
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-  if (action.status === 'closed' || action.date < today) throw new HttpsError('failed-precondition', 'As inscrições desta ação foram encerradas.');
+  if (actionPhase(action) === 'completed') throw new HttpsError('failed-precondition', 'As inscrições desta ação foram encerradas.');
   const volunteerRef = db.collection('volunteers').doc(request.auth.uid);
   const existing = await volunteerRef.get();
   if (existing.exists) {

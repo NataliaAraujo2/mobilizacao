@@ -9,6 +9,7 @@ import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import ListSearch from '../components/ListSearch';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import { actionScheduleSummary, formatActionDate } from '../domain/actions/actionSchedule';
+import ActionStatus from '../components/ActionStatus';
 import styles from "./ConsultationPage.module.css";
 
 export default function ConsultationPage() {
@@ -43,7 +44,6 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
   if (view === 'volunteers') return <ActionVolunteers action={action} branch={branch} user={user} onBack={() => setView('details')} />;
   if (view === 'attendance') return <><div className={styles.page}><button className={styles.back} type="button" onClick={() => setView('details')}>← Voltar aos detalhes da ação</button></div><AttendancePage fixedAction={action} /></>;
   const address = action.address ?? {};
-  const statuses = { planning: 'Em planejamento', active: 'Ativa', closed: 'Encerrada' };
   return <main className={styles.page}>
     <button className={styles.back} type="button" onClick={onBack}>← Voltar às ações</button>
     <header className={styles.header}><div><p>{branch?.name}</p><h1>{action.name}</h1></div></header>
@@ -54,7 +54,7 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
         <div><dt>Data de fim</dt><dd>{formatActionDate(action.endDate ?? action.startDate ?? action.date)}</dd></div>
         <div><dt>Hora de fim</dt><dd>{action.endTime || 'Não informada'}</dd></div>
         {action.scheduleText && <div className={styles.detailWide}><dt>Informações de data e horário</dt><dd>{action.scheduleText}</dd></div>}
-        <div><dt>Situação</dt><dd>{statuses[action.status] ?? action.status ?? 'Não informada'}</dd></div>
+        <div><dt>Situação</dt><dd><ActionStatus action={action} /></dd></div>
         <div className={styles.detailWide}><dt>Local</dt><dd>{[address.street, address.number, address.complement, address.neighborhood, address.city, address.state].filter(Boolean).join(', ')}</dd></div>
         {address.cep && <div><dt>CEP</dt><dd>{address.cep}</dd></div>}
         {action.description && <div className={styles.detailWide}><dt>Descrição</dt><dd>{action.description}</dd></div>}
