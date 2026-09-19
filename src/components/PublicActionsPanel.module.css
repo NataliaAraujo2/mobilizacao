@@ -1,13 +1,22 @@
-.panel { width: 100%; margin-top: 1rem; padding: 1rem; background: white; border: 1px solid var(--border); border-radius: 1rem; }
-.actions { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
-.actions article { padding: 1rem; background: #f5f8fa; border-radius: .75rem; }
-.actions h4 { margin: 0 0 .5rem; font-size: 1.15rem; }
-.municipality { margin: 0 0 .2rem !important; color: var(--brand-orange); font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
-.actions p { margin: .35rem 0; }
-.panel button { min-height: 2.7rem; padding: .55rem .8rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
-.signup { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-.tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
-.signup form { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+.panel { width: 100%; color: var(--text); }
+.panel h3 { margin: 0 0 .8rem; color: var(--brand-blue); font-size: 1.35rem; }
+.actions { display: grid; gap: .7rem; }
+.actions article { padding: .9rem; background: #f5f8fa; border: 1px solid #d9e6ee; border-radius: .75rem; }
+.actions h4 { margin: 0 0 .45rem; font-size: 1.08rem; }
+.municipality { margin: 0 0 .2rem !important; color: var(--brand-orange); font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; }
+.actions p, .details > p { margin: .35rem 0; line-height: 1.45; }
+.panel button { min-height: 2.55rem; padding: .5rem .75rem; color: white; font: inherit; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
+.actions button { width: 100%; margin-top: .45rem; }
+.details { display: grid; gap: .45rem; }
+.details h3 { margin: 0; }
+.details :global(.gallery) { margin-top: .55rem; }
+.back { justify-self: start; min-height: auto !important; padding: .15rem 0 !important; color: var(--brand-blue) !important; background: transparent !important; }
+.participate { width: 100%; margin-top: .35rem; }
+.signup { display: grid; gap: .65rem; }
+.signup h3 { margin: 0; }
+.tabs { display: flex; gap: .5rem; }
+.tabs button { flex: 1; }
+.signup form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
 .signup label { display: grid; gap: .3rem; font-weight: 750; }
 .signup input, .signup select { min-height: 2.8rem; padding: .6rem; font: inherit; border: 1px solid var(--border); border-radius: .55rem; }
 .address { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; padding: 1rem; border: 1px solid var(--border); border-radius: .65rem; }
@@ -16,7 +25,7 @@
 .acceptance input { width: 1.15rem; min-height: 1.15rem; margin-top: .15rem; }
 .regulationAcceptance { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .regulationAcceptance .acceptance { flex: 1 1 16rem; }
-.regulationButton { min-height: 2.45rem !important; padding: .45rem .7rem !important; color: var(--map-state) !important; background: white !important; border: 1px solid var(--border) !important; }
+.regulationButton { min-height: 2.45rem !important; padding: .45rem .7rem !important; color: var(--brand-blue) !important; background: white !important; border: 1px solid var(--border) !important; }
 .signup form > button { grid-column: 1 / -1; }
-.error { color: #a22b2b; font-weight: 750; }
-@media (max-width: 600px) { .panel { padding: .85rem; } .actions { grid-template-columns: 1fr; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button, .panel button { width: 100%; min-height: 3rem; grid-column: 1; } }
+.error { margin: .8rem 0 0; color: #a22b2b; font-weight: 750; }
+@media (max-width: 600px) { .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } }

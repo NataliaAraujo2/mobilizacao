@@ -6,6 +6,7 @@ import styles from './PublicActionsPanel.module.css';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { NGO_RELATIONSHIPS, SHIRT_SIZES } from '../domain/volunteers/volunteerModel';
 import { BRAZIL_STATES } from '../domain/locations/brazilStates';
+import ActionPhotoGallery from './ActionPhotoGallery';
 import VolunteerRegulation from './VolunteerRegulation';
 
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
@@ -16,6 +17,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   const navigate = useNavigate();
   const [actions, setActions] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [showSignup, setShowSignup] = useState(false);
   const [mode, setMode] = useState('signup');
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   const [showRegulation, setShowRegulation] = useState(false);
 
   useEffect(() => {
-    setSelected(null); setError('');
+    setSelected(null); setShowSignup(false); setError('');
     if (!state && !actionId) { setActions([]); return; }
     let current = true; setLoading(true);
     const request = actionId ? getPublicAction(actionId) : listPublicActions(state);
@@ -39,6 +41,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
       throw err;
     }
   }
+
   async function joinExisting(action) { setLoading(true); setError(''); try { await enrollWithOptionalSwap(action); navigate('/voluntario'); } catch (err) { setError(err.message || 'Não foi possível realizar a inscrição.'); } finally { setLoading(false); } }
   async function submit(event) {
     event.preventDefault(); setLoading(true); setError(''); let credential;
@@ -47,23 +50,38 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     finally { setLoading(false); }
   }
 
+  function openDetails(action) { setSelected(action); setShowSignup(false); setError(''); }
+  function beginParticipation() {
+    if (user && claims?.role === 'volunteer') return joinExisting(selected);
+    if (user) return setError('Saia da conta administrativa para entrar como voluntário.');
+    setShowSignup(true);
+  }
+
   if (!state && !actionId) return null;
   const update = patch => setForm({ ...form, ...patch });
   const updateAddress = patch => update({ address: { ...form.address, ...patch } });
   return <section className={styles.panel} aria-live="polite">
     {!selected && <>
       <h3>Ações disponíveis</h3>
-      {loading ? <p>Carregando…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <article key={action.id}><p className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</p><h4>{action.name}</h4><p><strong>Quando:</strong> {actionScheduleSummary(action)}</p><p>{action.address.street}, {action.address.number}</p>{action.description && <p>{action.description}</p>}{action.whatToBring && <p><strong>O que levar:</strong> {action.whatToBring}</p>}<button type="button" onClick={() => user && claims?.role === 'volunteer' ? joinExisting(action) : setSelected(action)}>Quero participar</button></article>)}</div>}
+      {loading ? <p>Carregando…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <article key={action.id}><p className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</p><h4>{action.name}</h4><p><strong>Quando:</strong> {actionScheduleSummary(action)}</p><button type="button" onClick={() => openDetails(action)}>Ver detalhes</button></article>)}</div>}
     </>}
-    {selected && !user && <div className={styles.signup}><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Primeiro acesso</button><button type="button" onClick={() => setMode('login')}>Já tenho conta</button></div><form onSubmit={submit}>
-      {mode === 'signup' && <>
-        <label>Nome completo<input required value={form.fullName} onChange={e => update({ fullName: e.target.value })} /></label><label>Telefone<input required value={form.phone} onChange={e => update({ phone: formatPhone(e.target.value) })} /></label><label>CPF<input required inputMode="numeric" value={form.cpf} onChange={e => update({ cpf: e.target.value })} /></label><label>RG<input required value={form.rg} onChange={e => update({ rg: e.target.value })} /></label><label>Data de nascimento<input required type="date" value={form.birthDate} onChange={e => update({ birthDate: e.target.value })} /></label>
-        <fieldset className={styles.address}><legend>Endereço</legend><label>CEP<input required inputMode="numeric" value={formatCep(form.address.cep)} onChange={e => updateAddress({ cep: formatCep(e.target.value) })} /></label><label>Logradouro<input required value={form.address.street} onChange={e => updateAddress({ street: e.target.value })} /></label><label>Número<input required value={form.address.number} onChange={e => updateAddress({ number: e.target.value })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={e => updateAddress({ complement: e.target.value })} /></label><label>Bairro<input required value={form.address.neighborhood} onChange={e => updateAddress({ neighborhood: e.target.value })} /></label><label>Cidade<input required value={form.address.city} onChange={e => updateAddress({ city: e.target.value })} /></label><label>Estado<select required value={form.address.state} onChange={e => updateAddress({ state: e.target.value })}><option value="">Selecione</option>{BRAZIL_STATES.map(item => <option key={item.code} value={item.code}>{item.code} — {item.name}</option>)}</select></label></fieldset>
-        <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={e => update({ shirtSize: e.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label><label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={e => update({ ngoRelationship: e.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
-        <label className={styles.acceptance}><input required type="checkbox" checked={form.lgpdAccepted} onChange={e => update({ lgpdAccepted: e.target.checked })} />Concordo com o uso dos meus dados conforme LGPD.</label><div className={styles.regulationAcceptance}><label className={styles.acceptance}><input required type="checkbox" checked={form.regulationAccepted} onChange={e => update({ regulationAccepted: e.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.regulationButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div>
-      </>}
-      <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label><label>Senha<input required type="password" minLength="8" value={form.password} onChange={e => update({ password: e.target.value })} /></label><button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Criar conta e participar' : 'Entrar e participar'}</button>
-    </form></div>}
-    {selected && user && claims?.role !== 'volunteer' && <p className={styles.error}>Saia da conta administrativa para entrar como voluntário.</p>}{error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
+    {selected && !showSignup && <article className={styles.details}>
+      {!actionId && <button className={styles.back} type="button" onClick={() => { setSelected(null); setError(''); }}>← Todas as ações</button>}
+      <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><p><strong>Quando:</strong> {actionScheduleSummary(selected)}</p><p><strong>Local:</strong> {selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</p>{selected.description && <p><strong>Sobre a ação:</strong> {selected.description}</p>}{selected.whatToBring && <p><strong>O que levar:</strong> {selected.whatToBring}</p>}{selected.tips && <p><strong>Orientações:</strong> {selected.tips}</p>}
+      <ActionPhotoGallery action={selected} />
+      <button className={styles.participate} type="button" disabled={loading} onClick={beginParticipation}>{loading ? 'Concluindo…' : 'Quero participar'}</button>
+    </article>}
+    {selected && showSignup && !user && <div className={styles.signup}>
+      <button className={styles.back} type="button" onClick={() => { setShowSignup(false); setError(''); }}>← Voltar aos detalhes</button><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Primeiro acesso</button><button type="button" onClick={() => setMode('login')}>Já tenho conta</button></div><form onSubmit={submit}>
+        {mode === 'signup' && <>
+          <label>Nome completo<input required value={form.fullName} onChange={e => update({ fullName: e.target.value })} /></label><label>Telefone<input required value={form.phone} onChange={e => update({ phone: formatPhone(e.target.value) })} /></label><label>CPF<input required inputMode="numeric" value={form.cpf} onChange={e => update({ cpf: e.target.value })} /></label><label>RG<input required value={form.rg} onChange={e => update({ rg: e.target.value })} /></label><label>Data de nascimento<input required type="date" value={form.birthDate} onChange={e => update({ birthDate: e.target.value })} /></label>
+          <fieldset className={styles.address}><legend>Endereço</legend><label>CEP<input required inputMode="numeric" value={formatCep(form.address.cep)} onChange={e => updateAddress({ cep: formatCep(e.target.value) })} /></label><label>Logradouro<input required value={form.address.street} onChange={e => updateAddress({ street: e.target.value })} /></label><label>Número<input required value={form.address.number} onChange={e => updateAddress({ number: e.target.value })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={e => updateAddress({ complement: e.target.value })} /></label><label>Bairro<input required value={form.address.neighborhood} onChange={e => updateAddress({ neighborhood: e.target.value })} /></label><label>Cidade<input required value={form.address.city} onChange={e => updateAddress({ city: e.target.value })} /></label><label>Estado<select required value={form.address.state} onChange={e => updateAddress({ state: e.target.value })}><option value="">Selecione</option>{BRAZIL_STATES.map(item => <option key={item.code} value={item.code}>{item.code} — {item.name}</option>)}</select></label></fieldset>
+          <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={e => update({ shirtSize: e.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label><label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={e => update({ ngoRelationship: e.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
+          <label className={styles.acceptance}><input required type="checkbox" checked={form.lgpdAccepted} onChange={e => update({ lgpdAccepted: e.target.checked })} />Concordo com o uso dos meus dados conforme LGPD.</label><div className={styles.regulationAcceptance}><label className={styles.acceptance}><input required type="checkbox" checked={form.regulationAccepted} onChange={e => update({ regulationAccepted: e.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.regulationButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div>
+        </>}
+        <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label><label>Senha<input required type="password" minLength="8" value={form.password} onChange={e => update({ password: e.target.value })} /></label><button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Criar conta e participar' : 'Entrar e participar'}</button>
+      </form>
+    </div>}
+    {error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
   </section>;
 }

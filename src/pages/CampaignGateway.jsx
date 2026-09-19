@@ -129,10 +129,17 @@ export default function CampaignGateway() {
           <span>{mapOpen ? "Fechar mapa" : "Passe o mouse ou toque no mapa"}</span>
         </button>
         {mapVisible && <div id="mapa-acoes-publico" className={styles.publicMap}>
-          <div><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
-          <BrazilMap selectedState={selectedState} onSelectState={setSelectedState} />
-          <p className={styles.mapResult} aria-live="polite">{selectedState ? <>Estado selecionado: <strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name} ({selectedState})</strong></> : "Nenhum estado selecionado."}</p>
-          <PublicActionsPanel state={selectedState} user={user} claims={claims} />
+          <div className={styles.mapIntro}><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
+          <div className={styles.mapLayout}>
+            <div className={styles.mapCanvas}>
+              <BrazilMap selectedState={selectedState} onSelectState={setSelectedState} />
+              <p className={styles.mapResult} aria-live="polite">{selectedState ? <>Estado selecionado: <strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name} ({selectedState})</strong></> : "Nenhum estado selecionado."}</p>
+            </div>
+            {selectedState && <aside className={styles.actionsModal} aria-label={`Ações disponíveis em ${BRAZIL_STATE_BY_CODE[selectedState]?.name ?? selectedState}`}>
+              <header><strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name ?? selectedState}</strong><button type="button" onClick={() => setSelectedState('')} aria-label="Fechar ações">×</button></header>
+              <PublicActionsPanel state={selectedState} user={user} claims={claims} />
+            </aside>}
+          </div>
         </div>}
       </section>
 
