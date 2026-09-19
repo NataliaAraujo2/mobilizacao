@@ -425,7 +425,7 @@ export const deleteAction = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   const action = await actionRef.get();
   if (!action.exists) throw new HttpsError("not-found", "Ação não encontrada.");
 
-  const branchId = action.data().branchId;
+  const actionData = action.data();
   const [volunteers, attendance] = await Promise.all([
     db.collection("volunteers").where("actionIds", "array-contains", actionId).get(),
     db.collection("attendance").where("actionId", "==", actionId).get(),
@@ -445,8 +445,8 @@ export const deleteAction = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   writer.delete(db.collection("attendanceSessions").doc(actionId));
   await writer.close();
 
-  const [files] = await getStorage().bucket().getFiles({ prefix: `branches/${branchId}/actions/${actionId}/` });
-  await Promise.all(files.map((file) => file.delete()));
+  const photoPaths = ['photosBefore', 'photosDuring', 'photosAfter'].flatMap((field) => (actionData[field] ?? []).map((photo) => photo.path).filter(Boolean));
+  await Promise.all(photoPaths.map((path) => getStorage().bucket().file(path).delete().catch(() => {})));
   await actionRef.delete();
   return { ok: true, removedVolunteers: volunteers.size, removedAttendance: attendance.size };
 });

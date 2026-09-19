@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useAuth } from "../auth/useAuth";
-import { addAction, deleteAction, listActionsPage, uploadActionPhotos } from "../services/actionsService";
+import { addAction, deleteAction, listActionsPage, updateAction, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
 import { getBranchViewerByBranch } from "../services/branchViewersService";
 import { findAddressByCep } from "../services/cepService";
@@ -40,6 +40,7 @@ export default function ActionsPage() {
   const [sharingQr, setSharingQr] = useState(false);
   const [detailsAction, setDetailsAction] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingActionId, setEditingActionId] = useState("");
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listActionsPage({ search: filtros.search, cursor, pageSize })
@@ -61,6 +62,15 @@ export default function ActionsPage() {
   function updateAddress(field, value) {
     setForm((current) => ({ ...current, address: { ...current.address, [field]: value, source: field === "cep" ? current.address.source : "manual" } }));
   }
+
+  function startEdit(action) {
+    setEditingActionId(action.id);
+    setForm({ name: action.name ?? "", branchId: action.branchId ?? "", startDate: action.startDate ?? action.date ?? "", endDate: action.endDate ?? action.startDate ?? action.date ?? "", startTime: action.startTime ?? "", endTime: action.endTime ?? "", scheduleText: action.scheduleText ?? "", address: { ...EMPTY_ADDRESS, ...(action.address ?? {}) }, description: action.description ?? "", whatToBring: action.whatToBring ?? "", tips: action.tips ?? "", status: action.status ?? "planning" });
+    setPhotos(EMPTY_PHOTOS); setError(""); setMessage(""); setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function closeForm() { setShowForm(false); setEditingActionId(""); setForm(EMPTY_FORM); setPhotos(EMPTY_PHOTOS); }
 
   async function searchCep() {
     setSearchingCep(true);
@@ -98,20 +108,23 @@ export default function ActionsPage() {
     setMessage("");
     setProgress("Salvando os dados da ação...");
     try {
-      const created = await addAction({ ...form, address: { ...form.address, cep: form.address.cep.replace(/\D/g, "") } });
-      for (const phase of ["before", "during", "after"]) {
-        if (photos[phase].length) {
-          await uploadActionPhotos(created, phase, photos[phase], (done, total) => setProgress(`Enviando fotos: ${done} de ${total}`));
+      const input = { ...form, address: { ...form.address, cep: form.address.cep.replace(/\D/g, "") } };
+      if (editingActionId) {
+        await updateAction(editingActionId, input);
+      } else {
+        const created = await addAction(input);
+        for (const phase of ["before", "during", "after"]) {
+          if (photos[phase].length) {
+            await uploadActionPhotos(created, phase, photos[phase], (done, total) => setProgress(`Enviando fotos: ${done} de ${total}`));
+          }
         }
       }
       await recarregar({ search });
-      setForm(EMPTY_FORM);
-      setPhotos(EMPTY_PHOTOS);
       setProgress("");
-      setMessage("Ação cadastrada com sucesso.");
-      setShowForm(false);
+      setMessage(editingActionId ? "Ação atualizada com sucesso." : "Ação cadastrada com sucesso.");
+      closeForm();
     } catch (saveError) {
-      setError(saveError.message || "Não foi possível cadastrar a ação.");
+      setError(saveError.message || "Não foi possível salvar a ação.");
       setProgress("");
     } finally {
       setSaving(false);
@@ -200,10 +213,10 @@ export default function ActionsPage() {
 
   return (
     <main className={styles.page}>
-      <PageHeading eyebrow="Administração nacional" title="Ações" meta={<span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span>} actions={<button type="button" className={styles.newAction} onClick={() => setShowForm((current) => !current)}>{showForm ? 'Cancelar nova ação' : 'Nova ação'}</button>} />
+      <PageHeading eyebrow="Administração nacional" title="Ações" meta={<span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span>} actions={<button type="button" className={styles.newAction} onClick={() => showForm ? closeForm() : setShowForm(true)}>{showForm ? (editingActionId ? 'Cancelar edição' : 'Cancelar nova ação') : 'Nova ação'}</button>} />
 
       {showForm && <section className={styles.card} aria-labelledby="action-form-title">
-        <h2 id="action-form-title">Cadastrar ação</h2>
+        <h2 id="action-form-title">{editingActionId ? "Editar ação" : "Cadastrar ação"}</h2>
         <p className={styles.help}>Comece com as informações disponíveis. As fotos de durante e depois poderão ser acrescentadas posteriormente.</p>
         <form onSubmit={handleSubmit}>
           <fieldset><legend>Informações principais</legend><div className={styles.grid}>
@@ -236,7 +249,7 @@ export default function ActionsPage() {
             {[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} foto(s) selecionada(s)` : "Nenhuma foto selecionada"}</span></label>)}
           </div></fieldset>
 
-          <button className={styles.submit} type="submit" disabled={saving || branches.length === 0}>{saving ? "Salvando..." : "Cadastrar ação"}</button>
+          <button className={styles.submit} type="submit" disabled={saving || branches.length === 0}>{saving ? "Salvando..." : editingActionId ? "Salvar alterações" : "Cadastrar ação"}</button>
           {progress && <p className={styles.progress} role="status">{progress}</p>}
         </form>
         {error && <p className={styles.error} role="alert">{error}</p>}
@@ -244,7 +257,7 @@ export default function ActionsPage() {
       </section>}
 
       <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
-        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
+        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => startEdit(action)}>Editar ação</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
         {photoActionId === action.id && <><ActionPhotoGallery action={action} /><form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form></>}
       </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
       {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('whatsapp')}>{sharingQr ? 'Preparando envio…' : 'Enviar pelo WhatsApp'}</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('email')}>Enviar por e-mail</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}

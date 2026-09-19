@@ -282,9 +282,7 @@ service cloud.firestore {
         || (hasRole('volunteer') && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.actionIds.hasAny([actionId]));
       allow list: if isSuperAdmin() || belongsToBranch(resource.data.branchId);
       allow create: if isSuperAdmin() && validAction(request.resource.data);
-      allow update: if isSuperAdmin()
-        && request.resource.data.branchId == resource.data.branchId
-        && validAction(request.resource.data);
+      allow update: if isSuperAdmin() && validAction(request.resource.data);
       allow delete: if isSuperAdmin();
     }
 

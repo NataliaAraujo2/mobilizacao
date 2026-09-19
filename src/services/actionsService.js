@@ -27,6 +27,14 @@ export async function addAction(input) {
   return { id: reference.id, ...data };
 }
 
+export async function updateAction(actionId, input) {
+  const { db, doc, serverTimestamp, updateDoc } = await getDbService(["doc", "serverTimestamp", "updateDoc"]);
+  const data = createAction(input);
+  const { photosBefore, photosDuring, photosAfter, createdAt, updatedAt, ...editableData } = data;
+  await updateDoc(doc(db, "actions", actionId), { ...editableData, updatedAt: serverTimestamp() });
+  return { id: actionId, ...editableData };
+}
+
 export async function deleteAction(actionId) {
   const { functions, httpsCallable } = await getFunctionsService();
   return (await httpsCallable(functions, "deleteAction")({ actionId })).data;
