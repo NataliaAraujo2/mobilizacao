@@ -203,8 +203,18 @@ async function getBranch(branchId) {
 async function nextBranchViewerIdentity(code, state, reservedUsernames = new Set()) {
   const snapshot = await getFirestore().collection("users").where("role", "==", VIEWER_ROLE).get();
   const identity = nextBranchViewerUsername(code, state, snapshot.docs.map((item) => item.data().displayName), reservedUsernames);
-  return { ...identity, email: `${identity.username.toLowerCase()}@${VIEWER_EMAIL_DOMAIN}` };
+  return identity;
 }
+
+export const resolveBranchViewerLogin = onCall({ region: REGION, minInstances: 0, maxInstances: 2, concurrency: 20 }, async (request) => {
+  const identity = requiredText(request.data?.identity, "identity", 2, 160);
+  const byEmail = identity.includes("@");
+  const value = byEmail ? identity.toLowerCase() : identity.toUpperCase();
+  const field = byEmail ? "contactEmail" : "displayName";
+  const snapshot = await getFirestore().collection("users").where(field, "==", value).limit(5).get();
+  const profile = snapshot.docs.find((item) => item.data().role === VIEWER_ROLE);
+  return { email: profile?.data().email ?? null };
+});
 
 export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   requireSuperAdmin(request);
@@ -230,16 +240,16 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   // sufixo. Em caso de colisão de e-mail, tentamos o próximo identificador;
   // nunca excluímos uma conta que já existia.
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const { username, email, coordinationNumber, userNumber } = await nextBranchViewerIdentity(code, state, reservedUsernames);
+    const { username, coordinationNumber, userNumber } = await nextBranchViewerIdentity(code, state, reservedUsernames);
     const password = generateFriendlyPassword();
     let createdAuthUser = null;
     try {
-      createdAuthUser = await auth.createUser({ displayName: username, email, password });
+      createdAuthUser = await auth.createUser({ displayName: username, email: contactEmail, password });
       const uid = createdAuthUser.uid;
       await auth.setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId, status: "active", mustChangePassword: true });
       await db.collection("users").doc(uid).set({
         displayName: username,
-        email,
+        email: contactEmail,
         role: VIEWER_ROLE,
         branchId,
         contactName,
@@ -257,10 +267,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
       // Só remove a conta criada por esta própria tentativa após uma falha
       // posterior. Conflitos nunca excluem uma conta que já existia.
       if (createdAuthUser) await auth.deleteUser(createdAuthUser.uid).catch(() => {});
-      if (error.code === "auth/email-already-exists") {
-        reservedUsernames.add(username);
-        continue;
-      }
+      if (error.code === "auth/email-already-exists") throw new HttpsError("already-exists", "Este e-mail de contato já possui uma conta.");
       throw new HttpsError("internal", "Não foi possível gerar o acesso de consulta.");
     }
   }
@@ -356,7 +363,13 @@ export const updateBranchViewerContact = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   if (!profile.exists || profile.data().role !== VIEWER_ROLE) {
     throw new HttpsError("not-found", "Acesso da coordenação estadual não encontrado.");
   }
-  await profile.ref.update({ contactName, contactNameSearch: normalizeSearchText(contactName), contactEmail, contactPhone, updatedAt: FieldValue.serverTimestamp() });
+  try {
+    await getAuth().updateUser(uid, { email: contactEmail });
+  } catch (error) {
+    if (error.code === "auth/email-already-exists") throw new HttpsError("already-exists", "Este e-mail de contato já possui uma conta.");
+    throw new HttpsError("internal", "Não foi possível atualizar o e-mail de acesso.");
+  }
+  await profile.ref.update({ contactName, contactNameSearch: normalizeSearchText(contactName), contactEmail, contactPhone, email: contactEmail, updatedAt: FieldValue.serverTimestamp() });
   return { uid, contactName, contactEmail, contactPhone };
 });
 

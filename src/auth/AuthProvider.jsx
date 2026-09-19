@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { getAuthService } from "../services/firebaseAuth";
+import { resolveBranchViewerLogin } from "../services/firebaseFunctions";
+import { resolveLoginIdentity } from "../domain/access/loginIdentity";
 import { AuthContext } from "./AuthContext";
 
 const SUPERADMIN_IDLE_TIMEOUT_MS = 60 * 60 * 1000;
@@ -92,8 +94,15 @@ export default function AuthProvider({ children }) {
   const value = useMemo(() => ({
     ...session,
     loading: needsSession && (!session.checked || session.loading),
-    async login(email, password) {
+    async login(identity, password) {
       const service = await getAuthService();
+      let email = resolveLoginIdentity(identity);
+      try {
+        const resolvedEmail = await resolveBranchViewerLogin(identity);
+        if (resolvedEmail) email = resolvedEmail;
+      } catch {
+        // Superadmins e voluntários continuam usando diretamente o e-mail informado.
+      }
       const credential = await service.signInWithEmailAndPassword(service.auth, email, password);
       const token = await service.getIdTokenResult(credential.user, true);
       if (token.claims.role === "branchViewer") {

@@ -17,3 +17,9 @@ export async function getFunctionsService({ appCheck = false } = {}) {
   cachedFunctions = Object.freeze({ functions, httpsCallable });
   return cachedFunctions;
 }
+
+export async function resolveBranchViewerLogin(identity) {
+  const { functions, httpsCallable } = await getFunctionsService();
+  const result = await httpsCallable(functions, "resolveBranchViewerLogin")({ identity });
+  return result.data?.email ?? null;
+}

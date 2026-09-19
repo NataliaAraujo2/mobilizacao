@@ -17,7 +17,7 @@ export async function listBranchContactsPage({ search = '', cursor = null, pageS
   const snapshot = await getDocs(query(collection(db, 'users'), ...constraints, limit(safePageSize + 1)));
   const docs = snapshot.docs.slice(0, safePageSize);
   return {
-    data: docs.map(item => { const data = item.data(); return { id: item.id, fullName: data.contactName, phone: data.contactPhone || '', branchLabel: data.displayName, branchId: data.branchId }; }),
+    data: docs.map(item => { const data = item.data(); return { id: item.id, fullName: data.contactName, phone: data.contactPhone || '', email: data.contactEmail || '', branchLabel: data.displayName, branchId: data.branchId }; }),
     hasMore: snapshot.size > safePageSize,
     cursor: snapshot.size > safePageSize ? docs.at(-1) : null,
   };

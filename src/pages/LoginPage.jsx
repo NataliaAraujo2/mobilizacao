@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
-import { resolveLoginIdentity } from "../domain/access/loginIdentity";
 import styles from "./LoginPage.module.css";
 
 const AUTH_ERRORS = {
@@ -52,7 +51,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const nextClaims = await login(resolveLoginIdentity(form.email), form.password);
+      const nextClaims = await login(form.email, form.password);
       navigate(permittedDestination(nextClaims.role, location.state?.from?.pathname), { replace: true });
     } catch (authError) {
       setError(AUTH_ERRORS[authError.code] ?? "Não foi possível entrar. Confira os dados e tente novamente.");
@@ -66,11 +65,11 @@ export default function LoginPage() {
       <section className={styles.card} aria-labelledby="login-title">
         <p className={styles.eyebrow}>Área restrita</p>
         <h1 id="login-title">Entrar</h1>
-        <p>Use uma conta autorizada para acessar sua área.</p>
+        <p>Acesse com seu nome de usuário ou e-mail.</p>
         {expiredByInactivity && <p className={styles.notice} role="status">Sua sessão foi encerrada após 1 hora de inatividade.</p>}
 
         <form onSubmit={handleSubmit}>
-          <label htmlFor="email">Usuário ou e-mail</label>
+          <label htmlFor="email">Nome de usuário ou e-mail</label>
           <input id="email" type="text" autoComplete="username" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
 
           <label htmlFor="password">Senha</label>
