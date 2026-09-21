@@ -13,6 +13,14 @@ import VolunteerRegulation from './VolunteerRegulation';
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
 const EMPTY = { fullName: '', email: '', password: '', phone: '', cpf: '', rg: '', birthDate: '', address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, imageUseAccepted: false, guardianAuthorizationAccepted: false };
 const formatCep = value => String(value ?? '').replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
+const enrollmentErrorMessage = error => ({
+  'auth/email-already-in-use': 'Este e-mail já possui cadastro. Escolha “Já tenho conta” para entrar.',
+  'auth/invalid-credential': 'E-mail ou senha incorretos.',
+  'auth/wrong-password': 'E-mail ou senha incorretos.',
+  'auth/weak-password': 'A senha deve ter pelo menos 8 caracteres.',
+  'auth/invalid-email': 'Informe um e-mail válido.',
+  'auth/network-request-failed': 'Não foi possível conectar. Verifique sua internet e tente novamente.',
+}[error?.code] || error?.message || 'Não foi possível concluir sua inscrição.');
 
 export default function PublicActionsPanel({ state, user, claims, actionId = '' }) {
   const navigate = useNavigate();
@@ -23,10 +31,11 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   const [form, setForm] = useState(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmation, setConfirmation] = useState(null);
   const [showRegulation, setShowRegulation] = useState(false);
 
   useEffect(() => {
-    setSelected(null); setShowSignup(false); setError('');
+    setSelected(null); setShowSignup(false); setError(''); setConfirmation(null);
     if (!state && !actionId) { setActions([]); return; }
     let current = true; setLoading(true);
     const request = actionId ? getPublicAction(actionId) : listPublicActions(state);
@@ -43,11 +52,11 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     }
   }
 
-  async function joinExisting(action) { setLoading(true); setError(''); try { await enrollWithOptionalSwap(action); navigate('/voluntario'); } catch (err) { setError(err.message || 'Não foi possível realizar a inscrição.'); } finally { setLoading(false); } }
+  async function joinExisting(action) { setLoading(true); setError(''); try { await enrollWithOptionalSwap(action); setConfirmation({ actionName: action.name, newAccount: false }); } catch (err) { setError(enrollmentErrorMessage(err)); } finally { setLoading(false); } }
   async function submit(event) {
     event.preventDefault(); setLoading(true); setError(''); let credential;
-    try { credential = mode === 'signup' ? await createVolunteerAccount(form.email, form.password) : await loginVolunteer(form.email, form.password); const result = await enrollWithOptionalSwap(selected, mode === 'signup' ? form : undefined); await refreshVolunteerSession(credential.user); if (result.created) window.location.assign('/voluntario'); else navigate('/voluntario'); }
-    catch (err) { if (mode === 'signup' && credential?.user) await removeCurrentAccount(credential.user).catch(() => {}); setError(err.message || 'Não foi possível concluir sua inscrição.'); }
+    try { credential = mode === 'signup' ? await createVolunteerAccount(form.email, form.password) : await loginVolunteer(form.email, form.password); const result = await enrollWithOptionalSwap(selected, mode === 'signup' ? form : undefined); await refreshVolunteerSession(credential.user); setShowSignup(false); setConfirmation({ actionName: selected.name, newAccount: result.created }); }
+    catch (err) { if (mode === 'signup' && credential?.user) await removeCurrentAccount(credential.user).catch(() => {}); setError(enrollmentErrorMessage(err)); }
     finally { setLoading(false); }
   }
 
@@ -81,8 +90,9 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
           <label className={styles.acceptance}><input required type="checkbox" checked={form.lgpdAccepted} onChange={e => update({ lgpdAccepted: e.target.checked })} />Concordo com o uso dos meus dados conforme LGPD.</label><div className={styles.regulationAcceptance}><label className={styles.acceptance}><input required type="checkbox" checked={form.regulationAccepted} onChange={e => update({ regulationAccepted: e.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.regulationButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div><label className={styles.acceptance}><input required type="checkbox" checked={form.imageUseAccepted} onChange={e => update({ imageUseAccepted: e.target.checked })} />Autorizo a divulgação da minha imagem nas fotos e materiais institucionais da ONG Moradia e Cidadania.</label>{isMinorBirthDate(form.birthDate) && <label className={styles.acceptance}><input required type="checkbox" checked={form.guardianAuthorizationAccepted} onChange={e => update({ guardianAuthorizationAccepted: e.target.checked })} />Declaro que tenho autorização do meu responsável legal para participar da ação e para a divulgação da minha imagem.</label>}
         </>}
         <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label><label>Senha<input required type="password" minLength="8" value={form.password} onChange={e => update({ password: e.target.value })} /></label><button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Criar conta e participar' : 'Entrar e participar'}</button>
-      </form><button className={styles.back} type="button" onClick={() => { setShowSignup(false); setError(''); }}>← Voltar aos detalhes</button>
+      </form>{error && <p className={styles.error} role="alert">{error}</p>}<button className={styles.back} type="button" onClick={() => { setShowSignup(false); setError(''); }}>← Voltar aos detalhes</button>
     </section></div>, document.body)}
-    {error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
+    {confirmation && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.successModal} role="dialog" aria-modal="true" aria-labelledby="enrollment-success-title"><button className={styles.close} type="button" aria-label="Fechar confirmação" onClick={() => { setConfirmation(null); setSelected(null); }}>×</button><p className={styles.municipality}>INSCRIÇÃO EFETIVADA</p><h2 id="enrollment-success-title">Tudo certo!</h2><p>Sua participação em <strong>{confirmation.actionName}</strong> foi confirmada.</p>{confirmation.newAccount && <p>Seu cadastro e acesso de voluntário foram criados.</p>}<div><button type="button" className={styles.secondaryAction} onClick={() => { setConfirmation(null); setSelected(null); }}>Continuar navegando</button><button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button></div></section></div>, document.body)}
+    {!showSignup && error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
   </section>;
 }

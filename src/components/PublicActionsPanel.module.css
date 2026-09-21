@@ -17,6 +17,13 @@
 .signup h3 { margin: 0; }
 .modalHeader { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
 .close { display: grid; flex: 0 0 auto; width: 2.25rem; height: 2.25rem; min-height: 0 !important; place-items: center; padding: 0 !important; color: var(--brand-blue) !important; font-size: 1.55rem !important; line-height: 1; background: white !important; border: 1px solid var(--border) !important; }
+.successModal { position: relative; display: grid; width: min(100%, 32rem); gap: .75rem; padding: clamp(1.25rem, 4vw, 2rem); background: white; border: 1px solid #c9dfed; border-top: .35rem solid var(--brand-green); border-radius: 1rem; box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 38%); }
+.successModal .close { position: absolute; top: 1rem; right: 1rem; }
+.successModal h2 { margin: 0; color: var(--brand-blue); font-size: clamp(1.7rem, 4vw, 2.25rem); }
+.successModal p { margin: 0; line-height: 1.5; }
+.successModal > div { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .5rem; }
+.successModal > div button { flex: 1 1 12rem; }
+.secondaryAction { color: var(--brand-blue) !important; background: white !important; border: 1px solid var(--border) !important; }
 .tabs { display: flex; gap: .5rem; }
 .tabs button { flex: 1; }
 .signup form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
