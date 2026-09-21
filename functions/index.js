@@ -116,27 +116,6 @@ export const listCoordinationActionVolunteers = onCall(ADMIN_FUNCTION_OPTIONS, a
   };
 });
 
-export const publicVolunteerActions = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
-  const actionId = String(request.data?.actionId ?? '').trim();
-  if (actionId) {
-    const item = await getFirestore().collection('actions').doc(actionId).get();
-    if (!item.exists) throw new HttpsError('not-found', 'A ação não foi encontrada.');
-    const action = item.data();
-    if (actionPhase(action) === 'completed') throw new HttpsError('failed-precondition', 'Esta ação não está mais disponível para inscrição.');
-    return [{ id: item.id, name: action.name, date: action.date, startDate: action.startDate, endDate: action.endDate, startTime: action.startTime, endTime: action.endTime, scheduleText: action.scheduleText, description: action.description, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status }];
-  }
-  const state = requiredText(request.data?.state, 'state', 2, 2).toUpperCase();
-  const db = getFirestore();
-  const branches = await db.collection('branches').where('state', '==', state).get();
-  const branchIds = branches.docs.filter(item => item.data().status === 'active').map(item => item.id).slice(0, 30);
-  if (!branchIds.length) return [];
-  const snapshot = await db.collection('actions').where('branchId', 'in', branchIds).limit(50).get();
-  return snapshot.docs.map(item => {
-    const action = item.data();
-    return { id: item.id, name: action.name, date: action.date, startDate: action.startDate, endDate: action.endDate, startTime: action.startTime, endTime: action.endTime, scheduleText: action.scheduleText, description: action.description, branchId: action.branchId, address: action.address, whatToBring: action.whatToBring, tips: action.tips, status: action.status };
-  }).filter(action => actionPhase(action) !== 'completed');
-});
-
 export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Entre ou crie uma conta para participar.');
   const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
@@ -235,6 +214,28 @@ export const getVolunteerDashboard = onCall(PUBLIC_FUNCTION_OPTIONS, async (requ
     sessionActionIds: sessionSnapshots.filter((item) => item.exists).map((item) => item.id),
     presentActionIds: attendanceSnapshots.filter((item) => item.exists && item.data().present === true).map((item) => item.data().actionId),
   };
+});
+
+export const backfillPublicActions = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const db = getFirestore();
+  const [branchesSnapshot, actionsSnapshot] = await Promise.all([db.collection('branches').get(), db.collection('actions').get()]);
+  const branches = new Map(branchesSnapshot.docs.map((item) => [item.id, item.data()]));
+  let updated = 0;
+  let batch = db.batch();
+  let inBatch = 0;
+  for (const action of actionsSnapshot.docs) {
+    const branch = branches.get(action.data().branchId);
+    if (!branch?.state) continue;
+    const coordinationState = String(branch.state).toUpperCase();
+    if (action.data().coordinationState === coordinationState && action.data().publicVisible === true) continue;
+    batch.update(action.ref, { coordinationState, publicVisible: branch.status === 'active', updatedAt: FieldValue.serverTimestamp() });
+    updated += 1;
+    inBatch += 1;
+    if (inBatch === 450) { await batch.commit(); batch = db.batch(); inBatch = 0; }
+  }
+  if (inBatch) await batch.commit();
+  return { ok: true, updated };
 });
 
 async function getBranch(branchId) {

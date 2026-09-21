@@ -129,8 +129,8 @@ service cloud.firestore {
     }
 
     function validAction(data) {
-      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'date', 'dateStart', 'dateEnd', 'startDate', 'endDate', 'startTime', 'endTime', 'scheduleText', 'description', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'coordinationState', 'publicVisible', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'coordinationState', 'publicVisible', 'date', 'dateStart', 'dateEnd', 'startDate', 'endDate', 'startTime', 'endTime', 'scheduleText', 'description', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
         && data.name is string
         && data.name.size() >= 3
         && data.name.size() <= 160
@@ -139,6 +139,9 @@ service cloud.firestore {
         && data.nameSearch.size() <= 160
         && data.branchId is string
         && data.branchId.size() > 0
+        && data.coordinationState is string
+        && isBrazilState(data.coordinationState)
+        && data.publicVisible is bool
         && data.date is string
         && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
         && data.dateStart is timestamp
@@ -279,9 +282,11 @@ service cloud.firestore {
     }
 
     match /actions/{actionId} {
-      allow get: if isSuperAdmin() || belongsToBranch(resource.data.branchId)
+      allow get: if resource.data.publicVisible == true
+        || isSuperAdmin() || belongsToBranch(resource.data.branchId)
         || (hasRole('volunteer') && get(/databases/$(database)/documents/volunteers/$(request.auth.uid)).data.actionIds.hasAny([actionId]));
-      allow list: if isSuperAdmin() || belongsToBranch(resource.data.branchId);
+      allow list: if resource.data.publicVisible == true
+        || isSuperAdmin() || belongsToBranch(resource.data.branchId);
       allow create: if isSuperAdmin() && validAction(request.resource.data);
       allow update: if isSuperAdmin() && validAction(request.resource.data);
       allow delete: if isSuperAdmin();

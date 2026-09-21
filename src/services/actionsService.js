@@ -4,6 +4,9 @@ import { getDbService } from "./firebaseDb";
 import { getStorageService } from "./firebaseStorage";
 import { getFunctionsService } from "./firebaseFunctions";
 import { normalizeSearchText } from '../../functions/contactFields.js';
+import { actionStatus } from '../domain/actions/actionSchedule';
+
+const publicActionsCache = new Map();
 
 async function removeOrphanedPhoto(deleteObject, fileRef) {
   // Uma segunda tentativa cobre falhas transitórias sem criar uma Function
@@ -38,6 +41,37 @@ export async function updateAction(actionId, input) {
 export async function deleteAction(actionId) {
   const { functions, httpsCallable } = await getFunctionsService();
   return (await httpsCallable(functions, "deleteAction")({ actionId })).data;
+}
+
+export async function publishExistingActions() {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, 'backfillPublicActions')({})).data;
+}
+
+export async function listPublicActionsByCoordinationState(state) {
+  const coordinationState = String(state ?? '').trim().toUpperCase();
+  if (!coordinationState) return [];
+  if (publicActionsCache.has(coordinationState)) return publicActionsCache.get(coordinationState);
+  const { db, collection, getDocs, limit, query, where } = await getDbService(['collection', 'getDocs', 'limit', 'query', 'where']);
+  const snapshot = await getDocs(query(
+    collection(db, 'actions'),
+    where('coordinationState', '==', coordinationState),
+    where('publicVisible', '==', true),
+    where('dateEnd', '>=', new Date()),
+    limit(50),
+  ));
+  const actions = snapshot.docs.map(item => ({ id: item.id, ...item.data() })).filter(action => actionStatus(action) !== 'completed');
+  publicActionsCache.set(coordinationState, actions);
+  return actions;
+}
+
+export async function getPublicActionById(actionId) {
+  const { db, doc, getDoc } = await getDbService(['doc', 'getDoc']);
+  const snapshot = await getDoc(doc(db, 'actions', actionId));
+  if (!snapshot.exists()) throw new Error('A ação não foi encontrada ou não está disponível publicamente.');
+  const action = { id: snapshot.id, ...snapshot.data() };
+  if (actionStatus(action) === 'completed') throw new Error('Esta ação não está mais disponível para inscrição.');
+  return action;
 }
 
 export async function listActionsPage({ search = "", cursor = null, pageSize = 20 } = {}) {

@@ -1,13 +1,16 @@
 import { getAuthService } from './firebaseAuth';
 import { getFunctionsService } from './firebaseFunctions';
+import { getPublicActionById, listPublicActionsByCoordinationState } from './actionsService';
 
 async function call(name, data) {
   const { functions, httpsCallable } = await getFunctionsService({ appCheck: true });
   return (await httpsCallable(functions, name)(data)).data;
 }
 
-export function listPublicActions(state) { return call('publicVolunteerActions', { state }); }
-export function getPublicAction(actionId) { return call('publicVolunteerActions', { actionId }); }
+// A navegação no mapa é leitura pública, sem dados pessoais. Ela vai direto
+// ao Firestore para não depender do tempo de inicialização de uma Function.
+export function listPublicActions(state) { return listPublicActionsByCoordinationState(state); }
+export async function getPublicAction(actionId) { return [await getPublicActionById(actionId)]; }
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }
 export function getVolunteerDashboard() { return call('getVolunteerDashboard', {}); }

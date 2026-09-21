@@ -5,6 +5,9 @@
 .titleActions { display: flex; align-items: center; gap: .65rem; }
 .titleActions > span { padding: .5rem .8rem; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; white-space: nowrap; }
 .newAction { min-height: 2.7rem; padding: .55rem .9rem; color: white; font: inherit; font-weight: 850; background: var(--brand-blue); border: 0; border-radius: .65rem; cursor: pointer; white-space: nowrap; }
+.headingActions { display: flex; flex-wrap: wrap; gap: .55rem; }
+.mapSync { min-height: 2.7rem; padding: .55rem .9rem; color: var(--brand-blue); font: inherit; font-weight: 850; background: white; border: 1px solid var(--border); border-radius: .65rem; cursor: pointer; white-space: nowrap; }
+.mapSync:disabled, .newAction:disabled { cursor: wait; opacity: .65; }
 .card { margin-bottom: 1.5rem; padding: clamp(1.1rem, 4vw, 2rem); background: var(--surface); border: 1px solid var(--border); border-radius: 1.15rem; }
 .card h2 { margin-top: 0; }
 .help { padding: .8rem 1rem; color: #315e52; background: #e9f5ed; border-left: .25rem solid var(--brand-green); border-radius: .5rem; }

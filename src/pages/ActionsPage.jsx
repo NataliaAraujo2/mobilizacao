@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useAuth } from "../auth/useAuth";
-import { addAction, deleteAction, deleteActionPhoto, listActionsPage, updateAction, uploadActionPhotos } from "../services/actionsService";
+import { addAction, deleteAction, deleteActionPhoto, listActionsPage, publishExistingActions, updateAction, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
 import { getBranchViewerByBranch } from "../services/branchViewersService";
 import { findAddressByCep } from "../services/cepService";
@@ -109,7 +109,9 @@ export default function ActionsPage() {
     setMessage("");
     setProgress("Salvando os dados da ação...");
     try {
-      const input = { ...form, address: { ...form.address, cep: form.address.cep.replace(/\D/g, "") } };
+      const branch = branches.find((item) => item.id === form.branchId);
+      if (!branch) throw new Error('Selecione uma coordenação estadual válida.');
+      const input = { ...form, coordinationState: branch.state, publicVisible: true, address: { ...form.address, cep: form.address.cep.replace(/\D/g, "") } };
       if (editingAction && ["before", "during", "after"].some((phase) => (editingAction[{ before: "photosBefore", during: "photosDuring", after: "photosAfter" }[phase]]?.length ?? 0) + photos[phase].length > 5)) {
         throw new Error("Cada etapa pode ter no máximo 5 fotos.");
       }
@@ -135,6 +137,18 @@ export default function ActionsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function publishExisting() {
+    if (!window.confirm('Atualizar as ações existentes para que apareçam no mapa público pela coordenação responsável?')) return;
+    setSaving(true); setError(''); setMessage('');
+    try {
+      const result = await publishExistingActions();
+      await recarregar({ search });
+      setMessage(result.updated ? `${result.updated} ação(ões) atualizada(s) para o mapa público.` : 'As ações já estão atualizadas para o mapa público.');
+    } catch (publishError) {
+      setError(publishError.message || 'Não foi possível atualizar as ações públicas.');
+    } finally { setSaving(false); }
   }
 
   async function removeExistingPhoto(photo) {
@@ -205,7 +219,7 @@ export default function ActionsPage() {
 
   return (
     <main className={styles.page}>
-      <PageHeading eyebrow="Administração nacional" title="Ações" meta={<span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span>} actions={<button type="button" className={styles.newAction} onClick={() => showForm ? closeForm() : setShowForm(true)}>{showForm ? (editingActionId ? 'Cancelar edição' : 'Cancelar nova ação') : 'Nova ação'}</button>} />
+      <PageHeading eyebrow="Administração nacional" title="Ações" meta={<span>{actions.length} carregada{actions.length === 1 ? "" : "s"}</span>} actions={<div className={styles.headingActions}><button type="button" className={styles.mapSync} disabled={saving} onClick={publishExisting}>Atualizar mapa público</button><button type="button" className={styles.newAction} onClick={() => showForm ? closeForm() : setShowForm(true)}>{showForm ? (editingActionId ? 'Cancelar edição' : 'Cancelar nova ação') : 'Nova ação'}</button></div>} />
 
       {showForm && <section className={styles.card} aria-labelledby="action-form-title">
         <h2 id="action-form-title">{editingActionId ? "Editar ação" : "Cadastrar ação"}</h2>

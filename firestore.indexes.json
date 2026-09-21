@@ -56,6 +56,15 @@
       ]
     },
     {
+      "collectionGroup": "actions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coordinationState", "order": "ASCENDING" },
+        { "fieldPath": "publicVisible", "order": "ASCENDING" },
+        { "fieldPath": "dateEnd", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [

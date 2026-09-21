@@ -12,6 +12,8 @@ import { ref, uploadBytes } from "firebase/storage";
 
 const PROJECT_ID = "campanha-mobilizacao-dev";
 let environment;
+const ACTION_START = new Date(Date.now() - 60 * 60 * 1000);
+const ACTION_END = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 const branch = (name, code, state) => ({
   name,
@@ -51,6 +53,13 @@ const volunteerPrivate = (volunteerId) => ({
   cpf: "52998224725",
   rg: "123456789",
   birthDate: "1950-05-20",
+  address: { cep: "01001000", street: "Praça da Sé", number: "1", complement: "", neighborhood: "Sé", city: "São Paulo", state: "SP" },
+  shirtSize: "M",
+  ngoRelationship: "Comunidade ou Projeto local",
+  lgpdAccepted: true,
+  regulationAccepted: true,
+  imageUseAccepted: true,
+  guardianAuthorizationAccepted: false,
   createdAt: null,
   updatedAt: null,
 });
@@ -59,9 +68,11 @@ const action = (branchId = "sp") => ({
   name: "Mutirão da Praça",
   nameSearch: "mutirao da praca",
   branchId,
-  date: "2026-09-13",
-  dateStart: Timestamp.fromDate(new Date("2026-09-13T00:00:00-03:00")),
-  dateEnd: Timestamp.fromDate(new Date("2026-09-14T00:00:00-03:00")),
+  coordinationState: branchId.toUpperCase(),
+  publicVisible: false,
+  date: "2026-09-21",
+  dateStart: Timestamp.fromDate(ACTION_START),
+  dateEnd: Timestamp.fromDate(ACTION_END),
   status: "planning",
   address: { cep: "01001000", street: "Praça da Sé", number: "1", complement: "", neighborhood: "Sé", city: "São Paulo", state: "SP", source: "cep" },
   whatToBring: "Luvas e água",
@@ -205,6 +216,19 @@ test("superAdmin cadastra ação e conta compartilhada apenas consulta a própri
     await setDoc(doc(context.firestore(), "actions", "action-rj"), action("rj"));
   });
   await assertFails(getDoc(doc(viewerDb, "actions", "action-rj")));
+});
+
+test("mapa público lê somente ações publicadas da coordenação", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "actions", "public-sp"), { ...action("sp"), publicVisible: true });
+    await setDoc(doc(db, "actions", "private-sp"), action("sp"));
+  });
+  const publicDb = environment.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(publicDb, "actions", "public-sp")));
+  await assertFails(getDoc(doc(publicDb, "actions", "private-sp")));
+  await assertSucceeds(getDocs(query(collection(publicDb, "actions"), where("coordinationState", "==", "SP"), where("publicVisible", "==", true))));
+  await assertFails(getDocs(query(collection(publicDb, "actions"), where("coordinationState", "==", "SP"))));
 });
 
 test("responsável regional registra presença somente em ação e voluntário da própria regional", async () => {

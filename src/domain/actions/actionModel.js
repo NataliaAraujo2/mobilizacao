@@ -16,6 +16,10 @@ export function createAction(input) {
     name: String(input.name ?? "").trim(),
     nameSearch: normalizeSearchText(input.name),
     branchId: String(input.branchId ?? "").trim(),
+    // A publicação no mapa é vinculada à coordenação responsável, e não ao
+    // estado do endereço onde a atividade acontece.
+    coordinationState: String(input.coordinationState ?? "").trim().toUpperCase(),
+    publicVisible: input.publicVisible !== false,
     // `date` permanece como início para regras existentes de inscrição e presença.
     date: startDate,
     startDate,
@@ -47,6 +51,7 @@ export function createAction(input) {
   };
   if (data.name.length < 3 || data.name.length > 160) throw new Error("Informe o nome da ação.");
   if (!data.branchId) throw new Error("Selecione uma coordenação estadual.");
+  if (!isBrazilStateCode(data.coordinationState)) throw new Error("Selecione uma coordenação estadual válida.");
   if (!dateStart || !endDateValue || Number.isNaN(dateStart.getTime()) || Number.isNaN(endDateValue.getTime())) throw new Error('Informe as datas de início e fim da ação.');
   if (endDateValue < dateStart) throw new Error('A data de fim não pode ser anterior à data de início.');
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) throw new Error('Informe os horários de início e fim da ação.');
