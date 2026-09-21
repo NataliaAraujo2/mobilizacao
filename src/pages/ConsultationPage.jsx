@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
+import QRCode from "qrcode";
 import { useAuth } from "../auth/useAuth";
 import AttendancePage from './AttendancePage';
 import { getBranch } from "../services/branchesService";
@@ -61,11 +62,50 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
         <div className={styles.detailWide}><dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd></div>
         <div className={styles.detailWide}><dt>Orientações</dt><dd>{action.tips || 'Nenhuma orientação adicional.'}</dd></div>
       </dl><ActionPhotoGallery action={action} /></section>
+    <ActionQrCodes action={action} />
     <nav className={`${styles.actions} ${styles.detailActions}`} aria-label="Participantes da ação">
       <button type="button" onClick={() => setView('volunteers')}>Voluntários inscritos e impressão</button>
       <button type="button" onClick={() => setView('attendance')}>Lista de presença</button>
     </nav>
   </main>;
+}
+
+function ActionQrCodes({ action }) {
+  const [codes, setCodes] = useState({ registration: "", attendance: "" });
+  const [error, setError] = useState("");
+  const urls = {
+    registration: `${window.location.origin}/participar/${action.id}`,
+    attendance: `${window.location.origin}/presenca/${action.id}`,
+  };
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      QRCode.toDataURL(urls.registration, { width: 240, margin: 2, errorCorrectionLevel: "M" }),
+      QRCode.toDataURL(urls.attendance, { width: 240, margin: 2, errorCorrectionLevel: "M" }),
+    ]).then(([registration, attendance]) => {
+      if (active) setCodes({ registration, attendance });
+    }).catch(() => {
+      if (active) setError("Não foi possível gerar os QR Codes.");
+    });
+    return () => { active = false; };
+  }, [urls.attendance, urls.registration]);
+
+  function download(kind) {
+    const link = document.createElement("a");
+    link.href = codes[kind];
+    link.download = `qr-${kind === "attendance" ? "presenca" : "inscricao"}-${action.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`;
+    link.click();
+  }
+
+  return <section className={styles.qrSection} aria-labelledby="action-qrs-title">
+    <div className={styles.qrHeading}><div><p>Divulgação e controle no local</p><h2 id="action-qrs-title">QR Codes da ação</h2></div><span>Use o código certo para cada momento.</span></div>
+    {error && <p role="alert" className={styles.error}>{error}</p>}
+    <div className={styles.qrGrid}>
+      <article className={styles.qrCard}><div><p>Inscrição</p><h3>Novos voluntários</h3><span>Abre o cadastro/login para participar desta ação.</span></div>{codes.registration && <img src={codes.registration} alt={`QR Code de inscrição para ${action.name}`} />}<button type="button" onClick={() => download("registration")}>Baixar QR de inscrição</button></article>
+      <article className={styles.qrCard}><div><p>Presença</p><h3>Confirmação no local</h3><span>Uso exclusivo de voluntários já inscritos, durante a ação.</span></div>{codes.attendance && <img src={codes.attendance} alt={`QR Code de presença para ${action.name}`} />}<button type="button" onClick={() => download("attendance")}>Baixar QR de presença</button></article>
+    </div>
+  </section>;
 }
 
 function ActionVolunteers({ action, branch, user, onBack }) {

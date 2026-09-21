@@ -28,6 +28,17 @@
 .detailWide { grid-column: 1 / -1; }
 .detailActions { justify-content: flex-start; }
 .actions { flex-wrap: wrap; }
+.qrSection { padding: clamp(1rem, 3vw, 1.5rem); margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; box-shadow: 0 .65rem 1.5rem rgb(0 97 168 / 5%); }
+.qrHeading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.qrHeading p, .qrCard p { margin: 0 0 .25rem; color: var(--accent); font-size: .72rem; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
+.qrHeading h2 { margin: 0; }
+.qrHeading > span { max-width: 20rem; color: var(--text-muted); text-align: right; }
+.qrGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.qrCard { display: grid; grid-template-columns: minmax(0, 1fr) 8.5rem; gap: .5rem 1rem; align-items: center; padding: 1rem; background: #f7fbfe; border: 1px solid #d8e7f0; border-radius: .85rem; }
+.qrCard h3 { margin: 0 0 .4rem; }
+.qrCard span { color: var(--text-muted); line-height: 1.45; }
+.qrCard img { width: 8.5rem; height: 8.5rem; padding: .35rem; background: white; border: 1px solid var(--border); border-radius: .65rem; }
+.qrCard button { grid-column: 1 / -1; min-height: 2.7rem; padding: .55rem .85rem; color: var(--brand-blue); font: inherit; font-weight: 850; background: white; border: 1px solid var(--border); border-radius: .6rem; cursor: pointer; }
 .back { margin-bottom: 1rem; padding: .7rem 1rem; background: white; color: var(--brand-blue); border: 1px solid var(--border); border-radius: .6rem; cursor: pointer; }
 .volunteer { display: grid; grid-template-columns: auto minmax(14rem, 1.5fr) repeat(2, minmax(8rem, 1fr)); align-items: center; gap: .8rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: .85rem; }
 .volunteer > div { display: grid; gap: .2rem; min-width: 0; }
@@ -45,13 +56,16 @@
   .number { grid-row: 1 / span 3; }
   .details dl { grid-template-columns: 1fr; }
   .detailWide { grid-column: auto; }
+  .qrHeading { align-items: start; flex-direction: column; }
+  .qrHeading > span { text-align: left; }
+  .qrGrid { grid-template-columns: 1fr; }
 }
 @media print {
   .back, .actions a, .actions form { display: none; }
   .searchForm, .loadMore { display: none; }
   .page { width: 100%; padding: 0; }
   .header { margin-bottom: 1rem; }
-  .readOnly, .actions button, .safety { display: none; }
+  .readOnly, .actions button, .safety, .qrSection { display: none; }
   .actions { padding: 0 0 .75rem; border: 0; }
   .volunteer { break-inside: avoid; grid-template-columns: auto minmax(12rem, 1.5fr) repeat(2, 1fr); padding: .55rem; font-size: 10pt; border-radius: 0; }
 }
