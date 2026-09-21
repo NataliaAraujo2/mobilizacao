@@ -36,6 +36,7 @@ const FIRESTORE_OPERATORS = {
   serverTimestamp: null,
   writeBatch: null,
   arrayUnion: null,
+  arrayRemove: null,
   connectFirestoreEmulator: null,
 };
 

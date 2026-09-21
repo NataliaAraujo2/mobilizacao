@@ -237,7 +237,7 @@ export default function ActionsPage() {
             <label className={styles.wide}>Dicas e orientações<textarea rows="5" placeholder="Informações importantes para os participantes" value={form.tips} onChange={(event) => setForm({ ...form, tips: event.target.value })} /></label>
           </div></fieldset>
 
-          <fieldset><legend>Fotos</legend>{editingAction && <div className={styles.existingPhotos}><p>Fotos já cadastradas</p><ActionPhotoGallery action={editingAction} onRemove={removeExistingPhoto} removingPath={removingPhotoPath} /></div>}<p>{editingActionId ? 'Adicione novas fotos, se necessário.' : 'Até 5 fotos em cada etapa.'} As imagens serão reduzidas antes do envio para economizar internet e armazenamento.</p><div className={styles.photoGrid}>
+          <fieldset><legend>Fotos</legend>{editingAction && <div className={styles.existingPhotos}><p>Fotos já cadastradas</p><ActionPhotoGallery action={editingAction} grouped onRemove={removeExistingPhoto} removingPath={removingPhotoPath} /></div>}<p>{editingActionId ? 'Adicione novas fotos, se necessário.' : 'Até 5 fotos em cada etapa.'} As imagens serão reduzidas antes do envio para economizar internet e armazenamento.</p><div className={styles.photoGrid}>
             {[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} foto(s) selecionada(s)` : "Nenhuma foto selecionada"}</span></label>)}
           </div></fieldset>
 

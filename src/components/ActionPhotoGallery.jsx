@@ -9,7 +9,7 @@ const PHASES = [
   ["photosAfter", "Depois"],
 ];
 
-export default function ActionPhotoGallery({ action, onRemove, removingPath = '' }) {
+export default function ActionPhotoGallery({ action, onRemove, removingPath = '', grouped = false }) {
   const [photos, setPhotos] = useState([]);
   const [error, setError] = useState(false);
   const files = PHASES.flatMap(([field, label]) => (action[field] ?? []).map((file) => ({ ...file, field, label })));
@@ -27,8 +27,9 @@ export default function ActionPhotoGallery({ action, onRemove, removingPath = ''
   }, [action.id, photosKey]);
 
   if (!files.length) return null;
+  const photoCard = photo => <figure key={photo.path}><ImageFrame className={styles.photoFrame} src={photo.url} alt={`${photo.label}: ${photo.name || action.name}`} /><figcaption><span>{photo.label}</span>{onRemove && <button type="button" disabled={removingPath === photo.path} onClick={() => onRemove(photo)}>{removingPath === photo.path ? 'Excluindo…' : 'Excluir foto'}</button>}</figcaption></figure>;
   return <section className={styles.gallery} aria-label="Fotos da ação">
     <h3>Fotos da ação</h3>
-    {error ? <p>Não foi possível carregar as fotos agora.</p> : photos.length === 0 ? <p>Carregando fotos…</p> : <div>{photos.map((photo) => <figure key={photo.path}><ImageFrame className={styles.photoFrame} src={photo.url} alt={`${photo.label}: ${photo.name || action.name}`} /><figcaption><span>{photo.label}</span>{onRemove && <button type="button" disabled={removingPath === photo.path} onClick={() => onRemove(photo)}>{removingPath === photo.path ? 'Excluindo…' : 'Excluir foto'}</button>}</figcaption></figure>)}</div>}
+    {error ? <p>Não foi possível carregar as fotos agora.</p> : photos.length === 0 ? <p>Carregando fotos…</p> : grouped ? <div className={styles.phaseList}>{PHASES.map(([field, label]) => { const phasePhotos = photos.filter(photo => photo.field === field); return <section className={styles.phase} key={field}><h4>{label}</h4>{phasePhotos.length ? <div className={styles.photoGrid}>{phasePhotos.map(photoCard)}</div> : <p>Nenhuma foto nesta etapa.</p>}</section>; })}</div> : <div className={styles.photoGrid}>{photos.map(photoCard)}</div>}
   </section>;
 }

@@ -1,7 +1,11 @@
 .gallery { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .gallery h3 { margin: 0 0 .75rem; font-size: 1rem; }
 .gallery p { margin: 0; color: var(--text-muted); }
-.gallery > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; }
+.photoGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; }
+.phaseList { display: grid; gap: 1rem; }
+.phase { padding-top: .85rem; border-top: 1px solid var(--border); }
+.phase h4 { margin: 0 0 .55rem; color: var(--brand-blue); font-size: .9rem; }
+.phase p { font-size: .82rem; }
 .gallery figure { margin: 0; overflow: hidden; background: #f3f8f6; border: 1px solid var(--border); border-radius: .7rem; }
 .photoFrame { aspect-ratio: 1 / 1; }
 .gallery figcaption { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .45rem .6rem; color: var(--text-muted); font-size: .78rem; font-weight: 750; }
