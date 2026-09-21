@@ -3,11 +3,13 @@ import ContactInput from '../components/ContactInput';
 import PageHeading from '../components/PageHeading';
 import VolunteerRegulation from '../components/VolunteerRegulation';
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { createVolunteerRecords, isMinorBirthDate, maskCpf, NGO_RELATIONSHIPS, SHIRT_SIZES } from "../domain/volunteers/volunteerModel";
 import { BRAZIL_STATES } from '../domain/locations/brazilStates';
 import { getActionsByIds, listActionsByBranch } from '../services/actionsService';
+import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { getBranch, listBranches } from "../services/branchesService";
 import { createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
@@ -51,6 +53,9 @@ export default function VolunteersPage() {
   const [reportLoading, setReportLoading] = useState(false);
   const [reportReady, setReportReady] = useState(false);
   const [showRegulation, setShowRegulation] = useState(false);
+  const [actionsVolunteer, setActionsVolunteer] = useState(null);
+  const [modalActions, setModalActions] = useState([]);
+  const [loadingModalActions, setLoadingModalActions] = useState(false);
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listVolunteersPage({ branchId: filtros.branchId, cursor, pageSize })
@@ -196,6 +201,22 @@ export default function VolunteersPage() {
     }
   }
 
+  async function showVolunteerActions(volunteer) {
+    setActionsVolunteer(volunteer);
+    setModalActions([]);
+    setLoadingModalActions(true);
+    try {
+      setModalActions(await getActionsByIds(volunteer.actionIds ?? []));
+    } catch {
+      setError('Não foi possível carregar as ações deste voluntário.');
+    } finally { setLoadingModalActions(false); }
+  }
+
+  function closeVolunteerActions() {
+    setActionsVolunteer(null);
+    setModalActions([]);
+  }
+
   async function toggleStatus(volunteer) {
     const status = volunteer.status === "active" ? "blocked" : "active";
     setError("");
@@ -292,12 +313,13 @@ export default function VolunteersPage() {
                 <div><span>Nascimento</span><strong>{documents.birthDate.split("-").reverse().join("/")}</strong></div><div><span>Camiseta</span><strong>{documents.shirtSize || 'Não informado'}</strong></div><div><span>Vínculo com a ONG</span><strong>{documents.ngoRelationship || 'Não informado'}</strong></div>{documents.address && <div className={styles.wideDocument}><span>Endereço</span><strong>{[documents.address.street, documents.address.number, documents.address.complement, documents.address.neighborhood, documents.address.city, documents.address.state, documents.address.cep && `CEP ${formatCep(documents.address.cep)}`].filter(Boolean).join(', ')}</strong></div>}
                 <button type="button" className={styles.textButton} onClick={() => setShowFullCpf((current) => !current)}>{showFullCpf ? "Ocultar CPF" : "Mostrar CPF completo"}</button>
               </div>}
-              <div className={styles.actions}><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && (volunteer.accessStatus === 'active' || volunteer.accessStatus === 'blocked' ? <button type="button" disabled={saving} onClick={() => manageAccess(volunteer, true)}>Gerar nova senha</button> : <button type="button" disabled={saving} onClick={() => manageAccess(volunteer)}>Criar acesso individual</button>)}{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>
+              <div className={styles.actions}><button type="button" onClick={() => showVolunteerActions(volunteer)}>Ver ações</button><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && (volunteer.accessStatus === 'active' || volunteer.accessStatus === 'blocked' ? <button type="button" disabled={saving} onClick={() => manageAccess(volunteer, true)}>Gerar nova senha</button> : <button type="button" disabled={saving} onClick={() => manageAccess(volunteer)}>Criar acesso individual</button>)}{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>
             </article>;
           })}</div>
         )}
         {volunteers.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loadingVolunteers || saving} onClick={carregarMais}>{loadingVolunteers ? "Carregando..." : "Carregar mais voluntários"}</button>}
       </section>
+      {actionsVolunteer && createPortal(<div className={styles.modalBackdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeVolunteerActions(); }}><section className={styles.actionsModal} role="dialog" aria-modal="true" aria-labelledby="volunteer-actions-title" onMouseDown={event => event.stopPropagation()}><header><div><p>Ações do voluntário</p><h2 id="volunteer-actions-title">{actionsVolunteer.fullName}</h2></div><button type="button" aria-label="Fechar ações" onClick={closeVolunteerActions}>×</button></header>{loadingModalActions ? <p>Carregando ações…</p> : modalActions.length === 0 ? <p>Este voluntário não está vinculado a nenhuma ação.</p> : <div className={styles.modalActionList}>{modalActions.map(action => <article key={action.id}><h3>{action.name}</h3><p>{actionScheduleSummary(action)}</p><p>{action.address?.city}/{action.address?.state} · {action.address?.street}, {action.address?.number}</p></article>)}</div>}</section></div>, document.body)}
       <VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
     </main>
   );
