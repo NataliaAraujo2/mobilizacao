@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { formatPhone } from '../../functions/contactFields.js';
 import { createVolunteerAccount, enrollInAction, getPublicAction, listPublicActions, loginVolunteer, refreshVolunteerSession, removeCurrentAccount } from '../services/publicVolunteerService';
 import styles from './PublicActionsPanel.module.css';
@@ -71,7 +72,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
       <ActionPhotoGallery action={selected} />
       <button className={styles.participate} type="button" disabled={loading} onClick={beginParticipation}>{loading ? 'Concluindo…' : 'Quero participar'}</button>
     </article>}
-    {selected && showSignup && !user && <div className={styles.modalBackdrop} role="presentation"><section className={styles.signup} role="dialog" aria-modal="true" aria-labelledby="participation-title">
+    {selected && showSignup && !user && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.signup} role="dialog" aria-modal="true" aria-labelledby="participation-title">
       <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Primeiro acesso</button><button type="button" onClick={() => setMode('login')}>Já tenho conta</button></div><form onSubmit={submit}>
         {mode === 'signup' && <>
           <label>Nome completo<input required value={form.fullName} onChange={e => update({ fullName: e.target.value })} /></label><label>Telefone<input required value={form.phone} onChange={e => update({ phone: formatPhone(e.target.value) })} /></label><label>CPF<input required inputMode="numeric" value={form.cpf} onChange={e => update({ cpf: e.target.value })} /></label><label>RG<input required value={form.rg} onChange={e => update({ rg: e.target.value })} /></label><label>Data de nascimento<input required type="date" value={form.birthDate} onChange={e => update({ birthDate: e.target.value })} /></label>
@@ -81,7 +82,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
         </>}
         <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label><label>Senha<input required type="password" minLength="8" value={form.password} onChange={e => update({ password: e.target.value })} /></label><button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Criar conta e participar' : 'Entrar e participar'}</button>
       </form><button className={styles.back} type="button" onClick={() => { setShowSignup(false); setError(''); }}>← Voltar aos detalhes</button>
-    </section></div>}
+    </section></div>, document.body)}
     {error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
   </section>;
 }
