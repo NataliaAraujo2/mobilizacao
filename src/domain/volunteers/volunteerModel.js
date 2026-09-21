@@ -4,6 +4,16 @@ const CPF_LENGTH = 11;
 export const NGO_RELATIONSHIPS = Object.freeze(['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família']);
 export const SHIRT_SIZES = Object.freeze(['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO']);
 
+export function isMinorBirthDate(value, today = new Date()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value ?? ''))) return false;
+  const birth = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) return false;
+  let age = today.getFullYear() - birth.getFullYear();
+  const birthdayThisYear = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+  if (today < birthdayThisYear) age -= 1;
+  return age < 18;
+}
+
 function digits(value) {
   return String(value ?? "").replace(/\D/g, "");
 }
@@ -60,10 +70,11 @@ export function createVolunteerRecords(input) {
   if (!/^\d{8}$/.test(address.cep) || !address.street || !address.number || !address.neighborhood || !address.city || !isBrazilStateCode(address.state)) throw new Error('Preencha o endereço completo do voluntário.');
   if (!SHIRT_SIZES.includes(shirtSize)) throw new Error('Selecione o tamanho da camiseta.');
   if (!NGO_RELATIONSHIPS.includes(ngoRelationship)) throw new Error('Selecione o vínculo com a ONG.');
-  if (input.lgpdAccepted !== true || input.regulationAccepted !== true) throw new Error('É necessário aceitar a LGPD e o regulamento.');
+  if (input.lgpdAccepted !== true || input.regulationAccepted !== true || input.imageUseAccepted !== true) throw new Error('É necessário aceitar a LGPD, o regulamento e a autorização de uso de imagem.');
+  if (isMinorBirthDate(birthDate) && input.guardianAuthorizationAccepted !== true) throw new Error('Para menores de idade, é necessária a autorização do responsável.');
 
   return {
     publicData: { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds, regionalIds, participationDates, status: input.status ?? "active", accessStatus: input.accessStatus ?? "none", createdAt: null, updatedAt: null },
-    privateData: { cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, createdAt: null, updatedAt: null },
+    privateData: { cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: input.guardianAuthorizationAccepted === true, createdAt: null, updatedAt: null },
   };
 }

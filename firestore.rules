@@ -104,8 +104,8 @@ service cloud.firestore {
     }
 
     function validVolunteerPrivate(data, volunteerId) {
-      return data.keys().hasAll(['volunteerId', 'cpf', 'rg', 'birthDate', 'address', 'shirtSize', 'ngoRelationship', 'lgpdAccepted', 'regulationAccepted', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['volunteerId', 'cpf', 'rg', 'birthDate', 'address', 'shirtSize', 'ngoRelationship', 'lgpdAccepted', 'regulationAccepted', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['volunteerId', 'cpf', 'rg', 'birthDate', 'address', 'shirtSize', 'ngoRelationship', 'lgpdAccepted', 'regulationAccepted', 'imageUseAccepted', 'guardianAuthorizationAccepted', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['volunteerId', 'cpf', 'rg', 'birthDate', 'address', 'shirtSize', 'ngoRelationship', 'lgpdAccepted', 'regulationAccepted', 'imageUseAccepted', 'guardianAuthorizationAccepted', 'createdAt', 'updatedAt'])
         && data.volunteerId == volunteerId
         && data.cpf is string
         && data.cpf.matches('^[0-9]{11}$')
@@ -124,7 +124,8 @@ service cloud.firestore {
         && data.address.state is string && isBrazilState(data.address.state)
         && data.shirtSize in ['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO']
         && data.ngoRelationship in ['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família']
-        && data.lgpdAccepted == true && data.regulationAccepted == true;
+        && data.lgpdAccepted == true && data.regulationAccepted == true
+        && data.imageUseAccepted == true && data.guardianAuthorizationAccepted is bool;
     }
 
     function validAction(data) {

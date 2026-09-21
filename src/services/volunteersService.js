@@ -110,6 +110,7 @@ export async function updateVolunteer(id, input) {
     cpf: records.privateData.cpf, rg: records.privateData.rg, birthDate: records.privateData.birthDate,
     address: records.privateData.address, shirtSize: records.privateData.shirtSize, ngoRelationship: records.privateData.ngoRelationship,
     lgpdAccepted: records.privateData.lgpdAccepted, regulationAccepted: records.privateData.regulationAccepted,
+    imageUseAccepted: records.privateData.imageUseAccepted, guardianAuthorizationAccepted: records.privateData.guardianAuthorizationAccepted,
     updatedAt: timestamp,
   });
   await batch.commit();
@@ -141,10 +142,5 @@ export async function createVolunteerAccess(id) { return callVolunteerAccess('cr
 export async function resetVolunteerPassword(id) { return callVolunteerAccess('resetPassword', id); }
 
 export async function deleteVolunteer(id) {
-  await callVolunteerAccess('delete', id);
-  const { db, doc, writeBatch } = await getDbService(['doc', 'writeBatch']);
-  const batch = writeBatch(db);
-  batch.delete(doc(db, 'volunteers', id));
-  batch.delete(doc(db, 'volunteerPrivate', id));
-  await batch.commit();
+  return callVolunteerAccess('delete', id);
 }

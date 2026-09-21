@@ -41,6 +41,14 @@ function actionPhase(action, now = new Date()) {
   return 'completed';
 }
 
+function isMinorBirthDate(birthDate, today = new Date()) {
+  const birth = new Date(`${birthDate}T00:00:00-03:00`);
+  if (Number.isNaN(birth.getTime())) return false;
+  let age = today.getFullYear() - birth.getFullYear();
+  if (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age -= 1;
+  return age < 18;
+}
+
 function requiredText(value, field, min = 2, max = 120) {
   if (typeof value !== "string" || value.trim().length < min || value.trim().length > max) {
     throw new HttpsError("invalid-argument", `Campo inválido: ${field}.`);
@@ -175,12 +183,12 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   if (!validCpf(cpf)) throw new HttpsError('invalid-argument', 'CPF inválido.');
   if (phone && !isValidPhone(phone, 13)) throw new HttpsError('invalid-argument', 'Telefone inválido.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new HttpsError('invalid-argument', 'Data de nascimento inválida.');
-  if (!/^\d{8}$/.test(address.cep) || !BRAZIL_STATE_CODES.has(address.state) || !['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO'].includes(shirtSize) || !['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família'].includes(ngoRelationship) || profile.lgpdAccepted !== true || profile.regulationAccepted !== true) throw new HttpsError('invalid-argument', 'Dados complementares do voluntário inválidos.');
+  if (!/^\d{8}$/.test(address.cep) || !BRAZIL_STATE_CODES.has(address.state) || !['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO'].includes(shirtSize) || !['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família'].includes(ngoRelationship) || profile.lgpdAccepted !== true || profile.regulationAccepted !== true || profile.imageUseAccepted !== true || (isMinorBirthDate(birthDate) && profile.guardianAuthorizationAccepted !== true)) throw new HttpsError('invalid-argument', 'Dados complementares ou autorizações do voluntário inválidos.');
   const duplicateCpf = await db.collection('volunteerPrivate').where('cpf', '==', cpf).limit(1).get();
   if (!duplicateCpf.empty) throw new HttpsError('already-exists', 'Este CPF já possui cadastro. Entre com sua conta ou solicite nova senha.');
   const batch = db.batch();
   batch.set(volunteerRef, { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'active', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted === true, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   await batch.commit();
   await getAuth().updateUser(request.auth.uid, { displayName: fullName });
   await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });
@@ -482,6 +490,10 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   }
   if (action === 'delete') {
     try { await auth.deleteUser(volunteerId); } catch (error) { if (error.code !== 'auth/user-not-found') throw new HttpsError('internal', 'Não foi possível excluir o acesso.'); }
+    const batch = getFirestore().batch();
+    batch.delete(reference);
+    batch.delete(getFirestore().collection('volunteerPrivate').doc(volunteerId));
+    await batch.commit();
     return { ok: true };
   }
   let account;
