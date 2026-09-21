@@ -9,7 +9,7 @@
 .filters button { color: white; font-weight: 800; background: var(--brand-blue); cursor: pointer; }
 .sheet header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
 .sheet h2, .sheet p { margin: 0; }
-.details { display: grid; gap: .4rem; margin-top: 1rem; padding: .85rem; background: #f3f7fa; border-radius: .65rem; }
+.search { margin-top: 1rem; padding: .85rem; background: #f3f7fa; border-radius: .65rem; }
 .callNotice { margin-top: 1rem !important; padding: .75rem; color: #6f4a17; background: #fff2dc; border-radius: .65rem; }
 .sheet ol { display: grid; gap: .55rem; padding: 0; list-style: none; }
 .sheet li label { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .85rem; min-height: 3.2rem; padding: .7rem; border-bottom: 1px solid var(--border); cursor: pointer; }

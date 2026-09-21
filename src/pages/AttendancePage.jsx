@@ -4,6 +4,7 @@ import { listActionsByBranch } from '../services/actionsService';
 import { getAttendanceSession, listAttendance, setVolunteerAttendance, startAttendanceSession } from '../services/attendanceService';
 import { listBranches } from '../services/branchesService';
 import { listCoordinationActionVolunteers } from '../services/volunteersService';
+import ListSearch from '../components/ListSearch';
 import styles from './AttendancePage.module.css';
 
 function today() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); }
@@ -21,6 +22,7 @@ export default function AttendancePage({ fixedAction = null }) {
   const [loading, setLoading] = useState(false);
   const [savingId, setSavingId] = useState('');
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   const loadActionVolunteers = useCallback(async () => {
     let cursor = null; let hasMore = true; const rows = [];
@@ -67,6 +69,7 @@ export default function AttendancePage({ fixedAction = null }) {
   const selectedAction = actions.find(item => item.id === actionId);
   const attendanceEffective = sessionStarted || Boolean(selectedAction?.date && selectedAction.date < today());
   const canEditAttendance = isSuperAdmin || selectedAction?.date === today();
+  const filteredVolunteers = volunteers.filter((volunteer) => volunteer.fullName.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
   return <main className={styles.page}>
     <header><p>{isSuperAdmin ? 'Administração nacional' : 'Minha coordenação estadual'}</p><h1>Lista de presença</h1><span>{fixedAction ? fixedAction.name : 'Selecione uma ação para imprimir os nomes e registrar as presenças.'}</span></header>
     <section className={styles.filters}>
@@ -77,10 +80,10 @@ export default function AttendancePage({ fixedAction = null }) {
     {error && <p className={styles.error} role="alert">{error}</p>}
     {actionId && <section className={styles.sheet} aria-busy={loading}>
       <header><div><h2>{selectedAction?.name}</h2><p>{selectedAction?.address?.street}, {selectedAction?.address?.number} · {selectedAction?.address?.city}/{selectedAction?.address?.state}</p></div><p>{volunteers.length} voluntário(s){attendanceEffective ? ` · ${presentIds.size} presente(s) · ${volunteers.length - presentIds.size} ausente(s)` : ' · chamada não iniciada'}</p></header>
-      {(selectedAction?.whatToBring || selectedAction?.tips) && <div className={styles.details}>{selectedAction.whatToBring && <p><strong>O que levar:</strong> {selectedAction.whatToBring}</p>}{selectedAction.tips && <p><strong>Orientações:</strong> {selectedAction.tips}</p>}</div>}
+      <div className={styles.search}><ListSearch label="Buscar voluntário" placeholder="Nome do voluntário" initialValue="" onSearch={setSearch} disabled={loading} /></div>
       {!attendanceEffective && volunteers.length > 0 && <p className={styles.callNotice}>A chamada ainda não começou. Ao marcar a primeira presença, os demais passarão a constar como ausentes.</p>}
       {!isSuperAdmin && selectedAction?.date !== today() && <p className={styles.callNotice}>{selectedAction?.date < today() ? 'A chamada foi encerrada. Somente o superadmin pode fazer correções.' : 'A presença poderá ser registrada no dia da ação.'}</p>}
-      {loading ? <p>Carregando…</p> : volunteers.length === 0 ? <p>Nenhum voluntário vinculado a esta ação.</p> : <ol>{volunteers.map(volunteer => <li key={volunteer.id}><label><input type="checkbox" checked={presentIds.has(volunteer.id)} disabled={!canEditAttendance || savingId === volunteer.id} onChange={event => toggle(volunteer.id, event.target.checked)} /><strong>{volunteer.fullName}</strong><span>{!attendanceEffective ? 'Participante' : presentIds.has(volunteer.id) ? 'Presente' : 'Ausente'}</span></label></li>)}</ol>}
+      {loading ? <p>Carregando…</p> : volunteers.length === 0 ? <p>Nenhum voluntário vinculado a esta ação.</p> : filteredVolunteers.length === 0 ? <p>Nenhum voluntário encontrado para a busca.</p> : <ol>{filteredVolunteers.map(volunteer => <li key={volunteer.id}><label><input type="checkbox" checked={presentIds.has(volunteer.id)} disabled={!canEditAttendance || savingId === volunteer.id} onChange={event => toggle(volunteer.id, event.target.checked)} /><strong>{volunteer.fullName}</strong><span>{!attendanceEffective ? 'Participante' : presentIds.has(volunteer.id) ? 'Presente' : 'Ausente'}</span></label></li>)}</ol>}
     </section>}
   </main>;
 }
