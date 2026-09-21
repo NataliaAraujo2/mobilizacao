@@ -35,7 +35,7 @@
 .mapIntro > p:last-child, .mapResult { margin: .35rem 0 .75rem; color: var(--text-muted); }
 .mapResult strong { color: var(--text); }
 .mapLayout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(1rem, 3vw, 2rem); }
-.mapWithActions { grid-template-columns: minmax(18rem, .75fr) minmax(0, 1.55fr); }
+.mapWithActions { grid-template-columns: minmax(0, 1fr) minmax(19rem, 25rem); }
 .mapCanvas { min-width: 0; display: grid; justify-items: center; }
 .actionsModal { position: sticky; top: 1rem; min-width: 0; max-height: min(42rem, calc(100vh - 2rem)); padding: 1rem; overflow: auto; background: white; border: 1px solid #c9dfed; border-left: .35rem solid var(--brand-orange); border-radius: 1rem; box-shadow: 0 .8rem 2rem rgb(0 97 168 / 14%); }
 .actionsModal > header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; padding-bottom: .7rem; color: var(--brand-blue); border-bottom: 1px solid var(--border); }
@@ -99,7 +99,6 @@
   .legacyCopy > p:not(.eyebrow) { margin-inline: auto; }
   .legacyActions { justify-content: center; }
 }
-@media (max-width: 980px) and (min-width: 721px) { .mapWithActions { grid-template-columns: 1fr; } .actionsModal { position: static; max-height: none; } }
 @media (max-width: 420px) {
   .page { padding: .75rem; }
   .activeCampaign { border-radius: 1.1rem; }

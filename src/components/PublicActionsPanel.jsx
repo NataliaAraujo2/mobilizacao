@@ -61,6 +61,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   }
 
   function openDetails(action) { setSelected(action); setShowSignup(false); setError(''); }
+  function closeDetails() { setSelected(null); setShowSignup(false); setError(''); }
   function beginParticipation() {
     if (user && claims?.role === 'volunteer') return joinExisting(selected);
     if (user) return setError('Saia da conta administrativa para entrar como voluntário.');
@@ -76,16 +77,12 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     <button className={styles.participate} type="button" disabled={loading} onClick={beginParticipation}>{loading ? 'Concluindo…' : 'Quero participar'}</button>
   </article>;
   return <section className={styles.panel} aria-live="polite">
-    {!actionId && <div className={styles.explorer}>
-      <section className={styles.actionList} aria-label="Lista de ações">
+    {!actionId && <section className={styles.actionChooser} aria-label="Lista de ações">
         <h3>Ações disponíveis</h3>
-        {loading ? <p>Carregando ações…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <button className={`${styles.actionChoice} ${selected?.id === action.id ? styles.selectedChoice : ''}`} type="button" key={action.id} onClick={() => openDetails(action)}><span className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</span><strong>{action.name}</strong><span>{action.address.street}, {action.address.number}</span><small>{actionScheduleSummary(action)}</small></button>)}</div>}
-      </section>
-      <section className={styles.detailPane} aria-live="polite">
-        {selectedDetails || <div className={styles.emptyDetails}><p className={styles.municipality}>Detalhes da ação</p><h3>Escolha uma ação</h3><p>Selecione uma ação na lista para conhecer os detalhes, as fotos e confirmar sua participação.</p></div>}
-      </section>
-    </div>}
+        {loading ? <p>Carregando ações…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <button className={styles.actionChoice} type="button" key={action.id} onClick={() => openDetails(action)}><span className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</span><strong>{action.name}</strong><span>{action.address.street}, {action.address.number}</span><small>{actionScheduleSummary(action)}</small><b>Ver detalhes <span aria-hidden="true">→</span></b></button>)}</div>}
+      </section>}
     {actionId && selectedDetails}
+    {selected && !actionId && !showSignup && createPortal(<div className={styles.modalBackdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeDetails(); }}><section className={styles.actionModal} role="dialog" aria-modal="true" aria-labelledby="action-details-title" onMouseDown={event => event.stopPropagation()}><header><div><p className={styles.municipality}>Detalhes da ação</p><h2 id="action-details-title">Informações da ação</h2></div><button className={styles.close} type="button" aria-label="Fechar detalhes da ação" onClick={closeDetails}>×</button></header>{selectedDetails}</section></div>, document.body)}
     {selected && showSignup && !user && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.signup} role="dialog" aria-modal="true" aria-labelledby="participation-title">
       <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Primeiro acesso</button><button type="button" onClick={() => setMode('login')}>Já tenho conta</button></div><form onSubmit={submit}>
         {mode === 'signup' && <>
