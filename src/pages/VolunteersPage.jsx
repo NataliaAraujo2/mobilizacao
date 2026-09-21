@@ -9,6 +9,7 @@ import { useAuth } from "../auth/useAuth";
 import { createVolunteerRecords, isMinorBirthDate, maskCpf, NGO_RELATIONSHIPS, SHIRT_SIZES } from "../domain/volunteers/volunteerModel";
 import { BRAZIL_STATES } from '../domain/locations/brazilStates';
 import { getActionsByIds, listActionsByBranch } from '../services/actionsService';
+import { findAddressByCep } from '../services/cepService';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { getBranch, listBranches } from "../services/branchesService";
 import { createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
@@ -56,6 +57,8 @@ export default function VolunteersPage() {
   const [actionsVolunteer, setActionsVolunteer] = useState(null);
   const [modalActions, setModalActions] = useState([]);
   const [loadingModalActions, setLoadingModalActions] = useState(false);
+  const [searchingCep, setSearchingCep] = useState(false);
+  const [cepMessage, setCepMessage] = useState('');
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
     listVolunteersPage({ branchId: filtros.branchId, cursor, pageSize })
@@ -125,6 +128,35 @@ export default function VolunteersPage() {
       setShowForm(true);
     setForm(EMPTY_FORM);
     setActionBranchId(ownBranchId);
+  }
+
+  async function completeAddressFromCep(value) {
+    const cep = String(value ?? '').replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    setSearchingCep(true);
+    setCepMessage('Buscando endereço…');
+    try {
+      const result = await findAddressByCep(cep);
+      setForm((current) => {
+        if (current.address.cep.replace(/\D/g, '') !== cep) return current;
+        return {
+          ...current,
+          address: {
+            ...current.address,
+            cep: formatCep(result.cep),
+            street: result.street,
+            neighborhood: result.neighborhood,
+            city: result.city,
+            state: result.state,
+          },
+        };
+      });
+      setCepMessage('Endereço preenchido pelo CEP. Informe apenas o número e, se necessário, o complemento.');
+    } catch (cepError) {
+      setCepMessage(cepError.message || 'Não foi possível consultar o CEP. Preencha o endereço manualmente.');
+    } finally {
+      setSearchingCep(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -279,7 +311,7 @@ export default function VolunteersPage() {
           <label>CPF<input required inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={form.cpf} onChange={(event) => setForm({ ...form, cpf: formatCpf(event.target.value) })} /></label>
           <label>RG<input required minLength="3" maxLength="20" autoComplete="off" value={form.rg} onChange={(event) => setForm({ ...form, rg: event.target.value })} /></label>
           <label>Data de nascimento<input required type="date" autoComplete="bday" max={new Date().toISOString().slice(0, 10)} value={form.birthDate} onChange={(event) => setForm({ ...form, birthDate: event.target.value })} /></label>
-          <fieldset className={styles.actionChoices}><legend>Endereço do voluntário</legend><div className={styles.addressGrid}><label>CEP<input required inputMode="numeric" placeholder="00000-000" value={formatCep(form.address.cep)} onChange={event => setForm({ ...form, address: { ...form.address, cep: formatCep(event.target.value) } })} /></label><label>Logradouro<input required value={form.address.street} onChange={event => setForm({ ...form, address: { ...form.address, street: event.target.value } })} /></label><label>Número<input required value={form.address.number} onChange={event => setForm({ ...form, address: { ...form.address, number: event.target.value } })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={event => setForm({ ...form, address: { ...form.address, complement: event.target.value } })} /></label><label>Bairro<input required value={form.address.neighborhood} onChange={event => setForm({ ...form, address: { ...form.address, neighborhood: event.target.value } })} /></label><label>Cidade<input required value={form.address.city} onChange={event => setForm({ ...form, address: { ...form.address, city: event.target.value } })} /></label><label>Estado<select required value={form.address.state} onChange={event => setForm({ ...form, address: { ...form.address, state: event.target.value } })}><option value="">Selecione</option>{BRAZIL_STATES.map(state => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label></div></fieldset>
+          <fieldset className={styles.actionChoices}><legend>Endereço do voluntário</legend><div className={styles.addressGrid}><label>CEP<input required inputMode="numeric" placeholder="00000-000" value={formatCep(form.address.cep)} onChange={event => { const cep = formatCep(event.target.value); setForm(current => ({ ...current, address: { ...current.address, cep } })); setCepMessage(''); if (cep.replace(/\D/g, '').length === 8) completeAddressFromCep(cep); }} />{searchingCep && <small className={styles.cepStatus}>Buscando endereço…</small>}</label><label>Logradouro<input required value={form.address.street} onChange={event => setForm({ ...form, address: { ...form.address, street: event.target.value } })} /></label><label>Número<input required value={form.address.number} onChange={event => setForm({ ...form, address: { ...form.address, number: event.target.value } })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={event => setForm({ ...form, address: { ...form.address, complement: event.target.value } })} /></label><label>Bairro<input required value={form.address.neighborhood} onChange={event => setForm({ ...form, address: { ...form.address, neighborhood: event.target.value } })} /></label><label>Cidade<input required value={form.address.city} onChange={event => setForm({ ...form, address: { ...form.address, city: event.target.value } })} /></label><label>Estado<select required value={form.address.state} onChange={event => setForm({ ...form, address: { ...form.address, state: event.target.value } })}><option value="">Selecione</option>{BRAZIL_STATES.map(state => <option key={state.code} value={state.code}>{state.code} — {state.name}</option>)}</select></label></div>{cepMessage && <p className={styles.cepStatus} role="status">{cepMessage}</p>}</fieldset>
           <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={event => setForm({ ...form, shirtSize: event.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label>
           <label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={event => setForm({ ...form, ngoRelationship: event.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
           <fieldset className={styles.actionChoices}><legend>Confirmações</legend><label><input required type="checkbox" checked={form.lgpdAccepted} onChange={event => setForm({ ...form, lgpdAccepted: event.target.checked })} />Li e aceito o tratamento dos meus dados pessoais conforme a LGPD.</label><div className={styles.regulationAcceptance}><label><input required type="checkbox" checked={form.regulationAccepted} onChange={event => setForm({ ...form, regulationAccepted: event.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.textButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div><label><input required type="checkbox" checked={form.imageUseAccepted} onChange={event => setForm({ ...form, imageUseAccepted: event.target.checked })} />Autorizo a divulgação da imagem do voluntário nas fotos e materiais institucionais da ONG Moradia e Cidadania.</label>{isMinorBirthDate(form.birthDate) && <label><input required type="checkbox" checked={form.guardianAuthorizationAccepted} onChange={event => setForm({ ...form, guardianAuthorizationAccepted: event.target.checked })} />Declaro que o responsável legal autorizou a participação do menor e a divulgação de sua imagem.</label>}</fieldset>
