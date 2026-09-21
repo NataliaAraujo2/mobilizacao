@@ -14,6 +14,7 @@ export async function getPublicAction(actionId) { return [await getPublicActionB
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }
 export function getVolunteerDashboard() { return call('getVolunteerDashboard', {}); }
+export function confirmVolunteerAttendance(actionId) { return call('confirmVolunteerAttendance', { actionId }); }
 
 export async function createVolunteerAccount(email, password) {
   const service = await getAuthService();

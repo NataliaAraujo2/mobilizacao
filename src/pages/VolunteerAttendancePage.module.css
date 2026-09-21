@@ -1,0 +1,12 @@
+.page { display: grid; min-height: calc(100vh - 4.25rem); place-items: center; padding: 1rem; }
+.card { display: grid; width: min(100%, 38rem); gap: 1rem; padding: clamp(1.4rem, 5vw, 2.5rem); background: white; border: 1px solid var(--border); border-top: .4rem solid var(--brand-orange); border-radius: 1.2rem; box-shadow: 0 1rem 3rem rgb(0 97 168 / 14%); }
+.eyebrow { margin: 0; color: var(--brand-orange); font-size: .75rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.card h1, .card h2, .card p { margin: 0; }
+.card h1, .card h2 { color: var(--brand-blue); }
+.card > p:not(.eyebrow):not(.error) { color: var(--text-muted); line-height: 1.55; }
+article { display: grid; gap: .45rem; padding: 1rem; background: #f4f8fa; border: 1px solid #d9e6ee; border-radius: .75rem; }
+article p { color: var(--text-muted); line-height: 1.4; }
+button { min-height: 3rem; padding: .65rem .9rem; color: white; font: inherit; font-weight: 850; background: var(--brand-blue); border: 0; border-radius: .65rem; cursor: pointer; }
+button:disabled { cursor: wait; opacity: .65; }
+.secondary { color: var(--brand-blue); background: white; border: 1px solid var(--border); }
+.error { color: #a22b2b; font-weight: 750; }

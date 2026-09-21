@@ -23,7 +23,7 @@ const SuperAdminsPage = lazy(() => import("./pages/SuperAdminsPage"));
 const LinkFormsPage = lazy(() => import("./pages/LinkFormsPage"));
 const PublicLinkFormPage = lazy(() => import("./pages/PublicLinkFormPage"));
 const PublicActionPage = lazy(() => import("./pages/PublicActionPage"));
-const MaintenancePage = lazy(() => import("./pages/MaintenancePage"));
+const VolunteerAttendancePage = lazy(() => import("./pages/VolunteerAttendancePage"));
 
 export default function App() {
   return (
@@ -49,7 +49,7 @@ export default function App() {
           <Route path="admin/formularios" element={<LinkFormsPage />} />
           <Route path="admin/voluntarios" element={<VolunteersPage />} />
           <Route path="admin/acoes" element={<ActionsPage />} />
-          <Route path="admin/presencas" element={<MaintenancePage />} />
+          <Route path="admin/presencas" element={<AttendancePage />} />
           <Route path="admin/contador-associados" element={<AssociatesCounterPage />} />
           <Route path="admin/relatorio-2025" element={<ReportsAdminPage />} />
           <Route path="admin/superadmins" element={<SuperAdminsPage />} />
@@ -65,11 +65,12 @@ export default function App() {
           <Route path="consulta" element={<ConsultationPage />} />
         </Route>
         <Route element={<RequireAuth allowedRoles={["superAdmin", "branchViewer"]} />}>
-          <Route path="presencas" element={<MaintenancePage />} />
+          <Route path="presencas" element={<AttendancePage />} />
         </Route>
 
         <Route element={<RequireAuth allowedRoles={["volunteer"]} />}>
           <Route path="voluntario" element={<VolunteerAreaPage />} />
+          <Route path="presenca/:actionId" element={<VolunteerAttendancePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

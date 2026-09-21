@@ -185,7 +185,7 @@ export default function ActionsPage() {
   }
 
   async function showQrCode(action) {
-    const url = `${window.location.origin}/participar/${action.id}`;
+    const url = `${window.location.origin}/presenca/${action.id}`;
     setQrAction({ ...action, publicUrl: url });
     setQrDataUrl(await QRCode.toDataURL(url, { width: 320, margin: 2, errorCorrectionLevel: "M" }));
   }
@@ -196,7 +196,7 @@ export default function ActionsPage() {
   }
 
   function qrMessage(viewer) {
-    return `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction?.name}”. Ele abre diretamente o cadastro/login do voluntário para esta ação.\n\nLink da ação: ${qrAction?.publicUrl}`;
+    return `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction?.name}”. Ele abre a confirmação de presença do voluntário no local.\n\nLink da ação: ${qrAction?.publicUrl}`;
   }
 
   async function shareQrWithCoordinator(channel) {

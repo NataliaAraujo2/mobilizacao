@@ -11,7 +11,7 @@ const SUPERADMIN_IDLE_NOTICE_KEY = "mobilizacao.superadmin-idle-expired";
 export default function AuthProvider({ children }) {
   const { pathname } = useLocation();
   const [session, setSession] = useState({ user: null, claims: null, loading: true, checked: false });
-  const needsSession = pathname === "/login" || pathname.startsWith("/admin") || pathname.startsWith("/consulta") || pathname.startsWith("/presencas") || pathname.startsWith("/voluntario") || pathname.startsWith("/2026");
+  const needsSession = pathname === "/login" || pathname.startsWith("/admin") || pathname.startsWith("/consulta") || pathname.startsWith("/presencas") || pathname.startsWith("/presenca") || pathname.startsWith("/voluntario") || pathname.startsWith("/2026");
 
   useEffect(() => {
     if (!needsSession) {

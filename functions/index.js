@@ -13,7 +13,6 @@ export { manageLinkForms, publicLinkForms } from './formsFunctions.js';
 
 const REGION = "southamerica-east1";
 const VIEWER_ROLE = "branchViewer";
-const VIEWER_EMAIL_DOMAIN = "acesso.mobilizacao.invalid";
 const VOLUNTEER_ROLE = "volunteer";
 const BRAZIL_STATE_CODES = new Set('AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' '));
 const REPORT_YEAR = "2025";
@@ -214,6 +213,35 @@ export const getVolunteerDashboard = onCall(PUBLIC_FUNCTION_OPTIONS, async (requ
     sessionActionIds: sessionSnapshots.filter((item) => item.exists).map((item) => item.id),
     presentActionIds: attendanceSnapshots.filter((item) => item.exists && item.data().present === true).map((item) => item.data().actionId),
   };
+});
+
+export const confirmVolunteerAttendance = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || request.auth.token.role !== VOLUNTEER_ROLE || request.auth.token.status !== 'active') {
+    throw new HttpsError('permission-denied', 'Entre com sua conta de voluntário para confirmar a presença.');
+  }
+  const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
+  if (actionId.includes('/')) throw new HttpsError('invalid-argument', 'Ação inválida.');
+  const db = getFirestore();
+  const [actionSnapshot, volunteerSnapshot] = await Promise.all([
+    db.collection('actions').doc(actionId).get(),
+    db.collection('volunteers').doc(request.auth.uid).get(),
+  ]);
+  if (!actionSnapshot.exists || !volunteerSnapshot.exists) throw new HttpsError('not-found', 'Ação ou cadastro de voluntário não encontrado.');
+  const action = actionSnapshot.data();
+  const volunteer = volunteerSnapshot.data();
+  if (volunteer.status !== 'active' || !(volunteer.actionIds ?? []).includes(actionId)) {
+    throw new HttpsError('permission-denied', 'Sua conta não está inscrita nesta ação.');
+  }
+  if (actionPhase(action) !== 'ongoing') {
+    throw new HttpsError('failed-precondition', 'A presença pode ser confirmada somente durante o horário da ação.');
+  }
+  const attendanceRef = db.collection('attendance').doc(`${actionId}_${request.auth.uid}`);
+  const sessionRef = db.collection('attendanceSessions').doc(actionId);
+  const batch = db.batch();
+  batch.set(sessionRef, { actionId, branchId: action.branchId, startedAt: FieldValue.serverTimestamp() }, { merge: true });
+  batch.set(attendanceRef, { actionId, branchId: action.branchId, volunteerId: request.auth.uid, present: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  await batch.commit();
+  return { ok: true, actionName: action.name };
 });
 
 export const backfillPublicActions = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
