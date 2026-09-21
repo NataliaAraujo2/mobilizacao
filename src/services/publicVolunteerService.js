@@ -10,6 +10,7 @@ export function listPublicActions(state) { return call('publicVolunteerActions',
 export function getPublicAction(actionId) { return call('publicVolunteerActions', { actionId }); }
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }
+export function getVolunteerDashboard() { return call('getVolunteerDashboard', {}); }
 
 export async function createVolunteerAccount(email, password) {
   const service = await getAuthService();

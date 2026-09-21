@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/useAuth';
-import { getActionsByIds } from '../services/actionsService';
-import { getAttendanceSession, listMyAttendance } from '../services/attendanceService';
-import { getVolunteer } from '../services/volunteersService';
-import { withdrawFromAction } from '../services/publicVolunteerService';
+import { getVolunteerDashboard, withdrawFromAction } from '../services/publicVolunteerService';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import styles from './VolunteerAreaPage.module.css';
@@ -29,13 +26,10 @@ export default function VolunteerAreaPage() {
 
   useEffect(() => {
     let current = true;
-    getVolunteer(user.uid).then(async profile => {
-      const items = await getActionsByIds(profile.actionIds ?? []);
-      const attendance = await Promise.all(items.map(async action => {
-        const [session, presence] = await Promise.all([getAttendanceSession(action.id), listMyAttendance(action.id, user.uid)]);
-        const status = action.date < today() || session ? (presence ? 'Presente' : 'Ausente') : 'Participante';
-        return [action.id, status];
-      }));
+    getVolunteerDashboard().then(({ volunteer: profile, actions: items, sessionActionIds, presentActionIds }) => {
+      const sessions = new Set(sessionActionIds);
+      const presents = new Set(presentActionIds);
+      const attendance = items.map(action => [action.id, action.date < today() || sessions.has(action.id) ? (presents.has(action.id) ? 'Presente' : 'Ausente') : 'Participante']);
       if (current) { setVolunteer(profile); setActions(items); setStatuses(Object.fromEntries(attendance)); }
     }).catch(() => { if (current) setError('Não foi possível carregar suas ações.'); }).finally(() => { if (current) setLoading(false); });
     return () => { current = false; };

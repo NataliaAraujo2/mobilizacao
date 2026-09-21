@@ -216,6 +216,27 @@ export const withdrawVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request)
   return { ok: true };
 });
 
+export const getVolunteerDashboard = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || request.auth.token.role !== VOLUNTEER_ROLE || request.auth.token.status !== 'active') {
+    throw new HttpsError('permission-denied', 'Acesso de voluntário necessário.');
+  }
+  const db = getFirestore();
+  const volunteerSnapshot = await db.collection('volunteers').doc(request.auth.uid).get();
+  if (!volunteerSnapshot.exists) throw new HttpsError('not-found', 'Cadastro de voluntário não encontrado.');
+  const volunteer = volunteerSnapshot.data();
+  const actionIds = [...new Set(volunteer.actionIds ?? [])].filter(Boolean).slice(0, 20);
+  const actionSnapshots = actionIds.length ? await db.getAll(...actionIds.map((id) => db.collection('actions').doc(id))) : [];
+  const actions = actionSnapshots.filter((item) => item.exists).map((item) => ({ id: item.id, ...item.data() }));
+  const sessionSnapshots = actions.length ? await db.getAll(...actions.map((action) => db.collection('attendanceSessions').doc(action.id))) : [];
+  const attendanceSnapshots = actions.length ? await db.getAll(...actions.map((action) => db.collection('attendance').doc(`${action.id}_${request.auth.uid}`))) : [];
+  return {
+    volunteer: { id: volunteerSnapshot.id, fullName: volunteer.fullName },
+    actions,
+    sessionActionIds: sessionSnapshots.filter((item) => item.exists).map((item) => item.id),
+    presentActionIds: attendanceSnapshots.filter((item) => item.exists && item.data().present === true).map((item) => item.data().actionId),
+  };
+});
+
 async function getBranch(branchId) {
   const snapshot = await getFirestore().collection("branches").doc(branchId).get();
   if (!snapshot.exists) throw new HttpsError("not-found", "A coordenação estadual informada não existe.");
