@@ -139,9 +139,13 @@ function ActionVolunteers({ action, branch, user, onBack }) {
         remaining = result.hasMore;
       }
       if (mountedRef.current) {
-        const rows = volunteersRef.current.map((volunteer) => ({ Nome: volunteer.fullName }));
+        const rows = volunteersRef.current.map((volunteer, index) => ({
+          "Nº": index + 1,
+          Nome: volunteer.fullName,
+        }));
         const workbook = XLSX.utils.book_new();
         const worksheet = XLSX.utils.json_to_sheet(rows);
+        worksheet["!cols"] = [{ wch: 8 }, { wch: 42 }];
         XLSX.utils.book_append_sheet(workbook, worksheet, "Voluntários");
         const fileName = `voluntarios-${action.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.xlsx`;
         XLSX.writeFile(workbook, fileName);
