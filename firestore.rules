@@ -129,7 +129,7 @@ service cloud.firestore {
     }
 
     function validAction(data) {
-      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'coordinationState', 'publicVisible', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+      return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
         && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'coordinationState', 'publicVisible', 'date', 'dateStart', 'dateEnd', 'startDate', 'endDate', 'startTime', 'endTime', 'scheduleText', 'description', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
         && data.name is string
         && data.name.size() >= 3
@@ -139,9 +139,11 @@ service cloud.firestore {
         && data.nameSearch.size() <= 160
         && data.branchId is string
         && data.branchId.size() > 0
-        && data.coordinationState is string
-        && isBrazilState(data.coordinationState)
-        && data.publicVisible is bool
+        // Ações anteriores à publicação do mapa podem não ter estes campos.
+        // Elas seguem editáveis pelo superAdmin; só ficam visíveis ao público
+        // depois que a rotina de atualização acrescentá-los.
+        && (!data.keys().hasAll(['coordinationState']) || (data.coordinationState is string && isBrazilState(data.coordinationState)))
+        && (!data.keys().hasAll(['publicVisible']) || data.publicVisible is bool)
         && data.date is string
         && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
         && data.dateStart is timestamp

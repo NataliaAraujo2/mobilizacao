@@ -231,6 +231,17 @@ test("mapa público lê somente ações publicadas da coordenação", async () =
   await assertFails(getDocs(query(collection(publicDb, "actions"), where("coordinationState", "==", "SP"))));
 });
 
+test("superAdmin ainda edita ação antiga que não possui os campos do mapa", async () => {
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const legacy = action("sp");
+    delete legacy.coordinationState;
+    delete legacy.publicVisible;
+    await setDoc(doc(context.firestore(), "actions", "legacy-sp"), legacy);
+  });
+  const db = auth("god-admin", "superAdmin").firestore();
+  await assertSucceeds(updateDoc(doc(db, "actions", "legacy-sp"), { tips: "Orientação atualizada" }));
+});
+
 test("responsável regional registra presença somente em ação e voluntário da própria regional", async () => {
   await environment.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
