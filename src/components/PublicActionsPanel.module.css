@@ -12,8 +12,11 @@
 .details :global(.gallery) { margin-top: .55rem; }
 .back { justify-self: start; min-height: auto !important; padding: .15rem 0 !important; color: var(--brand-blue) !important; background: transparent !important; }
 .participate { width: 100%; margin-top: .35rem; }
-.signup { display: grid; gap: .65rem; }
+.modalBackdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: clamp(.75rem, 3vw, 2rem); background: rgb(13 35 55 / 58%); }
+.signup { display: grid; width: min(100%, 52rem); max-height: calc(100vh - 2rem); gap: .85rem; padding: clamp(1rem, 3vw, 1.5rem); overflow: auto; background: white; border: 1px solid #c9dfed; border-top: .35rem solid var(--brand-orange); border-radius: 1rem; box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 30%); }
 .signup h3 { margin: 0; }
+.modalHeader { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.close { display: grid; flex: 0 0 auto; width: 2.25rem; height: 2.25rem; min-height: 0 !important; place-items: center; padding: 0 !important; color: var(--brand-blue) !important; font-size: 1.55rem !important; line-height: 1; background: white !important; border: 1px solid var(--border) !important; }
 .tabs { display: flex; gap: .5rem; }
 .tabs button { flex: 1; }
 .signup form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
@@ -28,4 +31,4 @@
 .regulationButton { min-height: 2.45rem !important; padding: .45rem .7rem !important; color: var(--brand-blue) !important; background: white !important; border: 1px solid var(--border) !important; }
 .signup form > button { grid-column: 1 / -1; }
 .error { margin: .8rem 0 0; color: #a22b2b; font-weight: 750; }
-@media (max-width: 600px) { .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } }
+@media (max-width: 600px) { .modalBackdrop { padding: .5rem; } .signup { max-height: calc(100vh - 1rem); padding: 1rem; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } }
