@@ -130,7 +130,7 @@ export default function CampaignGateway() {
         </button>
         {mapVisible && <div id="mapa-acoes-publico" className={styles.publicMap}>
           <div className={styles.mapIntro}><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
-          <div className={styles.mapLayout}>
+          <div className={`${styles.mapLayout} ${selectedState ? styles.mapWithActions : ''}`}>
             <div className={styles.mapCanvas}>
               <BrazilMap selectedState={selectedState} onSelectState={setSelectedState} />
               <p className={styles.mapResult} aria-live="polite">{selectedState ? <>Estado selecionado: <strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name} ({selectedState})</strong></> : "Nenhum estado selecionado."}</p>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useAuth } from "../auth/useAuth";
-import { addAction, deleteAction, listActionsPage, updateAction, uploadActionPhotos } from "../services/actionsService";
+import { addAction, deleteAction, deleteActionPhoto, listActionsPage, updateAction, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
 import { getBranchViewerByBranch } from "../services/branchViewersService";
 import { findAddressByCep } from "../services/cepService";
@@ -32,7 +32,7 @@ export default function ActionsPage() {
   const [searchingCep, setSearchingCep] = useState(false);
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState("");
-  const [photoActionId, setPhotoActionId] = useState("");
+  const [removingPhotoPath, setRemovingPhotoPath] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [qrAction, setQrAction] = useState(null);
@@ -58,6 +58,7 @@ export default function ActionsPage() {
   useEffect(() => { recarregar({ search }); }, [recarregar, search]);
 
   if (detailsAction) return <CoordinationActionDetails action={detailsAction} branch={branches.find((branch) => branch.id === detailsAction.branchId)} user={user} onBack={() => setDetailsAction(null)} />;
+  const editingAction = editingActionId ? actions.find((action) => action.id === editingActionId) : null;
 
   function updateAddress(field, value) {
     setForm((current) => ({ ...current, address: { ...current.address, [field]: value, source: field === "cep" ? current.address.source : "manual" } }));
@@ -109,14 +110,19 @@ export default function ActionsPage() {
     setProgress("Salvando os dados da ação...");
     try {
       const input = { ...form, address: { ...form.address, cep: form.address.cep.replace(/\D/g, "") } };
+      if (editingAction && ["before", "during", "after"].some((phase) => (editingAction[{ before: "photosBefore", during: "photosDuring", after: "photosAfter" }[phase]]?.length ?? 0) + photos[phase].length > 5)) {
+        throw new Error("Cada etapa pode ter no máximo 5 fotos.");
+      }
+      let actionForPhotos;
       if (editingActionId) {
         await updateAction(editingActionId, input);
+        actionForPhotos = { id: editingActionId, branchId: input.branchId };
       } else {
-        const created = await addAction(input);
-        for (const phase of ["before", "during", "after"]) {
-          if (photos[phase].length) {
-            await uploadActionPhotos(created, phase, photos[phase], (done, total) => setProgress(`Enviando fotos: ${done} de ${total}`));
-          }
+        actionForPhotos = await addAction(input);
+      }
+      for (const phase of ["before", "during", "after"]) {
+        if (photos[phase].length) {
+          await uploadActionPhotos(actionForPhotos, phase, photos[phase], (done, total) => setProgress(`Enviando fotos: ${done} de ${total}`));
         }
       }
       await recarregar({ search });
@@ -131,30 +137,17 @@ export default function ActionsPage() {
     }
   }
 
-  async function addMorePhotos(event, action) {
-    event.preventDefault();
-    const limits = { before: action.photosBefore?.length ?? 0, during: action.photosDuring?.length ?? 0, after: action.photosAfter?.length ?? 0 };
-    if (Object.keys(limits).some((phase) => limits[phase] + photos[phase].length > 5)) {
-      setError("Cada etapa pode ter no máximo 5 fotos.");
-      return;
-    }
-    setSaving(true);
-    setError("");
-    setProgress("Preparando as novas fotos...");
+  async function removeExistingPhoto(photo) {
+    if (!editingActionId || saving || !window.confirm('Excluir esta foto permanentemente?')) return;
+    setSaving(true); setRemovingPhotoPath(photo.path); setError(''); setMessage('');
     try {
-      for (const phase of ["before", "during", "after"]) {
-        if (photos[phase].length) await uploadActionPhotos(action, phase, photos[phase], (done, total) => setProgress(`Enviando fotos: ${done} de ${total}`));
-      }
+      await deleteActionPhoto(editingActionId, photo);
       await recarregar({ search });
-      setPhotos(EMPTY_PHOTOS);
-      setPhotoActionId("");
-      setProgress("");
-      setMessage("Fotos adicionadas à ação.");
-    } catch (uploadError) {
-      setError(uploadError.message || "Não foi possível enviar as fotos.");
-      setProgress("");
+      setMessage('Foto excluída com sucesso.');
+    } catch (removeError) {
+      setError(removeError.message || 'Não foi possível excluir a foto.');
     } finally {
-      setSaving(false);
+      setSaving(false); setRemovingPhotoPath('');
     }
   }
 
@@ -166,7 +159,6 @@ export default function ActionsPage() {
     setProgress("Excluindo ação, vínculos e fotos...");
     try {
       await deleteAction(action.id);
-      if (photoActionId === action.id) setPhotoActionId("");
       setPhotos(EMPTY_PHOTOS);
       await recarregar({ search });
       setMessage("Ação excluída com sucesso.");
@@ -245,7 +237,7 @@ export default function ActionsPage() {
             <label className={styles.wide}>Dicas e orientações<textarea rows="5" placeholder="Informações importantes para os participantes" value={form.tips} onChange={(event) => setForm({ ...form, tips: event.target.value })} /></label>
           </div></fieldset>
 
-          <fieldset><legend>Fotos</legend><p>Até 5 fotos em cada etapa. As imagens serão reduzidas antes do envio para economizar internet e armazenamento.</p><div className={styles.photoGrid}>
+          <fieldset><legend>Fotos</legend>{editingAction && <div className={styles.existingPhotos}><p>Fotos já cadastradas</p><ActionPhotoGallery action={editingAction} onRemove={removeExistingPhoto} removingPath={removingPhotoPath} /></div>}<p>{editingActionId ? 'Adicione novas fotos, se necessário.' : 'Até 5 fotos em cada etapa.'} As imagens serão reduzidas antes do envio para economizar internet e armazenamento.</p><div className={styles.photoGrid}>
             {[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} foto(s) selecionada(s)` : "Nenhuma foto selecionada"}</span></label>)}
           </div></fieldset>
 
@@ -256,10 +248,9 @@ export default function ActionsPage() {
         {message && <p className={styles.success} role="status">{message}</p>}
       </section>}
 
-      <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => <article key={action.id}>
-        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => startEdit(action)}>Editar ação</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button type="button" disabled={saving} onClick={() => { setPhotoActionId(photoActionId === action.id ? "" : action.id); setPhotos(EMPTY_PHOTOS); }}>{photoActionId === action.id ? "Cancelar" : "Adicionar fotos"}</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
-        {photoActionId === action.id && <><ActionPhotoGallery action={action} /><form className={styles.morePhotos} onSubmit={(event) => addMorePhotos(event, action)}><p>Escolha somente as novas fotos. O limite é de 5 por etapa.</p><div className={styles.photoGrid}>{[["before", "Antes"], ["during", "Durante"], ["after", "Depois"]].map(([phase, label]) => <label className={styles.photoField} key={phase}><strong>{label}</strong><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => selectPhotos(phase, event.target.files)} /><span>{photos[phase].length ? `${photos[phase].length} selecionada(s)` : "Nenhuma nova foto"}</span></label>)}</div><button className={styles.submit} type="submit" disabled={saving || !Object.values(photos).some((items) => items.length)}>{saving ? "Enviando..." : "Enviar novas fotos"}</button></form></>}
-      </article>)}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
+      <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => { const branch = branches.find((item) => item.id === action.branchId); return <article key={action.id}>
+        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><p className={styles.branchName}>Coordenação: {branch?.name ?? 'Não identificada'}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => startEdit(action)}>Editar ação</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
+      </article>; })}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
       {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('whatsapp')}>{sharingQr ? 'Preparando envio…' : 'Enviar pelo WhatsApp'}</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('email')}>Enviar por e-mail</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
     </main>
   );

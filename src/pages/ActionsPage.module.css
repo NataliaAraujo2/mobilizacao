@@ -26,6 +26,10 @@
 .photoField { padding: 1rem; background: #f4f9fc; border: 1px dashed var(--brand-blue); border-radius: .75rem; }
 .photoField input { min-height: auto; padding: .55rem 0; border: 0; }
 .photoField span { color: var(--text-muted); font-size: .82rem; font-weight: 500; }
+.branchName { margin: .3rem 0; color: var(--brand-blue); font-size: .86rem; font-weight: 750; }
+.existingPhotos { margin: 0 0 1rem; padding: .9rem; background: #f8fbfc; border: 1px solid var(--border); border-radius: .75rem; }
+.existingPhotos > p { margin: 0; color: var(--brand-blue); font-weight: 800; }
+.existingPhotos :global(.gallery) { margin-top: .55rem; }
 .submit { justify-self: start; min-width: 12rem; }
 .progress, .success { color: var(--brand-green); font-weight: 750; }
 .error { color: #a22b2b; font-weight: 750; }

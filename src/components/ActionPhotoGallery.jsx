@@ -9,10 +9,10 @@ const PHASES = [
   ["photosAfter", "Depois"],
 ];
 
-export default function ActionPhotoGallery({ action }) {
+export default function ActionPhotoGallery({ action, onRemove, removingPath = '' }) {
   const [photos, setPhotos] = useState([]);
   const [error, setError] = useState(false);
-  const files = PHASES.flatMap(([field, label]) => (action[field] ?? []).map((file) => ({ ...file, label })));
+  const files = PHASES.flatMap(([field, label]) => (action[field] ?? []).map((file) => ({ ...file, field, label })));
   const photosKey = files.map((file) => file.path).join('|');
 
   useEffect(() => {
@@ -29,6 +29,6 @@ export default function ActionPhotoGallery({ action }) {
   if (!files.length) return null;
   return <section className={styles.gallery} aria-label="Fotos da ação">
     <h3>Fotos da ação</h3>
-    {error ? <p>Não foi possível carregar as fotos agora.</p> : photos.length === 0 ? <p>Carregando fotos…</p> : <div>{photos.map((photo) => <figure key={photo.path}><ImageFrame src={photo.url} alt={`${photo.label}: ${photo.name || action.name}`} /><figcaption>{photo.label}</figcaption></figure>)}</div>}
+    {error ? <p>Não foi possível carregar as fotos agora.</p> : photos.length === 0 ? <p>Carregando fotos…</p> : <div>{photos.map((photo) => <figure key={photo.path}><ImageFrame className={styles.photoFrame} src={photo.url} alt={`${photo.label}: ${photo.name || action.name}`} /><figcaption><span>{photo.label}</span>{onRemove && <button type="button" disabled={removingPath === photo.path} onClick={() => onRemove(photo)}>{removingPath === photo.path ? 'Excluindo…' : 'Excluir foto'}</button>}</figcaption></figure>)}</div>}
   </section>;
 }

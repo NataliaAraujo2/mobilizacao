@@ -34,7 +34,8 @@
 .publicMap h3 { margin: .25rem 0; color: var(--brand-blue); font-size: clamp(1.35rem, 3vw, 1.8rem); }
 .mapIntro > p:last-child, .mapResult { margin: .35rem 0 .75rem; color: var(--text-muted); }
 .mapResult strong { color: var(--text); }
-.mapLayout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(19rem, 25rem); align-items: start; gap: clamp(1rem, 3vw, 2rem); }
+.mapLayout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(1rem, 3vw, 2rem); }
+.mapWithActions { grid-template-columns: minmax(0, 1fr) minmax(19rem, 25rem); }
 .mapCanvas { min-width: 0; display: grid; justify-items: center; }
 .actionsModal { position: sticky; top: 1rem; max-height: min(42rem, calc(100vh - 2rem)); padding: 1rem; overflow: auto; background: white; border: 1px solid #c9dfed; border-left: .35rem solid var(--brand-orange); border-radius: 1rem; box-shadow: 0 .8rem 2rem rgb(0 97 168 / 14%); }
 .actionsModal > header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; padding-bottom: .7rem; color: var(--brand-blue); border-bottom: 1px solid var(--border); }
@@ -84,7 +85,7 @@
   .mapLogo { grid-row: 1; width: min(60vw, 15rem); }
   .mapLogoButton { grid-row: 1; }
   .publicMap { grid-column: 1; }
-  .mapLayout { grid-template-columns: 1fr; }
+  .mapLayout, .mapWithActions { grid-template-columns: 1fr; }
   .actionsModal { position: static; max-height: none; }
   .kitLeaves { left: -2rem; }
   .kitGrowing { right: -3rem; bottom: 18%; }

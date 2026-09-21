@@ -98,3 +98,12 @@ export async function uploadActionPhotos(action, phase, files, onProgress) {
     onProgress?.(index + 1, files.length);
   }
 }
+
+export async function deleteActionPhoto(actionId, photo) {
+  const field = photo.field;
+  if (!['photosBefore', 'photosDuring', 'photosAfter'].includes(field) || !photo.path) throw new Error('Foto inválida.');
+  const { storage, ref, deleteObject } = await getStorageService();
+  const { db, arrayRemove, doc, serverTimestamp, updateDoc } = await getDbService(['arrayRemove', 'doc', 'serverTimestamp', 'updateDoc']);
+  await updateDoc(doc(db, 'actions', actionId), { [field]: arrayRemove({ path: photo.path, name: photo.name, size: photo.size }), updatedAt: serverTimestamp() });
+  await deleteObject(ref(storage, photo.path)).catch(() => {});
+}
