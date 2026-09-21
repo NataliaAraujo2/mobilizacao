@@ -16,6 +16,7 @@ export default function VolunteerAttendancePage() {
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
+    if (!user?.uid) return undefined;
     let active = true;
     getVolunteerDashboard().then(({ actions, presentActionIds }) => {
       const item = actions.find(current => current.id === actionId);
@@ -23,7 +24,7 @@ export default function VolunteerAttendancePage() {
       if (active) { setAction(item); setConfirmed(presentActionIds.includes(actionId)); }
     }).catch(err => { if (active) setError(err.message || 'Não foi possível validar sua presença.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [actionId, user.uid]);
+  }, [actionId, user?.uid]);
 
   async function confirm() {
     setBusy(true); setError('');
@@ -32,5 +33,6 @@ export default function VolunteerAttendancePage() {
     finally { setBusy(false); }
   }
 
-  return <main className={styles.page}><section className={styles.card}>{loading ? <p>Validando sua inscrição…</p> : error && !action ? <><h1>Presença não confirmada</h1><p className={styles.error}>{error}</p><button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button></> : <><p className={styles.eyebrow}>Confirmação no local</p><h1>{confirmed ? 'Presença confirmada!' : 'Confirmar presença'}</h1><p>{confirmed ? 'Sua presença já foi registrada nesta ação.' : 'Você está no local da ação? Confirme abaixo para registrar sua presença.'}</p><article><h2>{action.name}</h2><p>{actionScheduleSummary(action)}</p><p>{action.address.street}, {action.address.number} · {action.address.city}/{action.address.state}</p></article>{!confirmed && <button type="button" disabled={busy} onClick={confirm}>{busy ? 'Confirmando…' : 'Confirmar minha presença'}</button>}{error && <p className={styles.error} role="alert">{error}</p>}<button className={styles.secondary} type="button" onClick={() => navigate('/voluntario')}>Voltar para minha área</button></>}</section></main>;
+  const address = action?.address ?? {};
+  return <main className={styles.page}><section className={styles.card}>{loading ? <p role="status">Validando sua inscrição…</p> : !action ? <><h1>Presença não confirmada</h1><p className={styles.error} role="alert">{error || 'Não foi possível abrir esta confirmação de presença.'}</p><button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button></> : <><p className={styles.eyebrow}>Confirmação no local</p><h1>{confirmed ? 'Presença confirmada!' : 'Confirmar presença'}</h1><p>{confirmed ? 'Sua presença já foi registrada nesta ação.' : 'Você está no local da ação? Confirme abaixo para registrar sua presença.'}</p><article><h2>{action.name}</h2><p>{actionScheduleSummary(action)}</p><p>{[address.street, address.number].filter(Boolean).join(', ') || 'Endereço não informado'} · {[address.city, address.state].filter(Boolean).join('/') || 'local não informado'}</p></article>{!confirmed && <button type="button" disabled={busy} onClick={confirm}>{busy ? 'Confirmando…' : 'Confirmar minha presença'}</button>}{error && <p className={styles.error} role="alert">{error}</p>}<button className={styles.secondary} type="button" onClick={() => navigate('/voluntario')}>Voltar para minha área</button></>}</section></main>;
 }

@@ -5,9 +5,8 @@ import { getAttendanceSession, listAttendance, setVolunteerAttendance, startAtte
 import { listBranches } from '../services/branchesService';
 import { listCoordinationActionVolunteers } from '../services/volunteersService';
 import ListSearch from '../components/ListSearch';
+import { actionStatus } from '../domain/actions/actionSchedule';
 import styles from './AttendancePage.module.css';
-
-function today() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }); }
 
 export default function AttendancePage({ fixedAction = null }) {
   const { claims } = useAuth();
@@ -47,7 +46,7 @@ export default function AttendancePage({ fixedAction = null }) {
   }, [branchId, fixedAction]);
 
   useEffect(() => {
-    if (!actionId) { setVolunteers([]); setPresentIds(new Set()); setSessionStarted(false); return; }
+    if (!actionId) { setVolunteers([]); setPresentIds(new Set()); setSessionStarted(false); setSearch(''); return; }
     let current = true; setLoading(true); setError('');
     Promise.all([loadActionVolunteers(), listAttendance(actionId, branchId), getAttendanceSession(actionId)])
       .then(([items, attendance, session]) => { if (current) { setVolunteers(items); setPresentIds(attendance); setSessionStarted(Boolean(session)); } })
@@ -67,8 +66,9 @@ export default function AttendancePage({ fixedAction = null }) {
   }
 
   const selectedAction = actions.find(item => item.id === actionId);
-  const attendanceEffective = sessionStarted || Boolean(selectedAction?.date && selectedAction.date < today());
-  const canEditAttendance = isSuperAdmin || selectedAction?.date === today();
+  const phase = selectedAction ? actionStatus(selectedAction) : 'planning';
+  const attendanceEffective = sessionStarted || phase === 'completed';
+  const canEditAttendance = isSuperAdmin || phase === 'ongoing';
   const filteredVolunteers = volunteers.filter((volunteer) => volunteer.fullName.toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
   return <main className={styles.page}>
     <header><p>{isSuperAdmin ? 'Administração nacional' : 'Minha coordenação estadual'}</p><h1>Lista de presença</h1><span>{fixedAction ? fixedAction.name : 'Selecione uma ação para imprimir os nomes e registrar as presenças.'}</span></header>
@@ -82,7 +82,7 @@ export default function AttendancePage({ fixedAction = null }) {
       <header><div><h2>{selectedAction?.name}</h2><p>{selectedAction?.address?.street}, {selectedAction?.address?.number} · {selectedAction?.address?.city}/{selectedAction?.address?.state}</p></div><p>{volunteers.length} voluntário(s){attendanceEffective ? ` · ${presentIds.size} presente(s) · ${volunteers.length - presentIds.size} ausente(s)` : ' · chamada não iniciada'}</p></header>
       <div className={styles.search}><ListSearch label="Buscar voluntário" placeholder="Nome do voluntário" initialValue="" onSearch={setSearch} disabled={loading} /></div>
       {!attendanceEffective && volunteers.length > 0 && <p className={styles.callNotice}>A chamada ainda não começou. Ao marcar a primeira presença, os demais passarão a constar como ausentes.</p>}
-      {!isSuperAdmin && selectedAction?.date !== today() && <p className={styles.callNotice}>{selectedAction?.date < today() ? 'A chamada foi encerrada. Somente o superadmin pode fazer correções.' : 'A presença poderá ser registrada no dia da ação.'}</p>}
+      {!isSuperAdmin && phase !== 'ongoing' && <p className={styles.callNotice}>{phase === 'completed' ? 'A chamada foi encerrada porque a ação terminou. Somente o superadmin pode fazer correções.' : 'A presença poderá ser registrada a partir do horário de início da ação.'}</p>}
       {loading ? <p>Carregando…</p> : volunteers.length === 0 ? <p>Nenhum voluntário vinculado a esta ação.</p> : filteredVolunteers.length === 0 ? <p>Nenhum voluntário encontrado para a busca.</p> : <ol>{filteredVolunteers.map(volunteer => <li key={volunteer.id}><label><input type="checkbox" checked={presentIds.has(volunteer.id)} disabled={!canEditAttendance || savingId === volunteer.id} onChange={event => toggle(volunteer.id, event.target.checked)} /><strong>{volunteer.fullName}</strong><span>{!attendanceEffective ? 'Participante' : presentIds.has(volunteer.id) ? 'Presente' : 'Ausente'}</span></label></li>)}</ol>}
     </section>}
   </main>;

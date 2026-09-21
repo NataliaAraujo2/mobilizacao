@@ -19,7 +19,7 @@ function destinationForRole(role) {
 function permittedDestination(role, requestedPath) {
   if (!requestedPath) return destinationForRole(role);
   if (role === "superAdmin" && requestedPath.startsWith("/admin")) return requestedPath;
-  if (role === "volunteer" && requestedPath === "/voluntario") return requestedPath;
+  if (role === "volunteer" && (requestedPath === "/voluntario" || requestedPath.startsWith("/presenca/"))) return requestedPath;
   if (role === "branchViewer" && requestedPath === "/consulta") return requestedPath;
   return destinationForRole(role);
 }
