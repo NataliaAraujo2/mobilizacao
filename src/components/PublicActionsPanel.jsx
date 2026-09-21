@@ -70,17 +70,22 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   if (!state && !actionId) return null;
   const update = patch => setForm({ ...form, ...patch });
   const updateAddress = patch => update({ address: { ...form.address, ...patch } });
+  const selectedDetails = selected && <article className={styles.details}>
+    <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><p><strong>Quando:</strong> {actionScheduleSummary(selected)}</p><p><strong>Local:</strong> {selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</p>{selected.description && <p><strong>Sobre a ação:</strong> {selected.description}</p>}{selected.whatToBring && <p><strong>O que levar:</strong> {selected.whatToBring}</p>}{selected.tips && <p><strong>Orientações:</strong> {selected.tips}</p>}
+    <ActionPhotoGallery action={selected} />
+    <button className={styles.participate} type="button" disabled={loading} onClick={beginParticipation}>{loading ? 'Concluindo…' : 'Quero participar'}</button>
+  </article>;
   return <section className={styles.panel} aria-live="polite">
-    {!selected && <>
-      <h3>Ações disponíveis</h3>
-      {loading ? <p>Carregando…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <article key={action.id}><p className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</p><h4>{action.name}</h4><p><strong>Quando:</strong> {actionScheduleSummary(action)}</p><button type="button" onClick={() => openDetails(action)}>Ver detalhes</button></article>)}</div>}
-    </>}
-    {selected && !showSignup && <article className={styles.details}>
-      {!actionId && <button className={styles.back} type="button" onClick={() => { setSelected(null); setError(''); }}>← Todas as ações</button>}
-      <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><p><strong>Quando:</strong> {actionScheduleSummary(selected)}</p><p><strong>Local:</strong> {selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</p>{selected.description && <p><strong>Sobre a ação:</strong> {selected.description}</p>}{selected.whatToBring && <p><strong>O que levar:</strong> {selected.whatToBring}</p>}{selected.tips && <p><strong>Orientações:</strong> {selected.tips}</p>}
-      <ActionPhotoGallery action={selected} />
-      <button className={styles.participate} type="button" disabled={loading} onClick={beginParticipation}>{loading ? 'Concluindo…' : 'Quero participar'}</button>
-    </article>}
+    {!actionId && <div className={styles.explorer}>
+      <section className={styles.actionList} aria-label="Lista de ações">
+        <h3>Ações disponíveis</h3>
+        {loading ? <p>Carregando ações…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <button className={`${styles.actionChoice} ${selected?.id === action.id ? styles.selectedChoice : ''}`} type="button" key={action.id} onClick={() => openDetails(action)}><span className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</span><strong>{action.name}</strong><span>{action.address.street}, {action.address.number}</span><small>{actionScheduleSummary(action)}</small></button>)}</div>}
+      </section>
+      <section className={styles.detailPane} aria-live="polite">
+        {selectedDetails || <div className={styles.emptyDetails}><p className={styles.municipality}>Detalhes da ação</p><h3>Escolha uma ação</h3><p>Selecione uma ação na lista para conhecer os detalhes, as fotos e confirmar sua participação.</p></div>}
+      </section>
+    </div>}
+    {actionId && selectedDetails}
     {selected && showSignup && !user && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.signup} role="dialog" aria-modal="true" aria-labelledby="participation-title">
       <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Primeiro acesso</button><button type="button" onClick={() => setMode('login')}>Já tenho conta</button></div><form onSubmit={submit}>
         {mode === 'signup' && <>
