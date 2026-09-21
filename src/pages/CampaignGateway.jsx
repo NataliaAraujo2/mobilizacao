@@ -103,6 +103,17 @@ export default function CampaignGateway() {
     if (!event.currentTarget.contains(event.relatedTarget)) setMapPreview(false);
   }
 
+  function selectState(state) {
+    setSelectedState(state);
+    setMapOpen(true);
+  }
+
+  function closeMap() {
+    setSelectedState('');
+    setMapOpen(false);
+    setMapPreview(false);
+  }
+
   return (
     <main className={styles.page}>
       <section className={styles.intro} aria-labelledby="editions-title">
@@ -124,7 +135,7 @@ export default function CampaignGateway() {
           <VolunteerChoicesCountdown />
           <Link className={styles.teaserLink} to="/2026">Conhecer a edição 2026 <b aria-hidden="true">→</b></Link>
         </div>
-        <button className={styles.mapLogoButton} type="button" aria-expanded={mapVisible} aria-controls="mapa-acoes-publico" onClick={() => setMapOpen(current => !current)}>
+        <button className={styles.mapLogoButton} type="button" aria-expanded={mapVisible} aria-controls="mapa-acoes-publico" onClick={() => mapOpen ? closeMap() : setMapOpen(true)}>
           <img className={styles.mapLogo} src={logo2026} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" width="1400" height="1466" />
           <span>{mapOpen ? "Fechar mapa" : "Passe o mouse ou toque no mapa"}</span>
         </button>
@@ -132,11 +143,11 @@ export default function CampaignGateway() {
           <div className={styles.mapIntro}><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
           <div className={`${styles.mapLayout} ${selectedState ? styles.mapWithActions : ''}`}>
             <div className={styles.mapCanvas}>
-              <BrazilMap selectedState={selectedState} onSelectState={setSelectedState} />
+              <BrazilMap selectedState={selectedState} onSelectState={selectState} />
               <p className={styles.mapResult} aria-live="polite">{selectedState ? <>Estado selecionado: <strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name} ({selectedState})</strong></> : "Nenhum estado selecionado."}</p>
             </div>
             {selectedState && <aside className={styles.actionsModal} aria-label={`Ações disponíveis em ${BRAZIL_STATE_BY_CODE[selectedState]?.name ?? selectedState}`}>
-              <header><strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name ?? selectedState}</strong><button type="button" onClick={() => setSelectedState('')} aria-label="Fechar ações">×</button></header>
+              <header><strong>{BRAZIL_STATE_BY_CODE[selectedState]?.name ?? selectedState}</strong><button type="button" onClick={closeMap} aria-label="Fechar ações">×</button></header>
               <PublicActionsPanel state={selectedState} user={user} claims={claims} />
             </aside>}
           </div>
