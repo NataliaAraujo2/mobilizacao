@@ -184,19 +184,23 @@ export default function ActionsPage() {
     }
   }
 
-  async function showQrCode(action) {
-    const url = `${window.location.origin}/presenca/${action.id}`;
-    setQrAction({ ...action, publicUrl: url });
+  async function showQrCode(action, kind = "registration") {
+    const url = `${window.location.origin}/${kind === "attendance" ? "presenca" : "participar"}/${action.id}`;
+    setQrAction({ ...action, publicUrl: url, qrKind: kind });
     setQrDataUrl(await QRCode.toDataURL(url, { width: 320, margin: 2, errorCorrectionLevel: "M" }));
   }
 
   function downloadQrCode() {
     if (!qrDataUrl || !qrAction) return;
-    const link = document.createElement("a"); link.href = qrDataUrl; link.download = `qr-${qrAction.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`; link.click();
+    const type = qrAction.qrKind === "attendance" ? "presenca" : "inscricao";
+    const link = document.createElement("a"); link.href = qrDataUrl; link.download = `qr-${type}-${qrAction.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`; link.click();
   }
 
   function qrMessage(viewer) {
-    return `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction?.name}”. Ele abre a confirmação de presença do voluntário no local.\n\nLink da ação: ${qrAction?.publicUrl}`;
+    const purpose = qrAction?.qrKind === "attendance"
+      ? "Ele permite que voluntários já inscritos confirmem a presença no local, durante a ação."
+      : "Ele abre o cadastro/login para novos voluntários se inscreverem na ação.";
+    return `Olá, ${viewer?.contactName || 'Coordenação'}!\n\nSegue o QR Code da ação “${qrAction?.name}”. ${purpose}\n\nLink da ação: ${qrAction?.publicUrl}`;
   }
 
   async function shareQrWithCoordinator(channel) {
@@ -263,9 +267,9 @@ export default function ActionsPage() {
       </section>}
 
       <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => { const branch = branches.find((item) => item.id === action.branchId); return <article key={action.id}>
-        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><p className={styles.branchName}>Coordenação: {branch?.name ?? 'Não identificada'}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => startEdit(action)}>Editar ação</button><button type="button" disabled={saving} onClick={() => showQrCode(action)}>QR Code</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
+        <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><p className={styles.branchName}>Coordenação: {branch?.name ?? 'Não identificada'}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => startEdit(action)}>Editar ação</button><button type="button" disabled={saving} onClick={() => showQrCode(action, "registration")}>QR inscrição</button><button type="button" disabled={saving} onClick={() => showQrCode(action, "attendance")}>QR presença</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
       </article>; })}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
-      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">QR Code da ação</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code para participar de ${qrAction.name}`} /><p>Leia este código para abrir o cadastro/login do voluntário já vinculado a esta ação.</p><input readOnly value={qrAction.publicUrl} aria-label="Link público da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('whatsapp')}>{sharingQr ? 'Preparando envio…' : 'Enviar pelo WhatsApp'}</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('email')}>Enviar por e-mail</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
+      {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">{qrAction.qrKind === "attendance" ? "QR Code de presença" : "QR Code de inscrição"}</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code ${qrAction.qrKind === "attendance" ? "de presença" : "de inscrição"} para ${qrAction.name}`} /><p>{qrAction.qrKind === "attendance" ? "Para voluntários já inscritos confirmarem a presença no local, durante o horário da ação." : "Para novos voluntários abrirem o cadastro/login e se inscreverem nesta ação."}</p><input readOnly value={qrAction.publicUrl} aria-label="Link da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('whatsapp')}>{sharingQr ? 'Preparando envio…' : 'Enviar pelo WhatsApp'}</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('email')}>Enviar por e-mail</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
     </main>
   );
 }
