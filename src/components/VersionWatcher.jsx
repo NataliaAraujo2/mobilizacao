@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import styles from "./VersionWatcher.module.css";
 
 const STORAGE_KEY = "mobilizacao.deployment-version";
-const AUTO_UPDATE_PATHS = new Set(["/", "/2025", "/2025/relatorio", "/2026"]);
+const AUTO_UPDATE_PATHS = new Set(["/", "/2025", "/2025/relatorio"]);
 
 export default function VersionWatcher() {
   const { pathname } = useLocation();

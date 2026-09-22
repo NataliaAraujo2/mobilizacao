@@ -7,7 +7,6 @@ const AccessMessagePage = lazy(() => import("./pages/AccessMessagePage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const CampaignGateway = lazy(() => import("./pages/CampaignGateway"));
 const Campaign2025Page = lazy(() => import("./pages/Campaign2025Page"));
-const PublicHome = lazy(() => import("./pages/PublicHome"));
 const ReportViewerPage = lazy(() => import("./pages/ReportViewerPage"));
 const BranchesPage = lazy(() => import("./pages/BranchesPage"));
 const BranchViewersPage = lazy(() => import("./pages/BranchViewersPage"));
@@ -35,8 +34,7 @@ export default function App() {
         <Route index element={<CampaignGateway />} />
         <Route path="2025" element={<Campaign2025Page />} />
         <Route path="2025/relatorio" element={<ReportViewerPage />} />
-        <Route path="2026" element={<PublicHome />} />
-        {import.meta.env.DEV && <Route path="2026/desenvolvimento" element={<PublicHome />} />}
+        <Route path="2026" element={<Navigate to="/" replace />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="admin/login" element={<LoginPage />} />
         <Route path="admin/acesso-bloqueado" element={<AccessMessagePage blocked />} />

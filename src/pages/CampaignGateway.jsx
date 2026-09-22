@@ -134,7 +134,7 @@ export default function CampaignGateway() {
           <h2 id="map-teaser-title">Em 21 de outubro, escolha sua ação!</h2>
           <p>Em breve, você poderá escolher a ação em que deseja atuar como voluntário e acompanhar as mobilizações em cada estado.</p>
           <VolunteerChoicesCountdown />
-          <Link className={styles.teaserLink} to="/2026">Conhecer a edição 2026 <b aria-hidden="true">→</b></Link>
+          <button className={styles.teaserLink} type="button" onClick={() => setMapOpen(true)}>Ver ações da edição 2026 <b aria-hidden="true">→</b></button>
         </div>
         <button className={styles.mapLogoButton} type="button" aria-expanded={mapVisible} aria-controls="mapa-acoes-publico" onClick={() => mapOpen ? closeMap() : setMapOpen(true)}>
           <img className={styles.mapLogo} src={logo2026} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" width="1400" height="1466" />
