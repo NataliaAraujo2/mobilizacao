@@ -32,18 +32,27 @@
 .successModal > div { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .5rem; }
 .successModal > div button { flex: 1 1 12rem; }
 .secondaryAction { color: var(--brand-blue) !important; background: white !important; border: 1px solid var(--border) !important; }
-.tabs { display: flex; gap: .5rem; }
-.tabs button { flex: 1; }
+.tabs { display: flex; gap: .4rem; padding: .35rem; background: #edf4f7; border: 1px solid #d7e4eb; border-radius: .7rem; }
+.tabs button { flex: 1; min-height: 2.7rem; padding: .55rem .75rem; font: inherit; font-weight: 800; border: 1px solid transparent; border-radius: .5rem; cursor: pointer; transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
+.tab { color: #456276; background: transparent; }
+.tab:hover, .tab:focus-visible { color: var(--brand-blue); background: white; outline: none; }
+.tabActive { color: white; background: var(--brand-blue); box-shadow: 0 .3rem .7rem rgb(0 85 155 / 20%); }
+.tabActive:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .signup form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
 .signup label { display: grid; gap: .3rem; font-weight: 750; }
-.signup input, .signup select { min-height: 2.8rem; padding: .6rem; font: inherit; border: 1px solid var(--border); border-radius: .55rem; }
+.signup input, .signup select { width: 100%; min-height: 2.8rem; padding: .6rem .7rem; color: var(--text); font: inherit; background: white; border: 1px solid #c8d9e3; border-radius: .55rem; }
+.signup input:focus, .signup select:focus { outline: 3px solid color-mix(in srgb, var(--focus) 55%, transparent); border-color: var(--brand-blue); }
 .address { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; padding: 1rem; border: 1px solid var(--border); border-radius: .65rem; }
 .address legend { padding: 0 .3rem; font-weight: 800; }
+.cepStatus { grid-column: 1 / -1; margin: 0; color: var(--text-muted); font-size: .82rem; font-weight: 650; line-height: 1.35; }
 .acceptance { grid-column: 1 / -1; display: flex !important; align-items: start; gap: .55rem !important; font-size: .9rem; }
 .acceptance input { width: 1.15rem; min-height: 1.15rem; margin-top: .15rem; }
 .regulationAcceptance { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .regulationAcceptance .acceptance { flex: 1 1 16rem; }
 .regulationButton { min-height: 2.45rem !important; padding: .45rem .7rem !important; color: var(--brand-blue) !important; background: white !important; border: 1px solid var(--border) !important; }
-.signup form > button { grid-column: 1 / -1; }
+.signup form > button { grid-column: 1 / -1; min-height: 2.95rem; padding: .6rem 1rem; color: white; font: inherit; font-weight: 800; background: var(--brand-blue); border: 1px solid var(--brand-blue); border-radius: .6rem; cursor: pointer; box-shadow: 0 .3rem .75rem rgb(0 85 155 / 18%); }
+.signup form > button:hover:not(:disabled) { background: #005396; }
+.signup form > button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.signup form > button:disabled { cursor: wait; opacity: .65; }
 .error { margin: .8rem 0 0; color: #a22b2b; font-weight: 750; }
 @media (max-width: 680px) { .modalBackdrop { padding: .5rem; } .actionModal, .signup { max-height: calc(100vh - 1rem); padding: 1rem; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } }

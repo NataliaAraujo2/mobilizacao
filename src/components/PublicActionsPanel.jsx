@@ -7,6 +7,7 @@ import styles from './PublicActionsPanel.module.css';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { isMinorBirthDate, NGO_RELATIONSHIPS, SHIRT_SIZES } from '../domain/volunteers/volunteerModel';
 import { BRAZIL_STATES } from '../domain/locations/brazilStates';
+import { findAddressByCep } from '../services/cepService';
 import ActionPhotoGallery from './ActionPhotoGallery';
 import VolunteerRegulation from './VolunteerRegulation';
 
@@ -32,6 +33,8 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   const [error, setError] = useState('');
   const [confirmation, setConfirmation] = useState(null);
   const [showRegulation, setShowRegulation] = useState(false);
+  const [searchingCep, setSearchingCep] = useState(false);
+  const [cepMessage, setCepMessage] = useState('');
 
   useEffect(() => {
     setSelected(null); setShowSignup(false); setError(''); setConfirmation(null);
@@ -82,6 +85,24 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   if (!state && !actionId) return null;
   const update = patch => setForm({ ...form, ...patch });
   const updateAddress = patch => update({ address: { ...form.address, ...patch } });
+  async function completeAddressFromCep(value) {
+    const cep = String(value ?? '').replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    setSearchingCep(true);
+    setCepMessage('Buscando endereço…');
+    try {
+      const result = await findAddressByCep(cep);
+      setForm(current => {
+        if (current.address.cep.replace(/\D/g, '') !== cep) return current;
+        return { ...current, address: { ...current.address, cep: formatCep(result.cep), street: result.street, neighborhood: result.neighborhood, city: result.city, state: result.state } };
+      });
+      setCepMessage('Endereço preenchido pelo CEP. Informe apenas o número e, se necessário, o complemento.');
+    } catch (cepError) {
+      setCepMessage(cepError.message || 'Não foi possível consultar o CEP. Preencha o endereço manualmente.');
+    } finally {
+      setSearchingCep(false);
+    }
+  }
   const selectedDetails = selected && <article className={styles.details}>
     <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><p><strong>Quando:</strong> {actionScheduleSummary(selected)}</p><p><strong>Local:</strong> {selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</p>{selected.description && <p><strong>Sobre a ação:</strong> {selected.description}</p>}{selected.whatToBring && <p><strong>O que levar:</strong> {selected.whatToBring}</p>}{selected.tips && <p><strong>Orientações:</strong> {selected.tips}</p>}
     <ActionPhotoGallery action={selected} />
@@ -95,10 +116,10 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     {actionId && selectedDetails}
     {selected && !actionId && !showSignup && createPortal(<div className={styles.modalBackdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeDetails(); }}><section className={styles.actionModal} role="dialog" aria-modal="true" aria-labelledby="action-details-title" onMouseDown={event => event.stopPropagation()}><header><div><p className={styles.municipality}>Detalhes da ação</p><h2 id="action-details-title">Informações da ação</h2></div><button className={styles.close} type="button" aria-label="Fechar detalhes da ação" onClick={closeDetails}>×</button></header>{selectedDetails}</section></div>, document.body)}
     {selected && showSignup && !user && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.signup} role="dialog" aria-modal="true" aria-labelledby="participation-title">
-      <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Nova inscrição</button><button type="button" onClick={() => setMode('login')}>Já tenho acesso</button></div><form onSubmit={submit}>
+      <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button className={mode === 'signup' ? styles.tabActive : styles.tab} type="button" onClick={() => setMode('signup')}>Nova inscrição</button><button className={mode === 'login' ? styles.tabActive : styles.tab} type="button" onClick={() => setMode('login')}>Já tenho acesso</button></div><form onSubmit={submit}>
         {mode === 'signup' && <>
           <label>Nome completo<input required value={form.fullName} onChange={e => update({ fullName: e.target.value })} /></label><label>Telefone<input required value={form.phone} onChange={e => update({ phone: formatPhone(e.target.value) })} /></label><label>CPF<input required inputMode="numeric" value={form.cpf} onChange={e => update({ cpf: e.target.value })} /></label><label>RG<input required value={form.rg} onChange={e => update({ rg: e.target.value })} /></label><label>Data de nascimento<input required type="date" value={form.birthDate} onChange={e => update({ birthDate: e.target.value })} /></label>
-          <fieldset className={styles.address}><legend>Endereço <small>(somente cidade e estado são obrigatórios)</small></legend><label>CEP<input inputMode="numeric" value={formatCep(form.address.cep)} onChange={e => updateAddress({ cep: formatCep(e.target.value) })} /></label><label>Logradouro<input value={form.address.street} onChange={e => updateAddress({ street: e.target.value })} /></label><label>Número<input value={form.address.number} onChange={e => updateAddress({ number: e.target.value })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={e => updateAddress({ complement: e.target.value })} /></label><label>Bairro<input value={form.address.neighborhood} onChange={e => updateAddress({ neighborhood: e.target.value })} /></label><label>Cidade<input required value={form.address.city} onChange={e => updateAddress({ city: e.target.value })} /></label><label>Estado<select required value={form.address.state} onChange={e => updateAddress({ state: e.target.value })}><option value="">Selecione</option>{BRAZIL_STATES.map(item => <option key={item.code} value={item.code}>{item.code} — {item.name}</option>)}</select></label></fieldset>
+          <fieldset className={styles.address}><legend>Endereço <small>(somente cidade e estado são obrigatórios)</small></legend><label>CEP<input inputMode="numeric" value={formatCep(form.address.cep)} onChange={e => { const cep = formatCep(e.target.value); updateAddress({ cep }); setCepMessage(''); if (cep.replace(/\D/g, '').length === 8) completeAddressFromCep(cep); }} />{searchingCep && <small className={styles.cepStatus}>Buscando endereço…</small>}</label><label>Logradouro<input value={form.address.street} onChange={e => updateAddress({ street: e.target.value })} /></label><label>Número<input value={form.address.number} onChange={e => updateAddress({ number: e.target.value })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={e => updateAddress({ complement: e.target.value })} /></label><label>Bairro<input value={form.address.neighborhood} onChange={e => updateAddress({ neighborhood: e.target.value })} /></label><label>Cidade<input required value={form.address.city} onChange={e => updateAddress({ city: e.target.value })} /></label><label>Estado<select required value={form.address.state} onChange={e => updateAddress({ state: e.target.value })}><option value="">Selecione</option>{BRAZIL_STATES.map(item => <option key={item.code} value={item.code}>{item.code} — {item.name}</option>)}</select></label>{cepMessage && <p className={styles.cepStatus} role="status">{cepMessage}</p>}</fieldset>
           <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={e => update({ shirtSize: e.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label><label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={e => update({ ngoRelationship: e.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
           <label className={styles.acceptance}><input required type="checkbox" checked={form.lgpdAccepted} onChange={e => update({ lgpdAccepted: e.target.checked })} />Concordo com o uso dos meus dados conforme LGPD.</label><div className={styles.regulationAcceptance}><label className={styles.acceptance}><input required type="checkbox" checked={form.regulationAccepted} onChange={e => update({ regulationAccepted: e.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.regulationButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div><label className={styles.acceptance}><input required type="checkbox" checked={form.imageUseAccepted} onChange={e => update({ imageUseAccepted: e.target.checked })} />Autorizo a divulgação da minha imagem nas fotos e materiais institucionais da ONG Moradia e Cidadania.</label>{isMinorBirthDate(form.birthDate) && <label className={styles.acceptance}><input required type="checkbox" checked={form.guardianAuthorizationAccepted} onChange={e => update({ guardianAuthorizationAccepted: e.target.checked })} />Declaro que tenho autorização do meu responsável legal para participar da ação e para a divulgação da minha imagem.</label>}
         </>}
