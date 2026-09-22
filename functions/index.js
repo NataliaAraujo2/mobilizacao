@@ -155,13 +155,13 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   const rg = requiredText(profile.rg, 'RG', 3, 20).toUpperCase().replace(/[^0-9A-Z]/g, '');
   const birthDate = requiredText(profile.birthDate, 'nascimento', 10, 10);
   const addressInput = profile.address ?? {};
-  const address = { cep: digits(addressInput.cep), street: requiredText(addressInput.street, 'logradouro', 2, 160), number: requiredText(addressInput.number, 'número', 1, 30), complement: String(addressInput.complement ?? '').trim(), neighborhood: requiredText(addressInput.neighborhood, 'bairro', 2, 120), city: requiredText(addressInput.city, 'cidade', 2, 120), state: requiredText(addressInput.state, 'estado', 2, 2).toUpperCase() };
+  const address = { cep: digits(addressInput.cep), street: String(addressInput.street ?? '').trim(), number: String(addressInput.number ?? '').trim(), complement: String(addressInput.complement ?? '').trim(), neighborhood: String(addressInput.neighborhood ?? '').trim(), city: requiredText(addressInput.city, 'cidade', 2, 120), state: requiredText(addressInput.state, 'estado', 2, 2).toUpperCase() };
   const shirtSize = requiredText(profile.shirtSize, 'tamanho da camiseta', 1, 10).toUpperCase();
   const ngoRelationship = requiredText(profile.ngoRelationship, 'vínculo com a ONG', 2, 120);
   if (!validCpf(cpf)) throw new HttpsError('invalid-argument', 'CPF inválido.');
-  if (phone && !isValidPhone(phone, 13)) throw new HttpsError('invalid-argument', 'Telefone inválido.');
+  if (!isValidPhone(phone, 13)) throw new HttpsError('invalid-argument', 'Telefone inválido.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new HttpsError('invalid-argument', 'Data de nascimento inválida.');
-  if (!/^\d{8}$/.test(address.cep) || !BRAZIL_STATE_CODES.has(address.state) || !['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO'].includes(shirtSize) || !['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família'].includes(ngoRelationship) || profile.lgpdAccepted !== true || profile.regulationAccepted !== true || profile.imageUseAccepted !== true || (isMinorBirthDate(birthDate) && profile.guardianAuthorizationAccepted !== true)) throw new HttpsError('invalid-argument', 'Dados complementares ou autorizações do voluntário inválidos.');
+  if (!BRAZIL_STATE_CODES.has(address.state) || !['PP', 'P', 'M', 'G', 'GG', 'XG'].includes(shirtSize) || !['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família'].includes(ngoRelationship) || profile.lgpdAccepted !== true || profile.regulationAccepted !== true || profile.imageUseAccepted !== true || (isMinorBirthDate(birthDate) && profile.guardianAuthorizationAccepted !== true)) throw new HttpsError('invalid-argument', 'Dados complementares ou autorizações do voluntário inválidos.');
   const duplicateCpf = await db.collection('volunteerPrivate').where('cpf', '==', cpf).limit(1).get();
   if (!duplicateCpf.empty) throw new HttpsError('already-exists', 'Este CPF já possui cadastro. Entre com sua conta ou solicite nova senha.');
   const batch = db.batch();

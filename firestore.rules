@@ -88,8 +88,10 @@ service cloud.firestore {
         && data.fullNameSearch.size() >= 2
         && data.fullNameSearch.size() <= 120
         && data.email is string
+        && data.email.size() >= 5
         && data.email.size() <= 160
         && data.phone is string
+        && data.phone.size() >= 10
         && data.phone.size() <= 20
         && data.actionIds is list
         && data.actionIds.size() >= 1
@@ -116,13 +118,13 @@ service cloud.firestore {
         && data.birthDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && data.address.keys().hasAll(['cep', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'])
         && data.address.keys().hasOnly(['cep', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'])
-        && data.address.cep is string && data.address.cep.matches('^[0-9]{8}$')
-        && data.address.street is string && data.address.street.size() > 0
-        && data.address.number is string && data.address.number.size() > 0
-        && data.address.complement is string && data.address.neighborhood is string && data.address.neighborhood.size() > 0
+        && data.address.cep is string && (data.address.cep == '' || data.address.cep.matches('^[0-9]{8}$'))
+        && data.address.street is string
+        && data.address.number is string
+        && data.address.complement is string && data.address.neighborhood is string
         && data.address.city is string && data.address.city.size() > 0
         && data.address.state is string && isBrazilState(data.address.state)
-        && data.shirtSize in ['PP', 'P', 'M', 'G', 'GG', 'XG', 'OUTRO']
+        && data.shirtSize in ['PP', 'P', 'M', 'G', 'GG', 'XG']
         && data.ngoRelationship in ['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família']
         && data.lgpdAccepted == true && data.regulationAccepted == true
         && data.imageUseAccepted == true && data.guardianAuthorizationAccepted is bool;
