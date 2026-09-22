@@ -1,8 +1,9 @@
 import styles from "./VolunteerRegulation.module.css";
+import { createPortal } from "react-dom";
 
 export default function VolunteerRegulation({ open, onClose }) {
   if (!open) return null;
-  return <div className={styles.backdrop} role="presentation" onMouseDown={onClose}>
+  return createPortal(<div className={styles.backdrop} role="presentation" onMouseDown={onClose}>
     <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="volunteer-regulation-title" onMouseDown={(event) => event.stopPropagation()}>
       <header><div><p>ONG Moradia e Cidadania</p><h2 id="volunteer-regulation-title">REGULAMENTO DO VOLUNTÁRIO</h2></div><button type="button" onClick={onClose} aria-label="Fechar regulamento">Fechar</button></header>
       <div className={styles.content}>
@@ -20,5 +21,5 @@ export default function VolunteerRegulation({ open, onClose }) {
         <p><strong>ONG Moradia e Cidadania</strong></p><p><em>Promovendo solidariedade e cidadania por todo o Brasil.</em></p><p>Para mais informações, entre em contato: <strong>contato@moradiaecidadania.org.br</strong></p>
       </div>
     </section>
-  </div>;
+  </div>, document.body);
 }
