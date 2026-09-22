@@ -81,6 +81,14 @@ export async function deleteSuperAdmin(uid) {
   return callFunction("deleteSuperAdmin", { uid });
 }
 
+export async function updateSuperAdmin(uid, input) {
+  return callFunction('updateSuperAdmin', { uid, ...input });
+}
+
+export async function resetSuperAdminPassword(uid) {
+  return callFunction('resetSuperAdminPassword', { uid });
+}
+
 export async function listSuperAdmins() {
   const { db, collection, getDocs, query, where } = await getDbService(["collection", "getDocs", "query", "where"]);
   const snapshot = await getDocs(query(collection(db, "users"), where("role", "==", "superAdmin")));

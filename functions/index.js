@@ -391,6 +391,43 @@ export const deleteSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
   return { ok: true };
 });
 
+export const updateSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const uid = requiredText(request.data?.uid, 'uid', 1, 128);
+  if (uid.includes('/')) throw new HttpsError('invalid-argument', 'Identificador inválido.');
+  const displayName = requiredText(request.data?.displayName, 'nome', 2, 120);
+  const email = requiredText(request.data?.email, 'e-mail', 5, 160).toLowerCase();
+  if (!isValidEmail(email)) throw new HttpsError('invalid-argument', 'E-mail inválido.');
+  const profileRef = getFirestore().collection('users').doc(uid);
+  const profile = await profileRef.get();
+  if (!profile.exists || profile.data().role !== 'superAdmin') throw new HttpsError('not-found', 'Superadmin não encontrado.');
+  try {
+    await getAuth().updateUser(uid, { displayName, email });
+  } catch (error) {
+    if (error.code === 'auth/email-already-exists') throw new HttpsError('already-exists', 'Este e-mail já possui uma conta.');
+    throw new HttpsError('internal', 'Não foi possível atualizar o superadmin.');
+  }
+  await profileRef.update({ displayName, email, updatedAt: FieldValue.serverTimestamp() });
+  return { uid, displayName, email };
+});
+
+export const resetSuperAdminPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const uid = requiredText(request.data?.uid, 'uid', 1, 128);
+  if (uid.includes('/')) throw new HttpsError('invalid-argument', 'Identificador inválido.');
+  const profile = await getFirestore().collection('users').doc(uid).get();
+  if (!profile.exists || profile.data().role !== 'superAdmin') throw new HttpsError('not-found', 'Superadmin não encontrado.');
+  const password = generateFriendlyPassword();
+  try {
+    await getAuth().updateUser(uid, { password });
+    await getAuth().setCustomUserClaims(uid, { role: 'superAdmin', status: 'active', mustChangePassword: true });
+  } catch {
+    throw new HttpsError('internal', 'Não foi possível gerar uma nova senha.');
+  }
+  await profile.ref.update({ updatedAt: FieldValue.serverTimestamp() });
+  return { uid, displayName: profile.data().displayName, email: profile.data().email, password };
+});
+
 export const completeSuperAdminPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   const { role, status, branchId, mustChangePassword } = request.auth?.token ?? {};
   if (!request.auth || !["superAdmin", VIEWER_ROLE].includes(role) || status !== "active" || !mustChangePassword) {
