@@ -85,6 +85,25 @@ function validCpf(value) {
   return true;
 }
 
+function publicVolunteerProfile(profile) {
+  const fullName = requiredText(profile.fullName, 'nome', 2, 120);
+  const email = String(profile.email ?? '').trim().toLowerCase();
+  const phone = digits(profile.phone);
+  const cpf = digits(profile.cpf);
+  const rg = requiredText(profile.rg, 'RG', 3, 20).toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const birthDate = requiredText(profile.birthDate, 'nascimento', 10, 10);
+  const addressInput = profile.address ?? {};
+  const address = { cep: digits(addressInput.cep), street: String(addressInput.street ?? '').trim(), number: String(addressInput.number ?? '').trim(), complement: String(addressInput.complement ?? '').trim(), neighborhood: String(addressInput.neighborhood ?? '').trim(), city: requiredText(addressInput.city, 'cidade', 2, 120), state: requiredText(addressInput.state, 'estado', 2, 2).toUpperCase() };
+  const shirtSize = requiredText(profile.shirtSize, 'tamanho da camiseta', 1, 10).toUpperCase();
+  const ngoRelationship = requiredText(profile.ngoRelationship, 'vínculo com a ONG', 2, 120);
+  if (!isValidEmail(email)) throw new HttpsError('invalid-argument', 'E-mail inválido.');
+  if (!validCpf(cpf)) throw new HttpsError('invalid-argument', 'CPF inválido.');
+  if (!isValidPhone(phone, 13)) throw new HttpsError('invalid-argument', 'Telefone inválido.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new HttpsError('invalid-argument', 'Data de nascimento inválida.');
+  if (!BRAZIL_STATE_CODES.has(address.state) || !['PP', 'P', 'M', 'G', 'GG', 'XG'].includes(shirtSize) || !['Comunidade ou Projeto local', 'Empregado ou Aposentado da CAIXA', 'Indicação de amigos ou família'].includes(ngoRelationship) || profile.lgpdAccepted !== true || profile.regulationAccepted !== true || profile.imageUseAccepted !== true || (isMinorBirthDate(birthDate) && profile.guardianAuthorizationAccepted !== true)) throw new HttpsError('invalid-argument', 'Dados complementares ou autorizações do voluntário inválidos.');
+  return { fullName, email, phone, cpf, rg, birthDate, address, shirtSize, ngoRelationship, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted === true };
+}
+
 export const listCoordinationActionVolunteers = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   if (!request.auth || request.auth.token.status !== 'active' || !['superAdmin', VIEWER_ROLE].includes(request.auth.token.role)) {
     throw new HttpsError('permission-denied', 'Acesso não autorizado.');
@@ -170,6 +189,26 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   await batch.commit();
   await getAuth().updateUser(request.auth.uid, { displayName: fullName });
   await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });
+  return { created: true };
+});
+
+// Cadastro público: dados pessoais nunca são gravados diretamente pelo navegador.
+// O App Check protege o endpoint e a Function valida todas as autorizações.
+export const registerPublicVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
+  const db = getFirestore();
+  const actionSnapshot = await db.collection('actions').doc(actionId).get();
+  if (!actionSnapshot.exists) throw new HttpsError('not-found', 'A ação não existe.');
+  const action = actionSnapshot.data();
+  if (actionPhase(action) === 'completed') throw new HttpsError('failed-precondition', 'As inscrições desta ação foram encerradas.');
+  const profile = publicVolunteerProfile(request.data?.profile ?? {});
+  const duplicateCpf = await db.collection('volunteerPrivate').where('cpf', '==', profile.cpf).limit(1).get();
+  if (!duplicateCpf.empty) throw new HttpsError('already-exists', 'Este CPF já possui cadastro. Procure a coordenação caso precise atualizar sua inscrição.');
+  const volunteerRef = db.collection('volunteers').doc();
+  const batch = db.batch();
+  batch.set(volunteerRef, { fullName: profile.fullName, fullNameSearch: normalizeSearchText(profile.fullName), email: profile.email, phone: profile.phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'none', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  await batch.commit();
   return { created: true };
 });
 

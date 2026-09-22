@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { formatPhone } from '../../functions/contactFields.js';
-import { createVolunteerAccount, enrollInAction, getPublicAction, listPublicActions, loginVolunteer, refreshVolunteerSession, removeCurrentAccount } from '../services/publicVolunteerService';
+import { enrollInAction, getPublicAction, listPublicActions, loginVolunteer, refreshVolunteerSession, registerPublicVolunteer } from '../services/publicVolunteerService';
 import styles from './PublicActionsPanel.module.css';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { isMinorBirthDate, NGO_RELATIONSHIPS, SHIRT_SIZES } from '../domain/volunteers/volunteerModel';
@@ -11,10 +11,9 @@ import ActionPhotoGallery from './ActionPhotoGallery';
 import VolunteerRegulation from './VolunteerRegulation';
 
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
-const EMPTY = { fullName: '', email: '', password: '', phone: '', cpf: '', rg: '', birthDate: '', address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, imageUseAccepted: false, guardianAuthorizationAccepted: false };
+const EMPTY = { fullName: '', email: '', phone: '', cpf: '', rg: '', birthDate: '', address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, imageUseAccepted: false, guardianAuthorizationAccepted: false };
 const formatCep = value => String(value ?? '').replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
 const enrollmentErrorMessage = error => ({
-  'auth/email-already-in-use': 'Este e-mail já possui cadastro. Escolha “Já tenho conta” para entrar.',
   'auth/invalid-credential': 'E-mail ou senha incorretos.',
   'auth/wrong-password': 'E-mail ou senha incorretos.',
   'auth/weak-password': 'A senha deve ter pelo menos 8 caracteres.',
@@ -54,9 +53,21 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
 
   async function joinExisting(action) { setLoading(true); setError(''); try { await enrollWithOptionalSwap(action); setConfirmation({ actionName: action.name, newAccount: false }); } catch (err) { setError(enrollmentErrorMessage(err)); } finally { setLoading(false); } }
   async function submit(event) {
-    event.preventDefault(); setLoading(true); setError(''); let credential;
-    try { credential = mode === 'signup' ? await createVolunteerAccount(form.email, form.password) : await loginVolunteer(form.email, form.password); const result = await enrollWithOptionalSwap(selected, mode === 'signup' ? form : undefined); await refreshVolunteerSession(credential.user); setShowSignup(false); setConfirmation({ actionName: selected.name, newAccount: result.created }); }
-    catch (err) { if (mode === 'signup' && credential?.user) await removeCurrentAccount(credential.user).catch(() => {}); setError(enrollmentErrorMessage(err)); }
+    event.preventDefault(); setLoading(true); setError('');
+    try {
+      if (mode === 'signup') {
+        await registerPublicVolunteer(selected.id, form);
+        setShowSignup(false);
+        setConfirmation({ actionName: selected.name, publicRegistration: true });
+      } else {
+        const credential = await loginVolunteer(form.email, form.password);
+        await enrollWithOptionalSwap(selected);
+        await refreshVolunteerSession(credential.user);
+        setShowSignup(false);
+        setConfirmation({ actionName: selected.name, publicRegistration: false });
+      }
+    }
+    catch (err) { setError(enrollmentErrorMessage(err)); }
     finally { setLoading(false); }
   }
 
@@ -84,17 +95,17 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     {actionId && selectedDetails}
     {selected && !actionId && !showSignup && createPortal(<div className={styles.modalBackdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeDetails(); }}><section className={styles.actionModal} role="dialog" aria-modal="true" aria-labelledby="action-details-title" onMouseDown={event => event.stopPropagation()}><header><div><p className={styles.municipality}>Detalhes da ação</p><h2 id="action-details-title">Informações da ação</h2></div><button className={styles.close} type="button" aria-label="Fechar detalhes da ação" onClick={closeDetails}>×</button></header>{selectedDetails}</section></div>, document.body)}
     {selected && showSignup && !user && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.signup} role="dialog" aria-modal="true" aria-labelledby="participation-title">
-      <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Primeiro acesso</button><button type="button" onClick={() => setMode('login')}>Já tenho conta</button></div><form onSubmit={submit}>
+      <div className={styles.modalHeader}><div><p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3 id="participation-title">Participar: {selected.name}</h3></div><button className={styles.close} type="button" aria-label="Fechar formulário" onClick={() => { setShowSignup(false); setError(''); }}>×</button></div><div className={styles.tabs}><button type="button" onClick={() => setMode('signup')}>Nova inscrição</button><button type="button" onClick={() => setMode('login')}>Já tenho acesso</button></div><form onSubmit={submit}>
         {mode === 'signup' && <>
           <label>Nome completo<input required value={form.fullName} onChange={e => update({ fullName: e.target.value })} /></label><label>Telefone<input required value={form.phone} onChange={e => update({ phone: formatPhone(e.target.value) })} /></label><label>CPF<input required inputMode="numeric" value={form.cpf} onChange={e => update({ cpf: e.target.value })} /></label><label>RG<input required value={form.rg} onChange={e => update({ rg: e.target.value })} /></label><label>Data de nascimento<input required type="date" value={form.birthDate} onChange={e => update({ birthDate: e.target.value })} /></label>
           <fieldset className={styles.address}><legend>Endereço <small>(somente cidade e estado são obrigatórios)</small></legend><label>CEP<input inputMode="numeric" value={formatCep(form.address.cep)} onChange={e => updateAddress({ cep: formatCep(e.target.value) })} /></label><label>Logradouro<input value={form.address.street} onChange={e => updateAddress({ street: e.target.value })} /></label><label>Número<input value={form.address.number} onChange={e => updateAddress({ number: e.target.value })} /></label><label>Complemento <small>(opcional)</small><input value={form.address.complement} onChange={e => updateAddress({ complement: e.target.value })} /></label><label>Bairro<input value={form.address.neighborhood} onChange={e => updateAddress({ neighborhood: e.target.value })} /></label><label>Cidade<input required value={form.address.city} onChange={e => updateAddress({ city: e.target.value })} /></label><label>Estado<select required value={form.address.state} onChange={e => updateAddress({ state: e.target.value })}><option value="">Selecione</option>{BRAZIL_STATES.map(item => <option key={item.code} value={item.code}>{item.code} — {item.name}</option>)}</select></label></fieldset>
           <label>Tamanho da camiseta<select required value={form.shirtSize} onChange={e => update({ shirtSize: e.target.value })}><option value="">Selecione</option>{SHIRT_SIZES.map(size => <option key={size} value={size}>{size}</option>)}</select></label><label>Vínculo com a ONG<select required value={form.ngoRelationship} onChange={e => update({ ngoRelationship: e.target.value })}><option value="">Selecione…</option>{NGO_RELATIONSHIPS.map(item => <option key={item} value={item}>{item}</option>)}</select></label>
           <label className={styles.acceptance}><input required type="checkbox" checked={form.lgpdAccepted} onChange={e => update({ lgpdAccepted: e.target.checked })} />Concordo com o uso dos meus dados conforme LGPD.</label><div className={styles.regulationAcceptance}><label className={styles.acceptance}><input required type="checkbox" checked={form.regulationAccepted} onChange={e => update({ regulationAccepted: e.target.checked })} />Concordo com o Regulamento do Voluntário.</label><button type="button" className={styles.regulationButton} onClick={() => setShowRegulation(true)}>Ver regulamento</button></div><label className={styles.acceptance}><input required type="checkbox" checked={form.imageUseAccepted} onChange={e => update({ imageUseAccepted: e.target.checked })} />Autorizo a divulgação da minha imagem nas fotos e materiais institucionais da ONG Moradia e Cidadania.</label>{isMinorBirthDate(form.birthDate) && <label className={styles.acceptance}><input required type="checkbox" checked={form.guardianAuthorizationAccepted} onChange={e => update({ guardianAuthorizationAccepted: e.target.checked })} />Declaro que tenho autorização do meu responsável legal para participar da ação e para a divulgação da minha imagem.</label>}
         </>}
-        <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label><label>Senha<input required type="password" minLength="8" value={form.password} onChange={e => update({ password: e.target.value })} /></label><button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Criar conta e participar' : 'Entrar e participar'}</button>
+        <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label>{mode === 'login' && <label>Senha<input required type="password" minLength="8" value={form.password ?? ''} onChange={e => update({ password: e.target.value })} /></label>}<button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Confirmar inscrição' : 'Entrar e participar'}</button>
       </form>{error && <p className={styles.error} role="alert">{error}</p>}<button className={styles.back} type="button" onClick={() => { setShowSignup(false); setError(''); }}>← Voltar aos detalhes</button>
     </section></div>, document.body)}
-    {confirmation && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.successModal} role="dialog" aria-modal="true" aria-labelledby="enrollment-success-title"><button className={styles.close} type="button" aria-label="Fechar confirmação" onClick={() => { setConfirmation(null); setSelected(null); }}>×</button><p className={styles.municipality}>INSCRIÇÃO EFETIVADA</p><h2 id="enrollment-success-title">Tudo certo!</h2><p>Sua participação em <strong>{confirmation.actionName}</strong> foi confirmada.</p>{confirmation.newAccount && <p>Seu cadastro e acesso de voluntário foram criados.</p>}<div><button type="button" className={styles.secondaryAction} onClick={() => { setConfirmation(null); setSelected(null); }}>Continuar navegando</button><button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button></div></section></div>, document.body)}
+    {confirmation && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.successModal} role="dialog" aria-modal="true" aria-labelledby="enrollment-success-title"><button className={styles.close} type="button" aria-label="Fechar confirmação" onClick={() => { setConfirmation(null); setSelected(null); }}>×</button><p className={styles.municipality}>INSCRIÇÃO EFETIVADA</p><h2 id="enrollment-success-title">Tudo certo!</h2><p>Sua participação em <strong>{confirmation.actionName}</strong> foi confirmada.</p>{confirmation.publicRegistration && <p>Seus dados e autorizações foram registrados. Não é necessário criar senha para esta inscrição.</p>}<div><button type="button" className={styles.secondaryAction} onClick={() => { setConfirmation(null); setSelected(null); }}>Continuar navegando</button>{!confirmation.publicRegistration && <button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button>}</div></section></div>, document.body)}
     {!showSignup && error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
   </section>;
 }

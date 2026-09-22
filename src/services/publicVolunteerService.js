@@ -12,6 +12,7 @@ async function call(name, data) {
 export function listPublicActions(state) { return listPublicActionsByCoordinationState(state); }
 export async function getPublicAction(actionId) { return [await getPublicActionById(actionId)]; }
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
+export function registerPublicVolunteer(actionId, profile) { return call('registerPublicVolunteer', { actionId, profile }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }
 export function getVolunteerDashboard() { return call('getVolunteerDashboard', {}); }
 export function confirmVolunteerAttendance(actionId) { return call('confirmVolunteerAttendance', { actionId }); }
