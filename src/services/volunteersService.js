@@ -34,6 +34,11 @@ export async function createVolunteer(input) {
   return volunteerRef.id;
 }
 
+export async function createCoordinationVolunteer(input) {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, 'createCoordinationVolunteer')(input)).data.id;
+}
+
 export async function listVolunteers(branchId = null) {
   const { db, collection, getDocs, query, where } = await getDbService([
     "collection", "getDocs", "query", "where",

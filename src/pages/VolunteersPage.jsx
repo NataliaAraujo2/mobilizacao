@@ -12,8 +12,9 @@ import { getActionsByIds, listActionsByBranch } from '../services/actionsService
 import { findAddressByCep } from '../services/cepService';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { getBranch, listBranches } from "../services/branchesService";
-import { createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
+import { createCoordinationVolunteer, createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
+import { gmailComposeUrl } from '../utils/email';
 import styles from "./VolunteersPage.module.css";
 
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
@@ -178,7 +179,7 @@ export default function VolunteersPage() {
         setPrivateData((current) => ({ ...current, [editingId]: { cpf: form.cpf.replace(/\D/g, ""), rg: form.rg.replace(/[^0-9a-z]/gi, "").toUpperCase(), birthDate: form.birthDate, address: form.address, shirtSize: form.shirtSize, ngoRelationship: form.ngoRelationship, lgpdAccepted: form.lgpdAccepted, regulationAccepted: form.regulationAccepted, imageUseAccepted: form.imageUseAccepted, guardianAuthorizationAccepted: form.guardianAuthorizationAccepted } }));
         setMessage("Cadastro atualizado com sucesso.");
       } else {
-        savedId = await createVolunteer(volunteerInput);
+        savedId = isSuperAdmin ? await createVolunteer(volunteerInput) : await createCoordinationVolunteer(volunteerInput);
         setMessage("Voluntário cadastrado com segurança.");
       }
       atualizarDados(current => {
@@ -265,7 +266,7 @@ export default function VolunteersPage() {
     setSaving(true); setError(''); setMessage(''); setCredentials(null);
     try {
       const result = reset ? await resetVolunteerPassword(volunteer.id) : await createVolunteerAccess(volunteer.id);
-      setCredentials({ fullName: volunteer.fullName, username: result.username, password: result.password });
+      setCredentials({ fullName: volunteer.fullName, username: result.username, password: result.password, passwordResetLink: result.passwordResetLink });
       atualizarDados(current => current.map(item => item.id === volunteer.id ? { ...item, status: 'active', accessStatus: 'active' } : item));
       setMessage(reset ? 'Nova senha de acesso gerada.' : 'Acesso individual criado. Copie as credenciais agora.');
     } catch (accessError) { setError(accessError.message || 'Não foi possível gerar o acesso.'); }
@@ -296,9 +297,12 @@ export default function VolunteersPage() {
     finally { setReportLoading(false); }
   }
 
+  const accessEmailUrl = credentials?.passwordResetLink && gmailComposeUrl(credentials.username, 'Crie sua senha de acesso à MobilizAÇÃO', `Olá, ${credentials.fullName}!\n\nSeu acesso à MobilizAÇÃO está pronto. Para criar sua senha e entrar na sua área de voluntário, use o link seguro abaixo:\n\n${credentials.passwordResetLink}\n\nSe você não solicitou este acesso, ignore esta mensagem.`);
+
   return (
     <main className={styles.page}>
       <PageHeading eyebrow={isSuperAdmin ? "Administração nacional" : "Minha coordenação estadual"} title="Voluntários" meta={<span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>} />
+      {credentials && <section className={styles.credentials} role="status"><strong>Acesso de {credentials.fullName}</strong><span>E-mail: <code>{credentials.username}</code></span><span>Uma senha temporária foi criada. Prefira enviar o link abaixo para que a pessoa defina a própria senha.</span><div className={styles.credentialActions}>{accessEmailUrl && <a href={accessEmailUrl} target="_blank" rel="noreferrer">Enviar por e-mail</a>}<button type="button" onClick={() => navigator.clipboard.writeText(`E-mail de acesso: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar senha temporária</button><button type="button" className={styles.dismissCredentials} onClick={() => setCredentials(null)}>Fechar</button></div></section>}
 
       {!showForm && <button className={styles.formToggle} type="button" onClick={() => setShowForm(true)}>Cadastrar voluntário manualmente</button>}
       {showForm && <section className={styles.card} aria-labelledby="volunteer-form-title">
@@ -325,7 +329,6 @@ export default function VolunteersPage() {
         </form>
         {error && <p className={styles.error} role="alert">{error}</p>}
         {message && <p className={styles.success} role="status">{message}</p>}
-        {credentials && <div className={styles.credentials} role="status"><strong>Credenciais de {credentials.fullName}</strong><span>E-mail de acesso: <code>{credentials.username}</code></span><span>Senha inicial: <code>{credentials.password}</code></span><button type="button" onClick={() => navigator.clipboard.writeText(`E-mail de acesso: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar credenciais</button><small>A senha não será exibida novamente.</small></div>}
       </section>}
 
       {isSuperAdmin && <section className={`${styles.card} ${styles.reportCard}`} aria-labelledby="volunteer-report-title"><h2 id="volunteer-report-title">Relatório protegido de voluntários</h2><p>CPF e RG são carregados somente ao preparar este relatório. Você pode escolher uma ação específica ou todos os voluntários.</p><form onSubmit={prepareReport}><label>Coordenação estadual<select value={reportFilter.branchId} onChange={event => { const branchId = event.target.value; setReportFilter({ branchId, actionId: 'all' }); setReportReady(false); }}><option value="all">Todas as coordenações estaduais</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label><label>Ação<select disabled={reportFilter.branchId === 'all'} value={reportFilter.actionId} onChange={event => { setReportFilter(current => ({ ...current, actionId: event.target.value })); setReportReady(false); }}><option value="all">{reportFilter.branchId === 'all' ? 'Todas as ações' : 'Todas as ações desta coordenação'}</option>{reportActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}</select></label><div className={styles.formActions}><button className={styles.primary} disabled={reportLoading}>{reportLoading ? 'Preparando…' : 'Gerar relatório'}</button>{reportReady && reportRows.length > 0 && <button className={styles.secondary} type="button" onClick={() => window.print()}>Imprimir relatório ({reportRows.length})</button>}</div></form>{reportReady && <div className={styles.report}><header><h2>Voluntários cadastrados</h2><p>Coordenação estadual: {reportFilter.branchId === 'all' ? 'Todas' : branches.find(branch => branch.id === reportFilter.branchId)?.name}</p><p>Ação: {reportFilter.actionId === 'all' ? 'Todas' : reportActions.find(action => action.id === reportFilter.actionId)?.name}</p><p><strong>Total: {reportRows.length} voluntário{reportRows.length === 1 ? '' : 's'}</strong></p></header><table><thead><tr><th>Nome</th><th>CPF</th><th>RG</th><th>Telefone</th><th>E-mail</th></tr></thead><tbody>{reportRows.map(row => <tr key={row.id}><td>{row.fullName}</td><td>{formatCpf(row.cpf)}</td><td>{row.rg}</td><td>{formatPhone(row.phone) || '—'}</td><td>{row.email || '—'}</td></tr>)}</tbody></table></div>}</section>}
@@ -339,13 +342,13 @@ export default function VolunteersPage() {
             return <article className={styles.volunteer} key={volunteer.id}>
               <div className={styles.summary}><div><h3>{volunteer.fullName}</h3><p>{(volunteer.actionIds ?? []).length} ação(ões) · {(volunteer.regionalIds ?? []).length} coordenação(ões) estadual(is)</p></div><span className={volunteer.status === "active" ? styles.active : styles.blocked}>{volunteer.status === "active" ? "Ativo" : "Bloqueado"}</span></div>
               <div className={styles.contact}><span>{volunteer.email || "Sem e-mail"}</span><span>{formatPhone(volunteer.phone) || "Sem telefone"}</span></div>
-              {expandedId === volunteer.id && documents && <div className={styles.documents}>
+              {isSuperAdmin && expandedId === volunteer.id && documents && <div className={styles.documents}>
                 <div><span>CPF</span><strong>{showFullCpf ? formatCpf(documents.cpf) : maskCpf(documents.cpf)}</strong></div>
                 <div><span>RG</span><strong>{documents.rg}</strong></div>
                 <div><span>Nascimento</span><strong>{documents.birthDate.split("-").reverse().join("/")}</strong></div><div><span>Camiseta</span><strong>{documents.shirtSize || 'Não informado'}</strong></div><div><span>Vínculo com a ONG</span><strong>{documents.ngoRelationship || 'Não informado'}</strong></div>{documents.address && <div className={styles.wideDocument}><span>Endereço</span><strong>{[documents.address.street, documents.address.number, documents.address.complement, documents.address.neighborhood, documents.address.city, documents.address.state, documents.address.cep && `CEP ${formatCep(documents.address.cep)}`].filter(Boolean).join(', ')}</strong></div>}
                 <button type="button" className={styles.textButton} onClick={() => setShowFullCpf((current) => !current)}>{showFullCpf ? "Ocultar CPF" : "Mostrar CPF completo"}</button>
               </div>}
-              <div className={styles.actions}><button type="button" onClick={() => showVolunteerActions(volunteer)}>Ver ações</button><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{isSuperAdmin && (volunteer.accessStatus === 'active' || volunteer.accessStatus === 'blocked' ? <button type="button" disabled={saving} onClick={() => manageAccess(volunteer, true)}>Gerar nova senha</button> : <button type="button" disabled={saving} onClick={() => manageAccess(volunteer)}>Criar acesso individual</button>)}{isSuperAdmin && <button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button>}</div>
+              <div className={styles.actions}><button type="button" onClick={() => showVolunteerActions(volunteer)}>Ver ações</button>{isSuperAdmin && <><button type="button" onClick={() => loadDocuments(volunteer)}>{expandedId === volunteer.id ? "Ocultar documentos" : "Ver documentos"}</button><button type="button" onClick={() => startEdit(volunteer)}>Editar</button><button type="button" onClick={() => toggleStatus(volunteer)}>{volunteer.status === "active" ? "Bloquear" : "Reativar"}</button>{volunteer.accessStatus === 'active' || volunteer.accessStatus === 'blocked' ? <button type="button" disabled={saving} onClick={() => manageAccess(volunteer, true)}>Gerar nova senha</button> : <button type="button" disabled={saving} onClick={() => manageAccess(volunteer)}>Criar acesso individual</button>}<button type="button" disabled={saving} onClick={() => removeVolunteer(volunteer)}>Excluir voluntário</button></>}</div>
             </article>;
           })}</div>
         )}

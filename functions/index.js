@@ -212,6 +212,32 @@ export const registerPublicVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (re
   return { created: true };
 });
 
+// A coordenação pode cadastrar voluntários da própria UF, porém os documentos
+// pessoais seguem sendo gravados apenas pela Function e nunca retornam a ela.
+export const createCoordinationVolunteer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  const isSuperAdmin = request.auth?.token.role === 'superAdmin' && request.auth.token.status === 'active';
+  const isBranchViewer = request.auth?.token.role === VIEWER_ROLE && request.auth.token.status === 'active' && request.auth.token.branchId;
+  if (!isSuperAdmin && !isBranchViewer) throw new HttpsError('permission-denied', 'Acesso não autorizado.');
+  const profile = publicVolunteerProfile(request.data ?? {});
+  const actionIds = [...new Set(Array.isArray(request.data?.actionIds) ? request.data.actionIds.map((id) => String(id).trim()).filter(Boolean) : [])];
+  if (actionIds.length < 1 || actionIds.length > 20 || actionIds.some((id) => id.includes('/'))) throw new HttpsError('invalid-argument', 'Selecione de uma a vinte ações válidas.');
+  const db = getFirestore();
+  const actionSnapshots = await db.getAll(...actionIds.map((id) => db.collection('actions').doc(id)));
+  if (actionSnapshots.some((item) => !item.exists)) throw new HttpsError('not-found', 'Uma das ações selecionadas não existe.');
+  const actions = actionSnapshots.map((item) => item.data());
+  if (isBranchViewer && actions.some((action) => action.branchId !== request.auth.token.branchId)) throw new HttpsError('permission-denied', 'A coordenação só pode cadastrar voluntários nas próprias ações.');
+  const participationDates = actions.map((action) => action.date);
+  if (new Set(participationDates).size !== participationDates.length) throw new HttpsError('already-exists', 'O voluntário só pode participar de uma ação por dia.');
+  const duplicateCpf = await db.collection('volunteerPrivate').where('cpf', '==', profile.cpf).limit(1).get();
+  if (!duplicateCpf.empty) throw new HttpsError('already-exists', 'Este CPF já possui cadastro.');
+  const volunteerRef = db.collection('volunteers').doc();
+  const batch = db.batch();
+  batch.set(volunteerRef, { fullName: profile.fullName, fullNameSearch: normalizeSearchText(profile.fullName), email: profile.email, phone: profile.phone, actionIds, regionalIds: [...new Set(actions.map((action) => action.branchId))], participationDates, status: 'active', accessStatus: 'none', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  await batch.commit();
+  return { id: volunteerRef.id };
+});
+
 export const withdrawVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
   if (!request.auth || request.auth.token.role !== VOLUNTEER_ROLE || request.auth.token.status !== 'active') throw new HttpsError('permission-denied', 'Acesso de voluntário necessário.');
   const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
@@ -607,7 +633,8 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
       createdAuthUser = true;
       await auth.setCustomUserClaims(volunteerId, { role: VOLUNTEER_ROLE, status: 'active' });
       await reference.update({ accessStatus: 'active', status: 'active', updatedAt: FieldValue.serverTimestamp() });
-      return { username: email, password };
+      const passwordResetLink = await auth.generatePasswordResetLink(email);
+      return { username: email, password, passwordResetLink };
     } catch (error) {
       if (createdAuthUser) await auth.deleteUser(volunteerId).catch(() => {});
       if (error.code === 'auth/uid-already-exists' || error.code === 'auth/email-already-exists') throw new HttpsError('already-exists', 'Este voluntário já possui acesso.');
@@ -634,7 +661,8 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   if (action === 'resetPassword') {
     const password = generateFriendlyPassword();
     await auth.updateUser(account.uid, { email, password });
-    return { username: email, password };
+    const passwordResetLink = await auth.generatePasswordResetLink(email);
+    return { username: email, password, passwordResetLink };
   }
   const status = action === 'activate' ? 'active' : 'blocked';
   await auth.updateUser(account.uid, { disabled: status === 'blocked' });
