@@ -11,6 +11,7 @@ import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import growingElement from "../assets/brand/elements/elemento-03.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
+import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
 
 function AssociatesCounter() {
@@ -185,6 +186,7 @@ export default function CampaignGateway() {
           height="689"
         />
       </section>
+      <PublicCoordinatorAccess />
     </main>
   );
 }

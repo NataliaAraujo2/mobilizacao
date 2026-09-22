@@ -33,7 +33,7 @@ export default function AppLayout() {
               <button type="button" onClick={logout}>Sair</button>
             </>
           ) : (
-            <Link to={adminArea ? "/admin/login" : "/login"}>Entrar</Link>
+            <Link to={adminArea ? "/admin/login" : "/login"}>{adminArea ? "Entrar" : "Entrar como voluntário"}</Link>
           )}
         </nav>
       </header>

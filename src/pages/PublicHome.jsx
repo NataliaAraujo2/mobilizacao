@@ -7,6 +7,7 @@ import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logoMobilizacao from "../assets/brand/mobilizacao-logo-colorido.webp";
 import leafElement from "../assets/brand/elements/elemento-02.webp";
 import treeElement from "../assets/brand/elements/elemento-04.webp";
+import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "../App.module.css";
 
 export default function PublicHome() {
@@ -78,9 +79,9 @@ export default function PublicHome() {
         <nav className={styles.quickAccess} aria-label="Acessos rápidos">
           {!loading && !user && (
             <Link to="/login">
-              <span>Área restrita</span>
-              <strong>Entrar no sistema</strong>
-              <small>Acesso para administradores e voluntários</small>
+              <span>Área do voluntário</span>
+              <strong>Entrar como voluntário</strong>
+              <small>Acompanhe suas ações e confirme a presença</small>
             </Link>
           )}
 
@@ -124,6 +125,7 @@ export default function PublicHome() {
             </a>
           )}
         </nav>
+        <PublicCoordinatorAccess />
 
       </section>
     </main>

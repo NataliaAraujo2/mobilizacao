@@ -41,6 +41,7 @@ export default function LoginPage() {
       return false;
     }
   });
+  const coordinatorAccess = location.pathname.startsWith('/admin/');
 
   const destination = destinationForRole(claims?.role);
   if (user) return <Navigate to={destination} replace />;
@@ -63,9 +64,9 @@ export default function LoginPage() {
   return (
     <main className={styles.page}>
       <section className={styles.card} aria-labelledby="login-title">
-        <p className={styles.eyebrow}>Área restrita</p>
-        <h1 id="login-title">Entrar</h1>
-        <p>Acesse com seu nome de usuário ou e-mail.</p>
+        <p className={styles.eyebrow}>{coordinatorAccess ? 'Coordenação e administração' : 'Área do voluntário'}</p>
+        <h1 id="login-title">{coordinatorAccess ? 'Acesso da coordenação' : 'Entrar como voluntário'}</h1>
+        <p>{coordinatorAccess ? 'Acesse com o usuário ou e-mail da sua coordenação.' : 'Acesse com seu e-mail e senha de voluntário.'}</p>
         {expiredByInactivity && <p className={styles.notice} role="status">Sua sessão foi encerrada após 1 hora de inatividade.</p>}
 
         <form onSubmit={handleSubmit}>
