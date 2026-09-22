@@ -166,6 +166,7 @@ export default function CampaignGateway() {
           <span className={styles.previousCopy}>
             <strong>MobilizAÇÃO 2025</strong>
             <small>Relembre a campanha e conheça as ações da edição anterior.</small>
+            <span className={styles.previousMetric}><b>1.417</b> voluntários mobilizados</span>
           </span>
           <span className={styles.previousLink}>Ver relatório da edição 2025 <b aria-hidden="true">→</b></span>
         </Link>
