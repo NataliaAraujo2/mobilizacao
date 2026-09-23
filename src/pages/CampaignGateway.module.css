@@ -47,6 +47,11 @@
 .kitSprout { right: -1.5rem; top: -2rem; max-width: 9rem; transform: rotate(16deg); }
 @keyframes showMap { from { opacity: 0; transform: translateY(-.5rem); } to { opacity: 1; transform: translateY(0); } }
 .previousEditions { width: min(100%, 64rem); margin: 3rem auto 0; }
+.videoSection { display: grid; grid-template-columns: minmax(15rem, .72fr) minmax(0, 1.28fr); align-items: center; gap: clamp(1.25rem, 4vw, 3rem); width: min(100%, 68rem); margin: 3rem auto 0; padding: clamp(1.25rem, 3vw, 2rem); background: linear-gradient(135deg, #fff 0%, #f3faff 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
+.videoCopy h2 { margin: .35rem 0 .65rem; color: var(--brand-blue); font-size: clamp(1.5rem, 3.6vw, 2.25rem); line-height: 1.1; }
+.videoCopy > p:last-child { margin: 0; color: var(--text-muted); line-height: 1.6; }
+.videoFrame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--brand-blue); border-radius: 1rem; box-shadow: 0 .8rem 1.8rem rgb(0 97 168 / 18%); }
+.videoFrame iframe { position: absolute; width: 100%; height: 100%; border: 0; }
 .previousHeading { margin-bottom: 1rem; text-align: center; }
 .previousHeading h2 { margin: .35rem 0 0; color: var(--brand-blue); font-size: clamp(1.5rem, 4vw, 2.25rem); }
 .previousCard { display: grid; grid-template-columns: 8rem auto minmax(0, 1fr) auto; align-items: center; gap: clamp(.8rem, 3vw, 1.5rem); padding: 1.25rem; color: var(--text); text-decoration: none; background: linear-gradient(rgb(255 255 255 / 88%), rgb(255 255 255 / 94%)), url("../assets/brand/mobilizacao-fundo-2025.webp") center / cover; border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 .8rem 2rem rgb(23 50 77 / 9%); transition: transform 180ms ease, box-shadow 180ms ease; }
@@ -92,6 +97,7 @@
   .kitLeaves { left: -2rem; }
   .kitGrowing { right: -3rem; bottom: 18%; }
   .kitSprout { display: none; }
+  .videoSection { grid-template-columns: 1fr; }
   .previousCard { grid-template-columns: 6rem 1fr; }
   .previousCard > img { grid-row: span 2; width: 6rem; height: 6rem; }
   .previousCopy { grid-column: 2; }

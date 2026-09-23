@@ -155,6 +155,23 @@ export default function CampaignGateway() {
         </div>}
       </section>
 
+      <section className={styles.videoSection} aria-labelledby="video-title">
+        <div className={styles.videoCopy}>
+          <p className={styles.eyebrow}>Conheça a MobilizAÇÃO</p>
+          <h2 id="video-title">Assista e venha fazer parte</h2>
+          <p>Conheça um pouco mais sobre a MobilizAÇÃO e como sua participação ajuda a transformar comunidades.</p>
+        </div>
+        <div className={styles.videoFrame}>
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/8rco9x7wIck"
+            title="MobilizAÇÃO | ONG Moradia e Cidadania"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      </section>
+
       <section className={styles.previousEditions} aria-labelledby="previous-editions-title">
         <div className={styles.previousHeading}>
           <p className={styles.eyebrow}>Nossa história</p>
