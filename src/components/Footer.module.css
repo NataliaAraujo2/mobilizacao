@@ -8,6 +8,7 @@
 .footer a:hover, .footer a:focus-visible { color: #ffd2aa; text-decoration: underline; text-underline-offset: .2rem; }
 .contact { display: grid; align-content: start; justify-items: start; gap: .5rem; }
 .contact address { color: rgb(255 255 255 / 82%); font-style: normal; line-height: 1.5; }
+.phone { display: flex; gap: .35rem; margin: 0; color: rgb(255 255 255 / 84%); }
 .socials { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .45rem; }
 .socials a { padding: .42rem .65rem; color: white; font-size: .76rem; font-weight: 800; border: 1px solid rgb(255 255 255 / 44%); border-radius: 999px; transition: transform 160ms ease, background 160ms ease; }
 .socials a:hover, .socials a:focus-visible { color: white; text-decoration: none; background: rgb(255 255 255 / 17%); transform: translateY(-1px); }

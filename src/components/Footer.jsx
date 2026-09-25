@@ -37,7 +37,7 @@ export default function Footer() {
             Ed. Ceará, Setor Comercial Sul, Q. 1, Bloco E, Lote 30, Sala 913<br />
             Brasília/DF
           </address>
-          <a href="tel:+556132248071">(61) 3224-8071</a>
+          <p className={styles.phone}>☎ <span>(61) 3224-8071</span></p>
           <a href="mailto:comunicacao@moradiaecidadania.org.br">comunicacao@moradiaecidadania.org.br</a>
           <div className={styles.socials} aria-label="Redes sociais">
             {socialLinks.map(({ label, href, className }) => (
