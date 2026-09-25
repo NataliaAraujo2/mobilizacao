@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import AdminInstall from "../components/AdminInstall";
 import BackButton from "../components/BackButton";
+import Footer from "../components/Footer";
 import { useAuth } from "../auth/useAuth";
 import mobilizacaoLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import styles from "./AppLayout.module.css";
@@ -39,6 +40,7 @@ export default function AppLayout() {
       </header>
       {derivedAccountPage && <BackButton fallback={accountPath} />}
       <Outlet />
+      <Footer />
     </>
   );
 }
