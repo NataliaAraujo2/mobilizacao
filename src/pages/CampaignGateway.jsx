@@ -10,6 +10,7 @@ import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import growingElement from "../assets/brand/elements/elemento-03.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
+import homeIntro from "../assets/brand/home-intro.svg";
 import { getNewAssociatesCount } from "../services/associationStatsService";
 import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
@@ -123,6 +124,10 @@ export default function CampaignGateway() {
           <span>Mobiliz</span><em>AÇÃO</em>
         </h1>
         <p>Conheça nossas edições e acompanhe o que estamos preparando.</p>
+      </section>
+
+      <section className={styles.homeIntroCard} aria-label="MobilizAÇÃO">
+        <img src={homeIntro} alt="MobilizAÇÃO — juntos podemos transformar territórios" width="1440" height="810" />
       </section>
 
       <section id="acoes-2026" className={styles.mapTeaser} aria-labelledby="map-teaser-title" onMouseEnter={() => setMapPreview(true)} onMouseLeave={() => setMapPreview(false)} onFocus={() => setMapPreview(true)} onBlur={closePreviewWhenLeaving}>
