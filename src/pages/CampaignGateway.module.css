@@ -6,7 +6,7 @@
 .wordmark span { color: var(--brand-blue); font-size: clamp(2.5rem, 7vw, 4.5rem); font-weight: 800; letter-spacing: -.055em; }
 .wordmark em { margin-left: .06em; color: var(--brand-green); font-family: "Amithen", cursive; font-size: clamp(3rem, 8.5vw, 5.45rem); font-style: normal; font-weight: 400; letter-spacing: 0; transform: rotate(-2deg); }
 .intro > p:last-child { margin: .5rem auto 0; color: var(--text-muted); }
-.activeCampaign { width: min(100%, 72rem); margin: clamp(2.5rem, 6vw, 4rem) auto 1.25rem; padding: clamp(.75rem, 2vw, 1rem); background: white; border: 1px solid var(--border); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(23 50 77 / 9%); }
+.activeCampaign { width: min(100%, 86rem); margin: clamp(2.5rem, 6vw, 4rem) auto 1.25rem; padding: clamp(.75rem, 2vw, 1rem); background: white; border: 1px solid var(--border); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(23 50 77 / 9%); }
 .activeCampaign > img { display: block; width: 100%; height: auto; border-radius: 1rem; }
 .campaignHeading { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: .5rem .4rem 1rem; }
 .campaignHeading h2 { margin: .3rem 0 0; color: var(--brand-blue); font-size: clamp(1.25rem, 3vw, 1.8rem); }
@@ -14,7 +14,7 @@
 .associatesCounter small { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .82; }
 .associatesCounter strong { margin: .15rem 0; font-size: clamp(1.65rem, 4vw, 2.25rem); line-height: 1; }
 .associatesCounter span { font-size: .72rem; font-weight: 800; text-transform: uppercase; }
-.mapTeaser { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(15rem, .65fr); align-items: center; gap: clamp(1rem, 5vw, 4rem); width: min(100%, 68rem); min-height: 24rem; margin: 2.5rem auto; padding: clamp(1.5rem, 4vw, 3rem); color: var(--text); text-decoration: none; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #fff7ef 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.75rem; box-shadow: 0 1.25rem 3rem rgb(0 97 168 / 13%); overflow: hidden; transition: transform 180ms ease, box-shadow 180ms ease; }
+.mapTeaser { position: relative; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(15rem, .65fr); align-items: center; gap: clamp(1rem, 5vw, 4rem); width: min(100%, 86rem); min-height: 24rem; margin: 2.5rem auto; padding: clamp(1.5rem, 4vw, 3rem); color: var(--text); text-decoration: none; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #fff7ef 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.75rem; box-shadow: 0 1.25rem 3rem rgb(0 97 168 / 13%); overflow: hidden; transition: transform 180ms ease, box-shadow 180ms ease; }
 .mapTeaserCopy, .mapLogo { position: relative; z-index: 1; }
 .mapTeaser .eyebrow { color: var(--brand-orange); }
 .mapTeaserCopy h2 { max-width: 38rem; margin: .5rem 0; color: var(--brand-blue); font-size: clamp(1.8rem, 5vw, 3.4rem); line-height: 1.06; letter-spacing: -.04em; }
@@ -46,8 +46,8 @@
 .kitGrowing { right: 23%; bottom: -3.5rem; max-width: 12rem; transform: rotate(-8deg); }
 .kitSprout { right: -1.5rem; top: -2rem; max-width: 9rem; transform: rotate(16deg); }
 @keyframes showMap { from { opacity: 0; transform: translateY(-.5rem); } to { opacity: 1; transform: translateY(0); } }
-.previousEditions { width: min(100%, 64rem); margin: 3rem auto 0; }
-.videoSection { display: grid; grid-template-columns: minmax(15rem, .72fr) minmax(0, 1.28fr); align-items: center; gap: clamp(1.25rem, 4vw, 3rem); width: min(100%, 68rem); margin: 3rem auto 0; padding: clamp(1.25rem, 3vw, 2rem); background: linear-gradient(135deg, #fff 0%, #f3faff 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
+.previousEditions { width: min(100%, 86rem); margin: 3rem auto 0; }
+.videoSection { display: grid; grid-template-columns: minmax(15rem, .72fr) minmax(0, 1.28fr); align-items: center; gap: clamp(1.25rem, 4vw, 3rem); width: min(100%, 86rem); margin: 3rem auto 0; padding: clamp(1.25rem, 3vw, 2rem); background: linear-gradient(135deg, #fff 0%, #f3faff 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
 .videoCopy h2 { margin: .35rem 0 .65rem; color: var(--brand-blue); font-size: clamp(1.5rem, 3.6vw, 2.25rem); line-height: 1.1; }
 .videoCopy > p:last-child { margin: 0; color: var(--text-muted); line-height: 1.6; }
 .videoFrame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--brand-blue); border-radius: 1rem; box-shadow: 0 .8rem 1.8rem rgb(0 97 168 / 18%); }
