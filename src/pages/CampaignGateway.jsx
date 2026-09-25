@@ -125,7 +125,7 @@ export default function CampaignGateway() {
         <p>Conheça nossas edições e acompanhe o que estamos preparando.</p>
       </section>
 
-      <section className={styles.mapTeaser} aria-labelledby="map-teaser-title" onMouseEnter={() => setMapPreview(true)} onMouseLeave={() => setMapPreview(false)} onFocus={() => setMapPreview(true)} onBlur={closePreviewWhenLeaving}>
+      <section id="acoes-2026" className={styles.mapTeaser} aria-labelledby="map-teaser-title" onMouseEnter={() => setMapPreview(true)} onMouseLeave={() => setMapPreview(false)} onFocus={() => setMapPreview(true)} onBlur={closePreviewWhenLeaving}>
         <img className={`${styles.kitElement} ${styles.kitLeaves}`} src={leavesElement} alt="" aria-hidden="true" />
         <img className={`${styles.kitElement} ${styles.kitGrowing}`} src={growingElement} alt="" aria-hidden="true" />
         <img className={`${styles.kitElement} ${styles.kitSprout}`} src={sproutElement} alt="" aria-hidden="true" />
@@ -189,7 +189,7 @@ export default function CampaignGateway() {
         </Link>
       </section>
 
-      <section className={styles.activeCampaign} aria-labelledby="active-campaign-title">
+      <section id="agenda-2030" className={styles.activeCampaign} aria-labelledby="active-campaign-title">
         <div className={styles.campaignHeading}>
           <div>
             <p className={styles.eyebrow}>Associação em andamento</p>

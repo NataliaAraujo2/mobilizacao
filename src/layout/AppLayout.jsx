@@ -3,12 +3,12 @@ import AdminInstall from "../components/AdminInstall";
 import BackButton from "../components/BackButton";
 import Footer from "../components/Footer";
 import { useAuth } from "../auth/useAuth";
-import mobilizacaoLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import styles from "./AppLayout.module.css";
 
 export default function AppLayout() {
   const { pathname } = useLocation();
   const adminArea = pathname === "/admin" || pathname.startsWith("/admin/");
+  const publicArea = pathname === "/" || pathname === "/2025";
   const { user, claims, logout } = useAuth();
   const accountPath = claims?.role === "volunteer" ? "/voluntario" : claims?.role === "branchViewer" ? "/consulta" : "/admin";
   const derivedAccountPage = user && pathname !== accountPath && (
@@ -19,15 +19,18 @@ export default function AppLayout() {
     <>
       <header className={styles.header}>
         <Link className={styles.brand} to="/" aria-label="MobilizAÇÃO — página inicial">
-          <img
-            src={mobilizacaoLogo}
-            alt="MobilizAÇÃO — Semeando e Cultivando o Futuro"
-            width="1400"
-            height="1466"
-          />
+          <small>ONG Moradia e Cidadania</small>
+          <strong><span>Mobiliz</span><em>AÇÃO</em></strong>
         </Link>
         <nav aria-label="Navegação principal">
-          {user ? (
+          {publicArea ? (
+            <>
+              <Link to="/">Início</Link>
+              <a href="/#acoes-2026">Ações 2026</a>
+              <a href="/#agenda-2030">Agenda 2030</a>
+              <Link to="/2025">Edição 2025</Link>
+            </>
+          ) : user ? (
             <>
               <Link to={accountPath}>Minha área</Link>
               <AdminInstall />

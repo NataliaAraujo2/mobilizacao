@@ -1,19 +1,23 @@
 .header {
-  min-height: 4.25rem;
+  min-height: 4rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem clamp(1rem, 4vw, 3rem);
+  padding: .75rem clamp(1rem, 4vw, 3rem);
   background: var(--surface);
-  border-top: 0.3rem solid var(--brand-orange);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 .2rem 1rem rgb(0 97 168 / 7%);
 }
-.brand { display: inline-flex; align-items: center; text-decoration: none; }
-.brand img { display: block; width: auto; height: 5.5rem; object-fit: contain; }
-.header nav { display: flex; flex: 0 0 auto; align-items: center; gap: 1rem; }
-.header nav a { color: var(--map-state); font-weight: 700; white-space: nowrap; }
+.brand { display: grid; color: var(--brand-blue); line-height: 1; text-decoration: none; }
+.brand small { color: var(--brand-orange); font-size: .3rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.brand strong { display: flex; align-items: baseline; margin-top: .1rem; font-size: 1.12rem; letter-spacing: -.06em; }
+.brand strong span { font-weight: 800; }
+.brand strong em { margin-left: .04em; color: var(--brand-green); font-family: "Amithen", cursive; font-size: 1.42rem; font-style: normal; font-weight: 400; letter-spacing: 0; }
+.header nav { display: flex; flex: 0 0 auto; align-items: center; gap: clamp(.9rem, 2.5vw, 2rem); }
+.header nav a { color: #6498c9; font-size: clamp(.88rem, 1.8vw, 1.08rem); font-weight: 800; white-space: nowrap; text-decoration: none; }
+.header nav a:first-child { color: var(--brand-blue); }
+.header nav a:hover, .header nav a:focus-visible { color: var(--brand-orange); text-decoration: underline; text-underline-offset: .3rem; }
 .header button {
   padding: 0.55rem 0.9rem;
   color: white;
@@ -23,12 +27,11 @@
   cursor: pointer;
 }
 @media (max-width: 420px) {
-  .header { min-height: 0; gap: .5rem; padding: .45rem .7rem; }
-  .brand img { height: 3.75rem; }
-  .header nav { gap: .5rem; font-size: .9rem; }
+  .header { min-height: 0; gap: .5rem; padding: .6rem .7rem; }
+  .header nav { gap: .5rem; font-size: .9rem; overflow-x: auto; }
+  .header nav a { font-size: .78rem; }
 }
 @media (max-width: 320px) {
   .header { padding-inline: .55rem; }
-  .brand img { height: 3.25rem; }
   .header nav { font-size: .84rem; }
 }
