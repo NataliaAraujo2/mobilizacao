@@ -493,6 +493,34 @@ export const resetSuperAdminPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (req
   return { uid, displayName: profile.data().displayName, email: profile.data().email, password };
 });
 
+// Reaplica as permissões do Auth a partir do cadastro administrativo. Isso evita
+// divergência entre o documento exibido no painel e o token usado pelo Storage.
+export const syncSuperAdminClaims = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  const db = getFirestore();
+  const auth = getAuth();
+  const snapshot = await db.collection('users').where('role', '==', 'superAdmin').get();
+  const synced = [];
+  const missingAuthUsers = [];
+
+  for (const profile of snapshot.docs) {
+    try {
+      const account = await auth.getUser(profile.id);
+      const currentClaims = account.customClaims ?? {};
+      const claims = { ...currentClaims, role: 'superAdmin', status: profile.data().status === 'blocked' ? 'blocked' : 'active' };
+      await auth.setCustomUserClaims(profile.id, claims);
+      synced.push({ uid: profile.id, email: account.email ?? profile.data().email ?? '' });
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        missingAuthUsers.push({ uid: profile.id, email: profile.data().email ?? '' });
+        continue;
+      }
+      throw new HttpsError('internal', 'Não foi possível sincronizar as permissões dos superadmins.');
+    }
+  }
+  return { synced, missingAuthUsers };
+});
+
 export const completeSuperAdminPasswordChange = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
   const { role, status, branchId, mustChangePassword } = request.auth?.token ?? {};
   if (!request.auth || !["superAdmin", VIEWER_ROLE].includes(role) || status !== "active" || !mustChangePassword) {
