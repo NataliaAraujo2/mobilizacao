@@ -231,7 +231,7 @@ export default function ActionsPage() {
         <form onSubmit={handleSubmit}>
           <fieldset><legend>Informações principais</legend><div className={styles.grid}>
             <label className={styles.wide}>Nome da ação<input required minLength="3" maxLength="160" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
-            <label className={styles.wide}>Descrição <small>(opcional)</small><textarea rows="4" maxLength="1500" placeholder="Explique o objetivo e como será a ação." value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
+            <label className={styles.wide}>Descrição <small>(opcional — use uma linha em branco entre os parágrafos)</small><textarea rows="6" maxLength="1500" placeholder={'Explique o objetivo e como será a ação.\n\nUse uma linha em branco para separar as ideias e facilitar a leitura.'} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
             <label>Coordenação estadual responsável<select required value={form.branchId} onChange={(event) => setForm({ ...form, branchId: event.target.value })}><option value="">Selecione</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label>
             <label>Data de início<input required type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value, endDate: form.endDate || event.target.value })} /></label>
             <label>Hora de início<input required type="time" value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></label>
@@ -251,8 +251,8 @@ export default function ActionsPage() {
           </div></fieldset>
 
           <fieldset><legend>Orientações</legend><div className={styles.grid}>
-            <label className={styles.wide}>O que levar<textarea rows="4" placeholder="Ex.: luvas, garrafa de água, protetor solar..." value={form.whatToBring} onChange={(event) => setForm({ ...form, whatToBring: event.target.value })} /></label>
-            <label className={styles.wide}>Dicas e orientações<textarea rows="5" placeholder="Informações importantes para os participantes" value={form.tips} onChange={(event) => setForm({ ...form, tips: event.target.value })} /></label>
+            <label className={styles.wide}>O que levar <small>(use uma linha em branco entre os parágrafos)</small><textarea rows="4" placeholder="Ex.: luvas, garrafa de água, protetor solar..." value={form.whatToBring} onChange={(event) => setForm({ ...form, whatToBring: event.target.value })} /></label>
+            <label className={styles.wide}>Dicas e orientações <small>(use uma linha em branco entre os parágrafos)</small><textarea rows="5" placeholder="Informações importantes para os participantes" value={form.tips} onChange={(event) => setForm({ ...form, tips: event.target.value })} /></label>
           </div></fieldset>
 
           <fieldset><legend>Fotos</legend>{editingAction && <div className={styles.existingPhotos}><p>Fotos já cadastradas</p><ActionPhotoGallery action={editingAction} grouped onRemove={removeExistingPhoto} removingPath={removingPhotoPath} /></div>}<p>{editingActionId ? 'Adicione novas fotos, se necessário.' : 'Até 5 fotos em cada etapa.'} As imagens serão reduzidas antes do envio para economizar internet e armazenamento.</p><div className={styles.photoGrid}>

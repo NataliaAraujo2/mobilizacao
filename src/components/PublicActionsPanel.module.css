@@ -10,10 +10,16 @@
 .actionChoice b { margin-top: .35rem; color: var(--brand-blue); font-size: .8rem; }
 .municipality { margin: 0 0 .2rem !important; color: var(--brand-orange); font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; }
 .actionChoice .municipality { display: block; margin: 0 !important; }
-.details > p { margin: .35rem 0; line-height: 1.45; }
 .panel button { min-height: 2.55rem; padding: .5rem .75rem; color: white; font: inherit; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
-.details { display: grid; gap: .45rem; }
+.details { display: grid; gap: 1rem; }
 .details h3 { margin: 0; }
+.actionEssentials { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; margin: 0; }
+.actionEssentials > div { padding: .8rem .9rem; background: #f2f7fa; border: 1px solid #d9e6ee; border-radius: .7rem; }
+.actionEssentials dt { margin-bottom: .25rem; color: var(--brand-blue); font-size: .78rem; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
+.actionEssentials dd { margin: 0; color: var(--text); font-size: .92rem; font-weight: 650; line-height: 1.45; }
+.detailSection { display: grid; gap: .55rem; max-width: 74ch; }
+.detailSection h4 { margin: 0; color: var(--brand-blue); font-size: 1rem; }
+.detailSection p { margin: 0; color: #29485a; font-size: .98rem; line-height: 1.7; }
 .details :global(.gallery) { margin-top: .55rem; }
 .back { justify-self: start; min-height: auto !important; padding: .15rem 0 !important; color: var(--brand-blue) !important; background: transparent !important; }
 .participate { width: 100%; margin-top: .35rem; }
@@ -55,4 +61,4 @@
 .signup form > button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .signup form > button:disabled { cursor: wait; opacity: .65; }
 .error { margin: .8rem 0 0; color: #a22b2b; font-weight: 750; }
-@media (max-width: 680px) { .modalBackdrop { padding: .5rem; } .actionModal, .signup { max-height: calc(100vh - 1rem); padding: 1rem; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } }
+@media (max-width: 680px) { .modalBackdrop { padding: .5rem; } .actionModal, .signup { max-height: calc(100vh - 1rem); padding: 1rem; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address, .actionEssentials { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } .detailSection p { font-size: .94rem; line-height: 1.62; } }

@@ -14,6 +14,10 @@ import VolunteerRegulation from './VolunteerRegulation';
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
 const EMPTY = { fullName: '', email: '', phone: '', cpf: '', rg: '', birthDate: '', address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, imageUseAccepted: false, guardianAuthorizationAccepted: false };
 const formatCep = value => String(value ?? '').replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
+const textParagraphs = value => String(value ?? '')
+  .split(/\n\s*\n/)
+  .map(paragraph => paragraph.trim())
+  .filter(Boolean);
 const enrollmentErrorMessage = error => ({
   'auth/invalid-credential': 'E-mail ou senha incorretos.',
   'auth/wrong-password': 'E-mail ou senha incorretos.',
@@ -104,7 +108,11 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     }
   }
   const selectedDetails = selected && <article className={styles.details}>
-    <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3><p><strong>Quando:</strong> {actionScheduleSummary(selected)}</p><p><strong>Local:</strong> {selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</p>{selected.description && <p><strong>Sobre a ação:</strong> {selected.description}</p>}{selected.whatToBring && <p><strong>O que levar:</strong> {selected.whatToBring}</p>}{selected.tips && <p><strong>Orientações:</strong> {selected.tips}</p>}
+    <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3>
+    <dl className={styles.actionEssentials}><div><dt>Quando</dt><dd>{actionScheduleSummary(selected)}</dd></div><div><dt>Local</dt><dd>{selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</dd></div></dl>
+    {selected.description && <section className={styles.detailSection}><h4>Sobre a ação</h4>{textParagraphs(selected.description).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
+    {selected.whatToBring && <section className={styles.detailSection}><h4>O que levar</h4>{textParagraphs(selected.whatToBring).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
+    {selected.tips && <section className={styles.detailSection}><h4>Orientações</h4>{textParagraphs(selected.tips).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
     <ActionPhotoGallery action={selected} />
     <button className={styles.participate} type="button" disabled={loading} onClick={beginParticipation}>{loading ? 'Concluindo…' : 'Quero participar'}</button>
   </article>;
