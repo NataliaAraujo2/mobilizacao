@@ -12,12 +12,14 @@ async function call(name, data) {
 // ao Firestore para não depender do tempo de inicialização de uma Function.
 export function listPublicActions(state) { return listPublicActionsByCoordinationState(state); }
 export async function getPublicAction(actionId) { return [await getPublicActionById(actionId)]; }
-export async function getPublicVolunteerCount() {
+export async function getPublicVolunteerCount(year) {
+  const safeYear = String(year ?? '');
+  if (!/^20\d{2}$/.test(safeYear)) return { count: 0 };
   const { db, doc, getDoc } = await getDbService(['doc', 'getDoc']);
-  const snapshot = await getDoc(doc(db, 'publicStats', 'volunteerCounter'));
+  const snapshot = await getDoc(doc(db, 'publicStats', `volunteerCounter-${safeYear}`));
   const total = snapshot.exists() ? snapshot.data().total : null;
   if (Number.isSafeInteger(total) && total >= 0) return { count: total };
-  return call('initializePublicVolunteerCounter', {});
+  return { count: 0 };
 }
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
 export function registerPublicVolunteer(actionId, profile) { return call('registerPublicVolunteer', { actionId, profile }); }

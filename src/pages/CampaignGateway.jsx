@@ -13,6 +13,8 @@ import { getPublicVolunteerCount } from "../services/publicVolunteerService";
 import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
 
+const CAMPAIGN_YEAR = '2026';
+
 function AssociatesCounter() {
   const counterRef = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -58,7 +60,7 @@ function VolunteerCounter() {
 
   useEffect(() => {
     let active = true;
-    getPublicVolunteerCount()
+    getPublicVolunteerCount(CAMPAIGN_YEAR)
       .then(({ count: value }) => { if (active) setCount(Number.isSafeInteger(value) && value >= 0 ? value : 0); })
       .catch(() => { if (active) setCount(0); });
     return () => { active = false; };

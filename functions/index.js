@@ -19,6 +19,7 @@ const REPORT_YEAR = "2025";
 const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
 const MAX_REPORT_SIZE = 25 * 1024 * 1024;
 const VOLUNTEER_COUNTER_DOCUMENT = 'volunteerCounter';
+const VOLUNTEER_COUNTER_PREFIX = 'volunteerCounter-';
 // Operações administrativas são pouco frequentes. Mantemos custo zero em
 // repouso e impedimos escala inesperada por repetição acidental de chamadas.
 const ADMIN_FUNCTION_OPTIONS = { region: REGION, minInstances: 0, maxInstances: 2, concurrency: 10 };
@@ -30,14 +31,22 @@ function requireSuperAdmin(request) {
   }
 }
 
-async function volunteerCounterUpdate(db) {
-  const reference = db.collection('publicStats').doc(VOLUNTEER_COUNTER_DOCUMENT);
-  const current = await reference.get();
-  if (current.exists && Number.isSafeInteger(current.data().total) && current.data().total >= 0) {
-    return { reference, data: { total: FieldValue.increment(1), updatedAt: FieldValue.serverTimestamp() } };
+function volunteerYear(date) {
+  const match = String(date ?? '').match(/^(20\d{2})-\d{2}-\d{2}$/);
+  return match ? match[1] : null;
+}
+
+function volunteerYears(dates) {
+  return [...new Set((dates ?? []).map(volunteerYear).filter(Boolean))];
+}
+
+function updateVolunteerYearCounters(batch, db, years, change) {
+  for (const year of years) {
+    batch.set(db.collection('publicStats').doc(`${VOLUNTEER_COUNTER_PREFIX}${year}`), {
+      total: FieldValue.increment(change),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
   }
-  const total = (await db.collection('volunteers').count().get()).data().count;
-  return { reference, data: { total: total + 1, updatedAt: FieldValue.serverTimestamp() } };
 }
 
 function actionPhase(action, now = new Date()) {
@@ -190,6 +199,10 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
       const participationDates = actionSnapshots.filter(item => item.exists).map(item => item.data().date);
       if (new Set(participationDates).size !== participationDates.length) throw new HttpsError('already-exists', 'Só é permitida uma ação por dia.');
       transaction.update(volunteerRef, { actionIds: nextActionIds, regionalIds, participationDates, updatedAt: FieldValue.serverTimestamp() });
+      const year = volunteerYear(action.date);
+      if (year && !volunteerYears(data.participationDates).includes(year)) {
+        transaction.set(db.collection('publicStats').doc(`${VOLUNTEER_COUNTER_PREFIX}${year}`), { total: FieldValue.increment(1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      }
     });
     return { created: false, replaced: Boolean(request.data?.replaceActionId) };
   }
@@ -213,8 +226,7 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   const batch = db.batch();
   batch.set(volunteerRef, { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'active', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted === true, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  const counter = await volunteerCounterUpdate(db);
-  batch.set(counter.reference, counter.data, { merge: true });
+  updateVolunteerYearCounters(batch, db, volunteerYears([action.date]), 1);
   await batch.commit();
   await getAuth().updateUser(request.auth.uid, { displayName: fullName });
   await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });
@@ -237,8 +249,7 @@ export const registerPublicVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (re
   const batch = db.batch();
   batch.set(volunteerRef, { fullName: profile.fullName, fullNameSearch: normalizeSearchText(profile.fullName), email: profile.email, phone: profile.phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'none', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  const counter = await volunteerCounterUpdate(db);
-  batch.set(counter.reference, counter.data, { merge: true });
+  updateVolunteerYearCounters(batch, db, volunteerYears([action.date]), 1);
   await batch.commit();
   return { created: true };
 });
@@ -265,8 +276,7 @@ export const createCoordinationVolunteer = onCall(ADMIN_FUNCTION_OPTIONS, async 
   const batch = db.batch();
   batch.set(volunteerRef, { fullName: profile.fullName, fullNameSearch: normalizeSearchText(profile.fullName), email: profile.email, phone: profile.phone, actionIds, regionalIds: [...new Set(actions.map((action) => action.branchId))], participationDates, status: 'active', accessStatus: 'none', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-  const counter = await volunteerCounterUpdate(db);
-  batch.set(counter.reference, counter.data, { merge: true });
+  updateVolunteerYearCounters(batch, db, volunteerYears(participationDates), 1);
   await batch.commit();
   return { id: volunteerRef.id };
 });
@@ -288,6 +298,14 @@ export const withdrawVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request)
     const regionalIds = [...new Set(remainingSnapshots.filter(item => item.exists).map(item => item.data().branchId))];
     const participationDates = [...new Set(remainingSnapshots.filter(item => item.exists).map(item => item.data().date))];
     transaction.update(volunteerRef, { actionIds: remainingIds, regionalIds, participationDates, updatedAt: FieldValue.serverTimestamp() });
+    const year = volunteerYear(action.date);
+    if (year && !volunteerYears(participationDates).includes(year)) {
+      const counterRef = db.collection('publicStats').doc(`${VOLUNTEER_COUNTER_PREFIX}${year}`);
+      const counter = await transaction.get(counterRef);
+      if (counter.exists && Number.isSafeInteger(counter.data().total) && counter.data().total > 0) {
+        transaction.set(counterRef, { total: FieldValue.increment(-1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      }
+    }
   });
   return { ok: true };
 });
@@ -708,11 +726,14 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
     const batch = db.batch();
     batch.delete(reference);
     batch.delete(db.collection('volunteerPrivate').doc(volunteerId));
-    const counterReference = db.collection('publicStats').doc(VOLUNTEER_COUNTER_DOCUMENT);
-    const counter = await counterReference.get();
-    if (counter.exists && Number.isSafeInteger(counter.data().total) && counter.data().total > 0) {
-      batch.set(counterReference, { total: FieldValue.increment(-1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    }
+    const years = volunteerYears(snapshot.data().participationDates);
+    const counterReferences = years.map((year) => db.collection('publicStats').doc(`${VOLUNTEER_COUNTER_PREFIX}${year}`));
+    const counters = counterReferences.length ? await db.getAll(...counterReferences) : [];
+    counters.forEach((counter, index) => {
+      if (counter.exists && Number.isSafeInteger(counter.data().total) && counter.data().total > 0) {
+        batch.set(counterReferences[index], { total: FieldValue.increment(-1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      }
+    });
     await batch.commit();
     return { ok: true };
   }
