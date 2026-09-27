@@ -144,7 +144,7 @@ export default function CampaignGateway() {
           <img className={`${styles.counterElement} ${styles.counterLeaves}`} src={leavesElement} alt="" aria-hidden="true" />
           <img className={`${styles.counterElement} ${styles.counterSprout}`} src={sproutElement} alt="" aria-hidden="true" />
           <div className={styles.volunteerCounterContent}>
-            <h2 id="video-title">Juntos semeamos <span>um futuro melhor</span></h2>
+            <h2 id="video-title"><span className={styles.counterTitleMain}>Juntos semeamos</span><span>um futuro melhor</span></h2>
             <p>Já somos</p>
             <VolunteerCounter />
             <small>voluntários</small>
