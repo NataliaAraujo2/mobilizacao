@@ -134,6 +134,13 @@ export const listCoordinationActionVolunteers = onCall(ADMIN_FUNCTION_OPTIONS, a
   };
 });
 
+// A página pública recebe somente o total de cadastros ativos, sem expor
+// nomes, contatos ou qualquer outro dado dos voluntários.
+export const getPublicVolunteerCount = onCall(PUBLIC_FUNCTION_OPTIONS, async () => {
+  const snapshot = await getFirestore().collection('volunteers').where('status', '==', 'active').count().get();
+  return { count: snapshot.data().count };
+});
+
 export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Entre ou crie uma conta para participar.');
   const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);

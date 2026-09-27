@@ -11,6 +11,7 @@ async function call(name, data) {
 // ao Firestore para não depender do tempo de inicialização de uma Function.
 export function listPublicActions(state) { return listPublicActionsByCoordinationState(state); }
 export async function getPublicAction(actionId) { return [await getPublicActionById(actionId)]; }
+export function getPublicVolunteerCount() { return call('getPublicVolunteerCount', {}); }
 export function enrollInAction(actionId, profile, replaceActionId = '') { return call('enrollVolunteer', { actionId, profile, replaceActionId }); }
 export function registerPublicVolunteer(actionId, profile) { return call('registerPublicVolunteer', { actionId, profile }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }

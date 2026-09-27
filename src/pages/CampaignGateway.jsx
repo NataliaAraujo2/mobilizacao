@@ -9,6 +9,7 @@ import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
+import { getPublicVolunteerCount } from "../services/publicVolunteerService";
 import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
 
@@ -50,6 +51,20 @@ function AssociatesCounter() {
       <span>{unavailable ? "contador em atualização" : "novos associados"}</span>
     </div>
   );
+}
+
+function VolunteerCounter() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    getPublicVolunteerCount()
+      .then(({ count: value }) => { if (active) setCount(Number.isSafeInteger(value) && value >= 0 ? value : 0); })
+      .catch(() => { if (active) setCount(0); });
+    return () => { active = false; };
+  }, []);
+
+  return <strong aria-live="polite">{count.toLocaleString("pt-BR")}</strong>;
 }
 
 export default function CampaignGateway() {
@@ -131,7 +146,7 @@ export default function CampaignGateway() {
           <div className={styles.volunteerCounterContent}>
             <h2 id="video-title">Juntos semeamos <span>um futuro melhor</span></h2>
             <p>Já somos</p>
-            <strong>2.000</strong>
+            <VolunteerCounter />
             <small>voluntários</small>
           </div>
         </div>
