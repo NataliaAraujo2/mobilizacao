@@ -53,7 +53,17 @@ function AssociatesCounter() {
 export default function CampaignGateway() {
   const [selectedState, setSelectedState] = useState("");
   const [heroExpanded, setHeroExpanded] = useState(false);
+  const mapRef = useRef(null);
   const { user, claims } = useAuth();
+
+  useEffect(() => {
+    if (!heroExpanded || !mapRef.current) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const mapTop = mapRef.current.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, mapTop - 88), behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [heroExpanded]);
 
   function selectState(state) {
     setSelectedState(state);
@@ -88,7 +98,7 @@ export default function CampaignGateway() {
           <p className={styles.heroDescription}>Voluntariado que transforma<br />vidas e territórios</p>
           <button className={styles.heroAction} type="button" aria-expanded={heroExpanded} aria-controls="mapa-acoes-publico" onClick={toggleActions}>{heroExpanded ? 'Fechar ações de 2026' : 'Conheça as ações de 2026'}</button>
         </div>
-        {heroExpanded && <div id="mapa-acoes-publico" className={styles.publicMap}>
+        {heroExpanded && <div ref={mapRef} id="mapa-acoes-publico" className={styles.publicMap}>
           <div className={styles.mapIntro}><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
           <div className={`${styles.mapLayout} ${selectedState ? styles.mapWithActions : ''}`}>
             <div className={styles.mapCanvas}>
