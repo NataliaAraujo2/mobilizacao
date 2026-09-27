@@ -5,12 +5,7 @@ import BrazilMap from "../components/BrazilMap/BrazilMap";
 import PublicActionsPanel from "../components/PublicActionsPanel";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
-import logo2026 from "../assets/brand/mobilizacao-logo-colorido.webp";
 import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
-import leavesElement from "../assets/brand/elements/elemento-01.webp";
-import growingElement from "../assets/brand/elements/elemento-03.webp";
-import sproutElement from "../assets/brand/elements/elemento-05.webp";
-import homeIntro from "../assets/brand/home-intro.svg";
 import { getNewAssociatesCount } from "../services/associationStatsService";
 import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
@@ -55,65 +50,24 @@ function AssociatesCounter() {
   );
 }
 
-const VOLUNTEER_CHOICES_OPEN_AT = new Date("2026-10-21T00:00:00-03:00").getTime();
-
-function getRemainingTime() {
-  const difference = Math.max(0, VOLUNTEER_CHOICES_OPEN_AT - Date.now());
-  return {
-    isOpen: difference === 0,
-    days: Math.floor(difference / 86_400_000),
-    hours: Math.floor((difference % 86_400_000) / 3_600_000),
-    minutes: Math.floor((difference % 3_600_000) / 60_000),
-  };
-}
-
-function VolunteerChoicesCountdown() {
-  const [remainingTime, setRemainingTime] = useState(getRemainingTime);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setRemainingTime(getRemainingTime()), 30_000);
-    return () => window.clearInterval(interval);
-  }, []);
-
-  if (remainingTime.isOpen) {
-    return <p className={styles.openNotice}>As escolhas de ações para voluntariado já estão abertas.</p>;
-  }
-
-  const units = [
-    [remainingTime.days, "dias"],
-    [remainingTime.hours, "horas"],
-    [remainingTime.minutes, "minutos"],
-  ];
-
-  return (
-    <div className={styles.countdown} aria-live="polite" aria-label={`Faltam ${remainingTime.days} dias, ${remainingTime.hours} horas e ${remainingTime.minutes} minutos para abertura das escolhas de ações`}>
-      {units.map(([value, label]) => (
-        <span key={label}><strong>{String(value).padStart(2, "0")}</strong><small>{label}</small></span>
-      ))}
-    </div>
-  );
-}
-
 export default function CampaignGateway() {
   const [selectedState, setSelectedState] = useState("");
-  const [mapOpen, setMapOpen] = useState(false);
-  const [mapPreview, setMapPreview] = useState(false);
+  const [heroExpanded, setHeroExpanded] = useState(false);
   const { user, claims } = useAuth();
-  const mapVisible = mapOpen || mapPreview;
-
-  function closePreviewWhenLeaving(event) {
-    if (!event.currentTarget.contains(event.relatedTarget)) setMapPreview(false);
-  }
 
   function selectState(state) {
     setSelectedState(state);
-    setMapOpen(true);
+    setHeroExpanded(true);
   }
 
   function closeMap() {
     setSelectedState('');
-    setMapOpen(false);
-    setMapPreview(false);
+    setHeroExpanded(false);
+  }
+
+  function toggleActions() {
+    if (heroExpanded) closeMap();
+    else setHeroExpanded(true);
   }
 
   return (
@@ -126,26 +80,15 @@ export default function CampaignGateway() {
         <p>Conheça nossas edições e acompanhe o que estamos preparando.</p>
       </section>
 
-      <section className={styles.homeIntroCard} aria-label="MobilizAÇÃO">
-        <img src={homeIntro} alt="MobilizAÇÃO — juntos podemos transformar territórios" width="1440" height="810" />
-      </section>
-
-      <section id="acoes-2026" className={styles.mapTeaser} aria-labelledby="map-teaser-title" onMouseEnter={() => setMapPreview(true)} onMouseLeave={() => setMapPreview(false)} onFocus={() => setMapPreview(true)} onBlur={closePreviewWhenLeaving}>
-        <img className={`${styles.kitElement} ${styles.kitLeaves}`} src={leavesElement} alt="" aria-hidden="true" />
-        <img className={`${styles.kitElement} ${styles.kitGrowing}`} src={growingElement} alt="" aria-hidden="true" />
-        <img className={`${styles.kitElement} ${styles.kitSprout}`} src={sproutElement} alt="" aria-hidden="true" />
-        <div className={styles.mapTeaserCopy}>
-          <p className={styles.eyebrow}>MobilizAÇÃO 2026</p>
-          <h2 id="map-teaser-title">Em 21 de outubro, escolha sua ação!</h2>
-          <p>Em breve, você poderá escolher a ação em que deseja atuar como voluntário e acompanhar as mobilizações em cada estado.</p>
-          <VolunteerChoicesCountdown />
-          <button className={styles.teaserLink} type="button" onClick={() => setMapOpen(true)}>Ver ações da edição 2026 <b aria-hidden="true">→</b></button>
+      <section id="acoes-2026" className={`${styles.homeIntroCard} ${heroExpanded ? styles.homeIntroCardExpanded : ''}`} aria-labelledby="home-hero-title">
+        <div className={styles.homeHeroCopy}>
+          <p className={styles.heroEdition}>2ª Edição</p>
+          <h2 id="home-hero-title" className={styles.heroWordmark}><span>Mobiliz</span><em>AÇÃO</em></h2>
+          <p className={styles.heroTitle}>Semeando e<br />Cultivando<br />o Futuro!</p>
+          <p className={styles.heroDescription}>Voluntariado que transforma<br />vidas e territórios</p>
+          <button className={styles.heroAction} type="button" aria-expanded={heroExpanded} aria-controls="mapa-acoes-publico" onClick={toggleActions}>{heroExpanded ? 'Fechar ações de 2026' : 'Conheça as ações de 2026'}</button>
         </div>
-        <button className={styles.mapLogoButton} type="button" aria-expanded={mapVisible} aria-controls="mapa-acoes-publico" onClick={() => mapOpen ? closeMap() : setMapOpen(true)}>
-          <img className={styles.mapLogo} src={logo2026} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" width="1400" height="1466" />
-          <span>{mapOpen ? "Fechar mapa" : "Passe o mouse ou toque no mapa"}</span>
-        </button>
-        {mapVisible && <div id="mapa-acoes-publico" className={styles.publicMap}>
+        {heroExpanded && <div id="mapa-acoes-publico" className={styles.publicMap}>
           <div className={styles.mapIntro}><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
           <div className={`${styles.mapLayout} ${selectedState ? styles.mapWithActions : ''}`}>
             <div className={styles.mapCanvas}>
