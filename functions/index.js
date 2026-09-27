@@ -18,6 +18,7 @@ const BRAZIL_STATE_CODES = new Set('AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB
 const REPORT_YEAR = "2025";
 const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
 const MAX_REPORT_SIZE = 25 * 1024 * 1024;
+const VOLUNTEER_COUNTER_DOCUMENT = 'volunteerCounter';
 // Operações administrativas são pouco frequentes. Mantemos custo zero em
 // repouso e impedimos escala inesperada por repetição acidental de chamadas.
 const ADMIN_FUNCTION_OPTIONS = { region: REGION, minInstances: 0, maxInstances: 2, concurrency: 10 };
@@ -27,6 +28,16 @@ function requireSuperAdmin(request) {
   if (!request.auth || request.auth.token.role !== "superAdmin" || request.auth.token.status !== "active") {
     throw new HttpsError("permission-denied", "Apenas o superAdmin pode executar esta operação.");
   }
+}
+
+async function volunteerCounterUpdate(db) {
+  const reference = db.collection('publicStats').doc(VOLUNTEER_COUNTER_DOCUMENT);
+  const current = await reference.get();
+  if (current.exists && Number.isSafeInteger(current.data().total) && current.data().total >= 0) {
+    return { reference, data: { total: FieldValue.increment(1), updatedAt: FieldValue.serverTimestamp() } };
+  }
+  const total = (await db.collection('volunteers').count().get()).data().count;
+  return { reference, data: { total: total + 1, updatedAt: FieldValue.serverTimestamp() } };
 }
 
 function actionPhase(action, now = new Date()) {
@@ -136,9 +147,18 @@ export const listCoordinationActionVolunteers = onCall(ADMIN_FUNCTION_OPTIONS, a
 
 // A página pública recebe somente o total de cadastros ativos, sem expor
 // nomes, contatos ou qualquer outro dado dos voluntários.
-export const getPublicVolunteerCount = onCall(PUBLIC_FUNCTION_OPTIONS, async () => {
-  const snapshot = await getFirestore().collection('volunteers').where('status', '==', 'active').count().get();
-  return { count: snapshot.data().count };
+export const initializePublicVolunteerCounter = onCall(PUBLIC_FUNCTION_OPTIONS, async () => {
+  const db = getFirestore();
+  const reference = db.collection('publicStats').doc(VOLUNTEER_COUNTER_DOCUMENT);
+  const snapshot = await reference.get();
+  if (snapshot.exists && Number.isSafeInteger(snapshot.data().total) && snapshot.data().total >= 0) return { count: snapshot.data().total };
+  const count = (await db.collection('volunteers').count().get()).data().count;
+  await db.runTransaction(async (transaction) => {
+    const current = await transaction.get(reference);
+    if (!current.exists) transaction.set(reference, { total: count, updatedAt: FieldValue.serverTimestamp() });
+  });
+  const current = await reference.get();
+  return { count: current.data()?.total ?? count };
 });
 
 export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
@@ -193,6 +213,8 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   const batch = db.batch();
   batch.set(volunteerRef, { fullName, fullNameSearch: normalizeSearchText(fullName), email, phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'active', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('volunteerPrivate').doc(request.auth.uid), { volunteerId: request.auth.uid, cpf, rg, birthDate, address, shirtSize, ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted === true, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  const counter = await volunteerCounterUpdate(db);
+  batch.set(counter.reference, counter.data, { merge: true });
   await batch.commit();
   await getAuth().updateUser(request.auth.uid, { displayName: fullName });
   await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });
@@ -215,6 +237,8 @@ export const registerPublicVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (re
   const batch = db.batch();
   batch.set(volunteerRef, { fullName: profile.fullName, fullNameSearch: normalizeSearchText(profile.fullName), email: profile.email, phone: profile.phone, actionIds: [actionId], regionalIds: [action.branchId], participationDates: [action.date], status: 'active', accessStatus: 'none', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  const counter = await volunteerCounterUpdate(db);
+  batch.set(counter.reference, counter.data, { merge: true });
   await batch.commit();
   return { created: true };
 });
@@ -241,6 +265,8 @@ export const createCoordinationVolunteer = onCall(ADMIN_FUNCTION_OPTIONS, async 
   const batch = db.batch();
   batch.set(volunteerRef, { fullName: profile.fullName, fullNameSearch: normalizeSearchText(profile.fullName), email: profile.email, phone: profile.phone, actionIds, regionalIds: [...new Set(actions.map((action) => action.branchId))], participationDates, status: 'active', accessStatus: 'none', createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  const counter = await volunteerCounterUpdate(db);
+  batch.set(counter.reference, counter.data, { merge: true });
   await batch.commit();
   return { id: volunteerRef.id };
 });
@@ -678,9 +704,15 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   }
   if (action === 'delete') {
     try { await auth.deleteUser(volunteerId); } catch (error) { if (error.code !== 'auth/user-not-found') throw new HttpsError('internal', 'Não foi possível excluir o acesso.'); }
-    const batch = getFirestore().batch();
+    const db = getFirestore();
+    const batch = db.batch();
     batch.delete(reference);
-    batch.delete(getFirestore().collection('volunteerPrivate').doc(volunteerId));
+    batch.delete(db.collection('volunteerPrivate').doc(volunteerId));
+    const counterReference = db.collection('publicStats').doc(VOLUNTEER_COUNTER_DOCUMENT);
+    const counter = await counterReference.get();
+    if (counter.exists && Number.isSafeInteger(counter.data().total) && counter.data().total > 0) {
+      batch.set(counterReference, { total: FieldValue.increment(-1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    }
     await batch.commit();
     return { ok: true };
   }

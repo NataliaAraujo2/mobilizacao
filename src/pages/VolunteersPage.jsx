@@ -12,7 +12,7 @@ import { getActionsByIds, listActionsByBranch } from '../services/actionsService
 import { findAddressByCep } from '../services/cepService';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { getBranch, listBranches } from "../services/branchesService";
-import { createCoordinationVolunteer, createVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
+import { createCoordinationVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import { gmailComposeUrl } from '../utils/email';
 import styles from "./VolunteersPage.module.css";
@@ -179,7 +179,7 @@ export default function VolunteersPage() {
         setPrivateData((current) => ({ ...current, [editingId]: { cpf: form.cpf.replace(/\D/g, ""), rg: form.rg.replace(/[^0-9a-z]/gi, "").toUpperCase(), birthDate: form.birthDate, address: form.address, shirtSize: form.shirtSize, ngoRelationship: form.ngoRelationship, lgpdAccepted: form.lgpdAccepted, regulationAccepted: form.regulationAccepted, imageUseAccepted: form.imageUseAccepted, guardianAuthorizationAccepted: form.guardianAuthorizationAccepted } }));
         setMessage("Cadastro atualizado com sucesso.");
       } else {
-        savedId = isSuperAdmin ? await createVolunteer(volunteerInput) : await createCoordinationVolunteer(volunteerInput);
+        savedId = await createCoordinationVolunteer(volunteerInput);
         setMessage("Voluntário cadastrado com segurança.");
       }
       atualizarDados(current => {

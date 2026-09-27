@@ -322,7 +322,7 @@ service cloud.firestore {
     }
 
     match /publicStats/{statId} {
-      allow get: if statId == 'associationCampaign';
+      allow get: if statId in ['associationCampaign', 'volunteerCounter'];
       allow list: if false;
       allow create, update: if statId == 'associationCampaign'
         && isSuperAdmin()
