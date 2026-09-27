@@ -6,6 +6,7 @@ import PublicActionsPanel from "../components/PublicActionsPanel";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
 import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
+import whoWeAreImage from "../assets/brand/quem-somos.svg";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
@@ -152,6 +153,16 @@ export default function CampaignGateway() {
             <small>voluntários</small>
           </div>
         </div>
+      </section>
+
+      <section className={styles.whoWeAre} aria-labelledby="who-we-are-title">
+        <div className={styles.whoWeAreCopy}>
+          <p className={styles.eyebrow}>MobilizAÇÃO</p>
+          <h2 id="who-we-are-title">Quem somos</h2>
+          <p>Somos um movimento liderado pela ONG Moradia e Cidadania, criada por <strong>empregados e aposentados da CAIXA</strong> há 26 anos e que conecta pessoas, organizações e ideias para <strong>transformar realidades</strong> e construir um <strong>futuro mais justo, solidário e sustentável</strong> para todos.</p>
+          <a className={styles.whoWeAreButton} href="https://moradiaecidadania.org.br" target="_blank" rel="noreferrer">Saiba mais sobre a ONG</a>
+        </div>
+        <img src={whoWeAreImage} alt="Voluntários da ONG Moradia e Cidadania" />
       </section>
 
       <section className={styles.previousEditions} aria-labelledby="previous-editions-title">
