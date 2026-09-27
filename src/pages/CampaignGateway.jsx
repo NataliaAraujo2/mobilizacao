@@ -6,6 +6,8 @@ import PublicActionsPanel from "../components/PublicActionsPanel";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
 import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
+import leavesElement from "../assets/brand/elements/elemento-01.webp";
+import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
 import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
@@ -114,11 +116,6 @@ export default function CampaignGateway() {
       </section>
 
       <section className={styles.videoSection} aria-labelledby="video-title">
-        <div className={styles.videoCopy}>
-          <p className={styles.eyebrow}>Conheça a MobilizAÇÃO</p>
-          <h2 id="video-title">Assista e venha fazer parte</h2>
-          <p>Conheça um pouco mais sobre a MobilizAÇÃO e como sua participação ajuda a transformar comunidades.</p>
-        </div>
         <div className={styles.videoFrame}>
           <iframe
             src="https://www.youtube-nocookie.com/embed/8rco9x7wIck"
@@ -127,6 +124,16 @@ export default function CampaignGateway() {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
+        </div>
+        <div className={styles.volunteerCounter}>
+          <img className={`${styles.counterElement} ${styles.counterLeaves}`} src={leavesElement} alt="" aria-hidden="true" />
+          <img className={`${styles.counterElement} ${styles.counterSprout}`} src={sproutElement} alt="" aria-hidden="true" />
+          <div className={styles.volunteerCounterContent}>
+            <h2 id="video-title">Juntos semeamos <span>um futuro melhor</span></h2>
+            <p>Já somos</p>
+            <strong>2.000</strong>
+            <small>voluntários</small>
+          </div>
         </div>
       </section>
 
