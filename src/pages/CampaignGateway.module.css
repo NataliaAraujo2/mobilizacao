@@ -80,7 +80,7 @@
 .whoWeAreCopy strong { color: var(--brand-orange); }
 .whoWeAreButton { margin-top: 1.35rem; padding: .65rem 1.05rem; color: white; font: inherit; font-size: .95rem; font-weight: 850; text-decoration: none; text-transform: uppercase; background: var(--brand-orange); border: 0; border-radius: .7rem; box-shadow: 0 .45rem .85rem rgb(156 73 11 / 20%); transition: transform 180ms ease, background 180ms ease; }
 .whoWeAreButton:hover, .whoWeAreButton:focus-visible { color: white; background: #d96e16; outline: 3px solid rgb(244 131 43 / 35%); outline-offset: 3px; transform: translateY(-1px); }
-.whoWeAre > img { width: 100%; height: 100%; min-height: 19rem; object-fit: cover; object-position: center; }
+.whoWeAre > img { align-self: stretch; width: 135.2%; max-width: none; height: 100%; min-height: 19rem; margin-left: -13.1%; object-fit: fill; }
 .previousHeading { margin-bottom: 1rem; text-align: center; }
 .previousHeading h2 { margin: .35rem 0 0; color: var(--brand-blue); font-size: clamp(1.5rem, 4vw, 2.25rem); }
 .previousCard { display: grid; grid-template-columns: 8rem auto minmax(0, 1fr) auto; align-items: center; gap: clamp(.8rem, 3vw, 1.5rem); padding: 1.25rem; color: var(--text); text-decoration: none; background: linear-gradient(rgb(255 255 255 / 88%), rgb(255 255 255 / 94%)), url("../assets/brand/mobilizacao-fundo-2025.webp") center / cover; border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 .8rem 2rem rgb(23 50 77 / 9%); transition: transform 180ms ease, box-shadow 180ms ease; }
@@ -132,7 +132,7 @@
   .kitSprout { display: none; }
   .videoSection { grid-template-columns: 1fr; }
   .whoWeAre { grid-template-columns: 1fr; }
-  .whoWeAre > img { min-height: 15rem; max-height: 24rem; }
+  .whoWeAre > img { width: 135.2%; min-height: 15rem; max-height: 24rem; margin-left: -13.1%; }
   .previousCard { grid-template-columns: 6rem 1fr; }
   .previousCard > img { grid-row: span 2; width: 6rem; height: 6rem; }
   .previousCopy { grid-column: 2; }
