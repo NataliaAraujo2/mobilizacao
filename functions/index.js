@@ -4,7 +4,6 @@ import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import { randomInt } from "node:crypto";
 import nodemailer from "nodemailer";
 import { nextBranchViewerUsername } from "./viewerIdentity.js";
@@ -22,7 +21,7 @@ const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
 const MAX_REPORT_SIZE = 25 * 1024 * 1024;
 const VOLUNTEER_COUNTER_DOCUMENT = 'volunteerCounter';
 const VOLUNTEER_COUNTER_PREFIX = 'volunteerCounter-';
-const SMTP_PASSWORD = defineSecret('SMTP_PASSWORD');
+const SMTP_PASSWORD = 'SMTP_PASSWORD';
 const SMTP_HOST = 'mail.moradiaecidadania.org.br';
 const SMTP_PORT = 465;
 const SMTP_USER = 'mobilizacao@moradiaecidadania.org.br';
@@ -106,7 +105,7 @@ function escapeHtml(value) {
 }
 
 async function sendVolunteerAccessMessage({ name, email, passwordResetLink }) {
-  const password = SMTP_PASSWORD.value();
+  const password = process.env[SMTP_PASSWORD];
   if (!password) throw new HttpsError('failed-precondition', 'O envio automático ainda não foi configurado.');
 
   const transporter = nodemailer.createTransport({
@@ -790,6 +789,38 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   await auth.setCustomUserClaims(account.uid, { role: VOLUNTEER_ROLE, status });
   await reference.update({ status, accessStatus: status, updatedAt: FieldValue.serverTimestamp() });
   return { status };
+});
+
+// Remove somente logins de voluntários para permitir uma nova criação individual.
+// Cadastros, documentos, participações e contas administrativas são preservados.
+export const resetAllVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  requireSuperAdmin(request);
+  if (request.data?.confirmation !== 'RESET_ALL_VOLUNTEER_ACCESS') throw new HttpsError('failed-precondition', 'Confirmação de redefinição inválida.');
+
+  const db = getFirestore();
+  const snapshot = await db.collection('volunteers').get();
+  const auth = getAuth();
+  const writer = db.bulkWriter();
+  let removedAccounts = 0;
+  let protectedAccounts = 0;
+
+  for (const volunteer of snapshot.docs) {
+    try {
+      const account = await auth.getUser(volunteer.id);
+      const role = account.customClaims?.role;
+      if (role && role !== VOLUNTEER_ROLE) {
+        protectedAccounts += 1;
+      } else {
+        await auth.deleteUser(volunteer.id);
+        removedAccounts += 1;
+      }
+    } catch (error) {
+      if (error.code !== 'auth/user-not-found') throw new HttpsError('internal', 'Não foi possível remover todos os acessos.');
+    }
+    writer.update(volunteer.ref, { accessStatus: 'none', updatedAt: FieldValue.serverTimestamp() });
+  }
+  await writer.close();
+  return { totalVolunteers: snapshot.size, removedAccounts, protectedAccounts };
 });
 
 export const sendVolunteerAccessEmail = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {

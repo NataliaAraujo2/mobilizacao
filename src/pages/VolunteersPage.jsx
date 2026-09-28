@@ -12,7 +12,7 @@ import { getActionsByIds, listActionsByBranch } from '../services/actionsService
 import { findAddressByCep } from '../services/cepService';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { getBranch, listBranches } from "../services/branchesService";
-import { createCoordinationVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, sendVolunteerAccessEmail, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
+import { createCoordinationVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetAllVolunteerAccess, resetVolunteerPassword, sendVolunteerAccessEmail, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import { gmailComposeUrl } from '../utils/email';
 import styles from "./VolunteersPage.module.css";
@@ -285,6 +285,18 @@ export default function VolunteersPage() {
     } finally { setSaving(false); }
   }
 
+  async function resetEveryVolunteerAccess() {
+    if (saving || !window.confirm('Remover o login de todos os voluntários? Os cadastros, documentos e participações serão preservados. Contas de superadmin e coordenação não serão removidas.')) return;
+    setSaving(true); setError(''); setMessage(''); setCredentials(null);
+    try {
+      const result = await resetAllVolunteerAccess();
+      atualizarDados(current => current.map(volunteer => ({ ...volunteer, accessStatus: 'none' })));
+      setMessage(`${result.removedAccounts} acesso(s) de voluntário removido(s). ${result.protectedAccounts ? `${result.protectedAccounts} conta(s) administrativa(s) foram preservadas.` : 'Os cadastros e participações foram preservados.'}`);
+    } catch (resetError) {
+      setError(resetError.message || 'Não foi possível remover os acessos dos voluntários.');
+    } finally { setSaving(false); }
+  }
+
   async function removeVolunteer(volunteer) {
     if (!isSuperAdmin || saving || !window.confirm(`Excluir permanentemente ${volunteer.fullName}? O cadastro e os documentos pessoais serão apagados. Esta ação não pode ser desfeita.`)) return;
     setSaving(true); setError(''); setMessage('');
@@ -316,7 +328,7 @@ export default function VolunteersPage() {
       <PageHeading eyebrow={isSuperAdmin ? "Administração nacional" : "Minha coordenação estadual"} title="Voluntários" meta={<span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>} />
       {credentials && <section className={styles.credentials} role="status"><strong>Acesso de {credentials.fullName}</strong><span>E-mail: <code>{credentials.username}</code></span><span>Uma senha temporária foi criada. Prefira enviar o link para que a pessoa defina a própria senha.</span><div className={styles.credentialActions}><button type="button" disabled={saving || credentials.emailSent} onClick={sendAccessEmail}>{credentials.emailSent ? 'E-mail enviado' : saving ? 'Enviando…' : 'Enviar pelo sistema'}</button>{accessEmailUrl && <a href={accessEmailUrl} target="_blank" rel="noreferrer">Enviar manualmente pelo Gmail</a>}<button type="button" onClick={() => navigator.clipboard.writeText(`E-mail de acesso: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar senha temporária</button><button type="button" className={styles.dismissCredentials} onClick={() => setCredentials(null)}>Fechar</button></div></section>}
 
-      {!showForm && <button className={styles.formToggle} type="button" onClick={() => setShowForm(true)}>Cadastrar voluntário manualmente</button>}
+      {!showForm && <div className={styles.volunteerTools}><button className={styles.formToggle} type="button" onClick={() => setShowForm(true)}>Cadastrar voluntário manualmente</button>{isSuperAdmin && <button className={styles.resetAllAccess} type="button" disabled={saving || loadingVolunteers} onClick={resetEveryVolunteerAccess}>Remover acessos de voluntários</button>}</div>}
       {showForm && <section className={styles.card} aria-labelledby="volunteer-form-title">
         <div className={styles.sectionHeading}><h2 id="volunteer-form-title">{editingId ? "Editar voluntário" : "Cadastrar voluntário"}</h2>{!editingId && <button className={styles.secondary} type="button" onClick={() => { resetForm(); setShowForm(false); }}>Recolher</button>}</div>
         <p className={styles.privacy}>CPF, RG e nascimento ficam em uma área protegida e não aparecem nas consultas comuns.</p>

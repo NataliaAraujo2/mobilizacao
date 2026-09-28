@@ -151,6 +151,11 @@ export async function sendVolunteerAccessEmail(volunteerId) {
   return (await httpsCallable(functions, 'sendVolunteerAccessEmail')({ volunteerId })).data;
 }
 
+export async function resetAllVolunteerAccess() {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, 'resetAllVolunteerAccess')({ confirmation: 'RESET_ALL_VOLUNTEER_ACCESS' })).data;
+}
+
 export async function deleteVolunteer(id) {
   return callVolunteerAccess('delete', id);
 }
