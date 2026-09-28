@@ -79,13 +79,14 @@ export async function getPublicActionById(actionId) {
   return action;
 }
 
-export async function listActionsPage({ search = "", cursor = null, pageSize = 20 } = {}) {
+export async function listActionsPage({ search = "", branchId = "", cursor = null, pageSize = 20 } = {}) {
   const safePageSize = Math.min(Math.max(Number(pageSize) || 20, 1), 50);
   const term = normalizeSearchText(search);
-  const { db, collection, endAt, getDocs, limit, orderBy, query, startAfter, startAt } = await getDbService([
-    "collection", "endAt", "getDocs", "limit", "orderBy", "query", "startAfter", "startAt",
+  const { db, collection, endAt, getDocs, limit, orderBy, query, startAfter, startAt, where } = await getDbService([
+    "collection", "endAt", "getDocs", "limit", "orderBy", "query", "startAfter", "startAt", "where",
   ]);
   const constraints = [collection(db, "actions"), orderBy("nameSearch")];
+  if (branchId) constraints.splice(1, 0, where("branchId", "==", branchId));
   if (term) constraints.push(startAt(term), endAt(`${term}\uf8ff`));
   if (cursor) constraints.push(startAfter(cursor));
   constraints.push(limit(safePageSize + 1));

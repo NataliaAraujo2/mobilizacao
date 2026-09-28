@@ -26,6 +26,7 @@ export default function ActionsPage() {
   const { user } = useAuth();
   const [branches, setBranches] = useState([]);
   const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState("");
   const [form, setForm] = useState(EMPTY_FORM);
   const [photos, setPhotos] = useState(EMPTY_PHOTOS);
   const [searchingCep, setSearchingCep] = useState(false);
@@ -42,7 +43,7 @@ export default function ActionsPage() {
   const [editingActionId, setEditingActionId] = useState("");
 
   const buscarPagina = useCallback(({ filtros, cursor, pageSize }) => (
-    listActionsPage({ search: filtros.search, cursor, pageSize })
+    listActionsPage({ search: filtros.search, branchId: filtros.branchId, cursor, pageSize })
   ), []);
   const { dados: actions, loading, error: listError, hasMore, recarregar, carregarMais } = useInfiniteScroll(buscarPagina, { pageSize: 10 });
 
@@ -54,7 +55,7 @@ export default function ActionsPage() {
       .catch(() => setError("Não foi possível carregar as coordenações estaduais."));
   }, []);
 
-  useEffect(() => { recarregar({ search }); }, [recarregar, search]);
+  useEffect(() => { recarregar({ search, branchId: branchFilter }); }, [recarregar, search, branchFilter]);
 
   if (detailsAction) return <CoordinationActionDetails action={detailsAction} branch={branches.find((branch) => branch.id === detailsAction.branchId)} user={user} onBack={() => setDetailsAction(null)} />;
   const editingAction = editingActionId ? actions.find((action) => action.id === editingActionId) : null;
@@ -126,7 +127,7 @@ export default function ActionsPage() {
           await uploadActionPhotos(actionForPhotos, phase, photos[phase], (done, total) => setProgress(`Enviando fotos: ${done} de ${total}`));
         }
       }
-      await recarregar({ search });
+      await recarregar({ search, branchId: branchFilter });
       setProgress("");
       setMessage(editingActionId ? "Ação atualizada com sucesso." : "Ação cadastrada com sucesso.");
       closeForm();
@@ -143,7 +144,7 @@ export default function ActionsPage() {
     setSaving(true); setError(''); setMessage('');
     try {
       const result = await publishExistingActions();
-      await recarregar({ search });
+      await recarregar({ search, branchId: branchFilter });
       setMessage(result.updated ? `${result.updated} ação(ões) atualizada(s) para o mapa público.` : 'As ações já estão atualizadas para o mapa público.');
     } catch (publishError) {
       setError(publishError.message || 'Não foi possível atualizar as ações públicas.');
@@ -155,7 +156,7 @@ export default function ActionsPage() {
     setSaving(true); setRemovingPhotoPath(photo.path); setError(''); setMessage('');
     try {
       await deleteActionPhoto(editingActionId, photo);
-      await recarregar({ search });
+      await recarregar({ search, branchId: branchFilter });
       setMessage('Foto excluída com sucesso.');
     } catch (removeError) {
       setError(removeError.message || 'Não foi possível excluir a foto.');
@@ -173,7 +174,7 @@ export default function ActionsPage() {
     try {
       await deleteAction(action.id);
       setPhotos(EMPTY_PHOTOS);
-      await recarregar({ search });
+      await recarregar({ search, branchId: branchFilter });
       setMessage("Ação excluída com sucesso.");
     } catch (deleteError) {
       setError(deleteError.message || "Não foi possível excluir a ação.");
@@ -268,7 +269,7 @@ export default function ActionsPage() {
         {message && <p className={styles.success} role="status">{message}</p>}
       </section>}
 
-      <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><ListSearch label="Buscar ação" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => { const branch = branches.find((item) => item.id === action.branchId); return <article key={action.id}>
+      <section className={styles.card} aria-labelledby="actions-list-title"><div className={styles.listHeading}><h2 id="actions-list-title">Ações cadastradas</h2><div className={styles.searchFilters}><ListSearch label="Buscar por nome" placeholder="Nome da ação" initialValue={search} onSearch={setSearch} /><label>Coordenação estadual<select value={branchFilter} onChange={event => setBranchFilter(event.target.value)}><option value="">Todas as coordenações</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div></div>{listError && <p className={styles.error}>Não foi possível carregar as ações. <button type="button" onClick={() => recarregar({ search, branchId: branchFilter })}>Tentar novamente</button></p>}{loading && actions.length === 0 ? <p aria-busy="true">Carregando...</p> : actions.length === 0 ? <p>Nenhuma ação encontrada.</p> : <div className={styles.list}>{actions.map((action) => { const branch = branches.find((item) => item.id === action.branchId); return <article key={action.id}>
         <div className={styles.actionSummary}><div><h3>{action.name}</h3><p>{action.address.city}/{action.address.state} · {action.address.street}, {action.address.number}</p><p className={styles.branchName}>Coordenação: {branch?.name ?? 'Não identificada'}</p><small>Fotos: {action.photosBefore?.length ?? 0} antes · {action.photosDuring?.length ?? 0} durante · {action.photosAfter?.length ?? 0} depois</small></div><span><ActionStatus action={action} /></span><button type="button" disabled={saving} onClick={() => setDetailsAction(action)}>Ver detalhes</button><button type="button" disabled={saving} onClick={() => startEdit(action)}>Editar ação</button><button type="button" disabled={saving} onClick={() => showQrCode(action, "registration")}>QR inscrição</button><button type="button" disabled={saving} onClick={() => showQrCode(action, "attendance")}>QR presença</button><button className={styles.deleteAction} type="button" disabled={saving} onClick={() => removeAction(action)}>Excluir ação</button></div>
       </article>; })}</div>}{actions.length > 0 && hasMore && <button className={styles.loadMore} type="button" disabled={loading} onClick={carregarMais}>{loading ? "Carregando..." : "Carregar mais ações"}</button>}</section>
       {qrAction && <div className={styles.qrBackdrop} role="presentation"><section className={styles.qrModal} role="dialog" aria-modal="true" aria-labelledby="qr-title"><h2 id="qr-title">{qrAction.qrKind === "attendance" ? "QR Code de presença" : "QR Code de inscrição"}</h2><h3>{qrAction.name}</h3><img src={qrDataUrl} alt={`QR Code ${qrAction.qrKind === "attendance" ? "de presença" : "de inscrição"} para ${qrAction.name}`} /><p>{qrAction.qrKind === "attendance" ? "Para voluntários já inscritos confirmarem a presença no local, durante o horário da ação." : "Para novos voluntários abrirem o cadastro/login e se inscreverem nesta ação."}</p><input readOnly value={qrAction.publicUrl} aria-label="Link da ação" /><div><button type="button" onClick={downloadQrCode}>Baixar QR Code</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('whatsapp')}>{sharingQr ? 'Preparando envio…' : 'Enviar pelo WhatsApp'}</button><button type="button" disabled={sharingQr} onClick={() => shareQrWithCoordinator('email')}>Enviar por e-mail</button><button type="button" onClick={() => window.print()}>Imprimir</button><button type="button" onClick={() => navigator.clipboard.writeText(qrAction.publicUrl)}>Copiar link</button><button type="button" onClick={() => setQrAction(null)}>Fechar</button></div></section></div>}
