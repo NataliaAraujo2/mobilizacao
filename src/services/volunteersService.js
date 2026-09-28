@@ -146,6 +146,11 @@ export async function updateVolunteerStatus(id, status) {
 export async function createVolunteerAccess(id) { return callVolunteerAccess('create', id); }
 export async function resetVolunteerPassword(id) { return callVolunteerAccess('resetPassword', id); }
 
+export async function sendVolunteerAccessEmail(volunteerId) {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, 'sendVolunteerAccessEmail')({ volunteerId })).data;
+}
+
 export async function deleteVolunteer(id) {
   return callVolunteerAccess('delete', id);
 }

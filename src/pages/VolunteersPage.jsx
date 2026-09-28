@@ -12,7 +12,7 @@ import { getActionsByIds, listActionsByBranch } from '../services/actionsService
 import { findAddressByCep } from '../services/cepService';
 import { actionScheduleSummary } from '../domain/actions/actionSchedule';
 import { getBranch, listBranches } from "../services/branchesService";
-import { createCoordinationVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
+import { createCoordinationVolunteer, createVolunteerAccess, deleteVolunteer, getVolunteerPrivate, listVolunteerReport, listVolunteersPage, resetVolunteerPassword, sendVolunteerAccessEmail, updateVolunteer, updateVolunteerStatus } from "../services/volunteersService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import { gmailComposeUrl } from '../utils/email';
 import styles from "./VolunteersPage.module.css";
@@ -266,11 +266,23 @@ export default function VolunteersPage() {
     setSaving(true); setError(''); setMessage(''); setCredentials(null);
     try {
       const result = reset ? await resetVolunteerPassword(volunteer.id) : await createVolunteerAccess(volunteer.id);
-      setCredentials({ fullName: volunteer.fullName, username: result.username, password: result.password, passwordResetLink: result.passwordResetLink });
+      setCredentials({ volunteerId: volunteer.id, fullName: volunteer.fullName, username: result.username, password: result.password, passwordResetLink: result.passwordResetLink });
       atualizarDados(current => current.map(item => item.id === volunteer.id ? { ...item, status: 'active', accessStatus: 'active' } : item));
       setMessage(reset ? 'Nova senha de acesso gerada.' : 'Acesso individual criado. Copie as credenciais agora.');
     } catch (accessError) { setError(accessError.message || 'Não foi possível gerar o acesso.'); }
     finally { setSaving(false); }
+  }
+
+  async function sendAccessEmail() {
+    if (!credentials || saving) return;
+    setSaving(true); setError(''); setMessage('');
+    try {
+      const result = await sendVolunteerAccessEmail(credentials.volunteerId);
+      setCredentials(current => ({ ...current, emailSent: true }));
+      setMessage(`E-mail enviado para ${result.deliveredTo}.`);
+    } catch (sendError) {
+      setError(sendError.message || 'Não foi possível enviar o e-mail.');
+    } finally { setSaving(false); }
   }
 
   async function removeVolunteer(volunteer) {
@@ -302,7 +314,7 @@ export default function VolunteersPage() {
   return (
     <main className={styles.page}>
       <PageHeading eyebrow={isSuperAdmin ? "Administração nacional" : "Minha coordenação estadual"} title="Voluntários" meta={<span>{volunteers.length} carregado{volunteers.length === 1 ? "" : "s"}</span>} />
-      {credentials && <section className={styles.credentials} role="status"><strong>Acesso de {credentials.fullName}</strong><span>E-mail: <code>{credentials.username}</code></span><span>Uma senha temporária foi criada. Prefira enviar o link abaixo para que a pessoa defina a própria senha.</span><div className={styles.credentialActions}>{accessEmailUrl && <a href={accessEmailUrl} target="_blank" rel="noreferrer">Enviar por e-mail</a>}<button type="button" onClick={() => navigator.clipboard.writeText(`E-mail de acesso: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar senha temporária</button><button type="button" className={styles.dismissCredentials} onClick={() => setCredentials(null)}>Fechar</button></div></section>}
+      {credentials && <section className={styles.credentials} role="status"><strong>Acesso de {credentials.fullName}</strong><span>E-mail: <code>{credentials.username}</code></span><span>Uma senha temporária foi criada. Prefira enviar o link para que a pessoa defina a própria senha.</span><div className={styles.credentialActions}><button type="button" disabled={saving || credentials.emailSent} onClick={sendAccessEmail}>{credentials.emailSent ? 'E-mail enviado' : saving ? 'Enviando…' : 'Enviar pelo sistema'}</button>{accessEmailUrl && <a href={accessEmailUrl} target="_blank" rel="noreferrer">Enviar manualmente pelo Gmail</a>}<button type="button" onClick={() => navigator.clipboard.writeText(`E-mail de acesso: ${credentials.username}\nSenha inicial: ${credentials.password}`)}>Copiar senha temporária</button><button type="button" className={styles.dismissCredentials} onClick={() => setCredentials(null)}>Fechar</button></div></section>}
 
       {!showForm && <button className={styles.formToggle} type="button" onClick={() => setShowForm(true)}>Cadastrar voluntário manualmente</button>}
       {showForm && <section className={styles.card} aria-labelledby="volunteer-form-title">

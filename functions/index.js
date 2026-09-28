@@ -4,7 +4,9 @@ import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { randomInt } from "node:crypto";
+import nodemailer from "nodemailer";
 import { nextBranchViewerUsername } from "./viewerIdentity.js";
 
 initializeApp();
@@ -20,6 +22,10 @@ const REPORT_PATH = `public-reports/${REPORT_YEAR}/report.pdf`;
 const MAX_REPORT_SIZE = 25 * 1024 * 1024;
 const VOLUNTEER_COUNTER_DOCUMENT = 'volunteerCounter';
 const VOLUNTEER_COUNTER_PREFIX = 'volunteerCounter-';
+const SMTP_PASSWORD = defineSecret('SMTP_PASSWORD');
+const SMTP_HOST = 'mail.moradiaecidadania.org.br';
+const SMTP_PORT = 465;
+const SMTP_USER = 'mobilizacao@moradiaecidadania.org.br';
 // Operações administrativas são pouco frequentes. Mantemos custo zero em
 // repouso e impedimos escala inesperada por repetição acidental de chamadas.
 const ADMIN_FUNCTION_OPTIONS = { region: REGION, minInstances: 0, maxInstances: 2, concurrency: 10 };
@@ -91,6 +97,33 @@ function generateFriendlyPassword() {
     if (!selected.includes(word)) selected.push(word);
   }
   return `${selected.join("-")}-${randomInt(10, 100)}`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+  }[character]));
+}
+
+async function sendVolunteerAccessMessage({ name, email, passwordResetLink }) {
+  const password = SMTP_PASSWORD.value();
+  if (!password) throw new HttpsError('failed-precondition', 'O envio automático ainda não foi configurado.');
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: true,
+    auth: { user: SMTP_USER, pass: password },
+  });
+  const safeName = escapeHtml(name);
+  const safeLink = escapeHtml(passwordResetLink);
+  await transporter.sendMail({
+    from: 'MobilizAÇÃO | ONG Moradia e Cidadania <mobilizacao@moradiaecidadania.org.br>',
+    to: email,
+    subject: 'Crie sua senha de acesso à MobilizAÇÃO',
+    text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO está pronto. Para criar sua senha e entrar na sua área de voluntário, use o link seguro abaixo:\n\n${passwordResetLink}\n\nSe você não solicitou este acesso, ignore esta mensagem.`,
+    html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> está pronto.</p><p>Para criar sua senha e entrar na sua área de voluntário, use o link seguro abaixo:</p><p><a href="${safeLink}">Criar minha senha</a></p><p>Se você não solicitou este acesso, ignore esta mensagem.</p>`,
+  });
 }
 
 function digits(value) { return String(value ?? '').replace(/\D/g, ''); }
@@ -757,6 +790,33 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
   await auth.setCustomUserClaims(account.uid, { role: VOLUNTEER_ROLE, status });
   await reference.update({ status, accessStatus: status, updatedAt: FieldValue.serverTimestamp() });
   return { status };
+});
+
+export const sendVolunteerAccessEmail = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
+  requireSuperAdmin(request);
+  const volunteerId = requiredText(request.data?.volunteerId, 'volunteerId', 1, 128);
+  if (volunteerId.includes('/')) throw new HttpsError('invalid-argument', 'Identificador inválido.');
+
+  const snapshot = await getFirestore().collection('volunteers').doc(volunteerId).get();
+  if (!snapshot.exists) throw new HttpsError('not-found', 'Voluntário não encontrado.');
+  const volunteer = snapshot.data();
+  const email = String(volunteer.email ?? '').trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(email)) throw new HttpsError('failed-precondition', 'Cadastre um e-mail válido para enviar o acesso.');
+
+  let account;
+  try { account = await getAuth().getUser(volunteerId); }
+  catch { throw new HttpsError('failed-precondition', 'Crie o acesso individual antes de enviar o e-mail.'); }
+  if (account.disabled) throw new HttpsError('failed-precondition', 'Reative o acesso do voluntário antes de enviar o e-mail.');
+
+  try {
+    const passwordResetLink = await getAuth().generatePasswordResetLink(email);
+    await sendVolunteerAccessMessage({ name: volunteer.fullName, email, passwordResetLink });
+    return { deliveredTo: email };
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    console.error('Erro ao enviar e-mail de acesso do voluntário', error);
+    throw new HttpsError('internal', 'Não foi possível enviar o e-mail. Tente novamente mais tarde.');
+  }
 });
 
 // Finaliza a publicação do PDF já enviado ao Storage. Isso permite repetir
