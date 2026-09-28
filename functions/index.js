@@ -793,34 +793,38 @@ export const manageVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (reque
 
 // Remove somente logins de voluntários para permitir uma nova criação individual.
 // Cadastros, documentos, participações e contas administrativas são preservados.
-export const resetAllVolunteerAccess = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+export const resetAllVolunteerAccess = onCall({ ...ADMIN_FUNCTION_OPTIONS, timeoutSeconds: 300 }, async (request) => {
   requireSuperAdmin(request);
   if (request.data?.confirmation !== 'RESET_ALL_VOLUNTEER_ACCESS') throw new HttpsError('failed-precondition', 'Confirmação de redefinição inválida.');
 
   const db = getFirestore();
   const snapshot = await db.collection('volunteers').get();
   const auth = getAuth();
+  const accounts = new Map();
+  let pageToken;
+  do {
+    const page = await auth.listUsers(1000, pageToken);
+    page.users.forEach((account) => accounts.set(account.uid, account));
+    pageToken = page.pageToken;
+  } while (pageToken);
+
   const writer = db.bulkWriter();
-  let removedAccounts = 0;
+  const removableIds = [];
   let protectedAccounts = 0;
 
   for (const volunteer of snapshot.docs) {
-    try {
-      const account = await auth.getUser(volunteer.id);
-      const role = account.customClaims?.role;
-      if (role && role !== VOLUNTEER_ROLE) {
-        protectedAccounts += 1;
-      } else {
-        await auth.deleteUser(volunteer.id);
-        removedAccounts += 1;
-      }
-    } catch (error) {
-      if (error.code !== 'auth/user-not-found') throw new HttpsError('internal', 'Não foi possível remover todos os acessos.');
-    }
+    const account = accounts.get(volunteer.id);
+    const role = account?.customClaims?.role;
+    if (account && role && role !== VOLUNTEER_ROLE) protectedAccounts += 1;
+    else if (account) removableIds.push(volunteer.id);
     writer.update(volunteer.ref, { accessStatus: 'none', updatedAt: FieldValue.serverTimestamp() });
   }
+  for (let index = 0; index < removableIds.length; index += 1000) {
+    const result = await auth.deleteUsers(removableIds.slice(index, index + 1000));
+    if (result.failureCount) throw new HttpsError('internal', 'Não foi possível remover todos os acessos. Tente novamente.');
+  }
   await writer.close();
-  return { totalVolunteers: snapshot.size, removedAccounts, protectedAccounts };
+  return { totalVolunteers: snapshot.size, removedAccounts: removableIds.length, protectedAccounts };
 });
 
 export const sendVolunteerAccessEmail = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
