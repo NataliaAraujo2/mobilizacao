@@ -58,20 +58,20 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
     }
   }
 
-  async function joinExisting(action) { setLoading(true); setError(''); try { await enrollWithOptionalSwap(action); setConfirmation({ actionName: action.name, newAccount: false }); } catch (err) { setError(enrollmentErrorMessage(err)); } finally { setLoading(false); } }
+  async function joinExisting(action) { setLoading(true); setError(''); try { const result = await enrollWithOptionalSwap(action); setConfirmation({ actionName: action.name, newAccount: false, emailSent: result.emailSent }); } catch (err) { setError(enrollmentErrorMessage(err)); } finally { setLoading(false); } }
   async function submit(event) {
     event.preventDefault(); setLoading(true); setError('');
     try {
       if (mode === 'signup') {
-        await registerPublicVolunteer(selected.id, form);
+        const result = await registerPublicVolunteer(selected.id, form);
         setShowSignup(false);
-        setConfirmation({ actionName: selected.name, publicRegistration: true });
+        setConfirmation({ actionName: selected.name, publicRegistration: true, emailSent: result.emailSent });
       } else {
         const credential = await loginVolunteer(form.email, form.password);
-        await enrollWithOptionalSwap(selected);
+        const result = await enrollWithOptionalSwap(selected);
         await refreshVolunteerSession(credential.user);
         setShowSignup(false);
-        setConfirmation({ actionName: selected.name, publicRegistration: false });
+        setConfirmation({ actionName: selected.name, publicRegistration: false, emailSent: result.emailSent });
       }
     }
     catch (err) { setError(enrollmentErrorMessage(err)); }
@@ -134,7 +134,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
         <label>E-mail<input required type="email" value={form.email} onChange={e => update({ email: e.target.value })} /></label>{mode === 'login' && <label>Senha<input required type="password" minLength="8" value={form.password ?? ''} onChange={e => update({ password: e.target.value })} /></label>}<button disabled={loading}>{loading ? 'Concluindo…' : mode === 'signup' ? 'Confirmar inscrição' : 'Entrar e participar'}</button>
       </form>{error && <p className={styles.error} role="alert">{error}</p>}<button className={styles.back} type="button" onClick={() => { setShowSignup(false); setError(''); }}>← Voltar aos detalhes</button>
     </section></div>, document.body)}
-    {confirmation && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.successModal} role="dialog" aria-modal="true" aria-labelledby="enrollment-success-title"><button className={styles.close} type="button" aria-label="Fechar confirmação" onClick={() => { setConfirmation(null); setSelected(null); }}>×</button><p className={styles.municipality}>INSCRIÇÃO EFETIVADA</p><h2 id="enrollment-success-title">Tudo certo!</h2><p>Sua participação em <strong>{confirmation.actionName}</strong> foi confirmada.</p>{confirmation.publicRegistration && <p>Seus dados e autorizações foram registrados. Não é necessário criar senha para esta inscrição.</p>}<div><button type="button" className={styles.secondaryAction} onClick={() => { setConfirmation(null); setSelected(null); }}>Continuar navegando</button>{!confirmation.publicRegistration && <button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button>}</div></section></div>, document.body)}
+    {confirmation && createPortal(<div className={styles.modalBackdrop} role="presentation"><section className={styles.successModal} role="dialog" aria-modal="true" aria-labelledby="enrollment-success-title"><button className={styles.close} type="button" aria-label="Fechar confirmação" onClick={() => { setConfirmation(null); setSelected(null); }}>×</button><p className={styles.municipality}>INSCRIÇÃO EFETIVADA</p><h2 id="enrollment-success-title">Tudo certo!</h2><p>Sua participação em <strong>{confirmation.actionName}</strong> foi confirmada.</p>{confirmation.emailSent ? <p>Também enviamos a confirmação para o seu e-mail.</p> : <p>Sua inscrição foi registrada. Não foi possível confirmar o envio do e-mail agora.</p>}{confirmation.publicRegistration && <p>Seus dados e autorizações foram registrados. Não é necessário criar senha para esta inscrição.</p>}<div><button type="button" className={styles.secondaryAction} onClick={() => { setConfirmation(null); setSelected(null); }}>Continuar navegando</button>{!confirmation.publicRegistration && <button type="button" onClick={() => navigate('/voluntario')}>Ir para minha área</button>}</div></section></div>, document.body)}
     {!showSignup && error && <p className={styles.error}>{error}</p>}<VolunteerRegulation open={showRegulation} onClose={() => setShowRegulation(false)} />
   </section>;
 }

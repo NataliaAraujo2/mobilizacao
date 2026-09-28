@@ -105,15 +105,7 @@ function escapeHtml(value) {
 }
 
 async function sendVolunteerAccessMessage({ name, email, passwordResetLink }) {
-  const password = process.env[SMTP_PASSWORD];
-  if (!password) throw new HttpsError('failed-precondition', 'O envio automático ainda não foi configurado.');
-
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: true,
-    auth: { user: SMTP_USER, pass: password },
-  });
+  const transporter = createSmtpTransporter();
   const safeName = escapeHtml(name);
   const safeLink = escapeHtml(passwordResetLink);
   await transporter.sendMail({
@@ -123,6 +115,56 @@ async function sendVolunteerAccessMessage({ name, email, passwordResetLink }) {
     text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO está pronto. Para criar sua senha e entrar na sua área de voluntário, use o link seguro abaixo:\n\n${passwordResetLink}\n\nSe você não solicitou este acesso, ignore esta mensagem.`,
     html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> está pronto.</p><p>Para criar sua senha e entrar na sua área de voluntário, use o link seguro abaixo:</p><p><a href="${safeLink}">Criar minha senha</a></p><p>Se você não solicitou este acesso, ignore esta mensagem.</p>`,
   });
+}
+
+function createSmtpTransporter() {
+  const password = process.env[SMTP_PASSWORD];
+  if (!password) throw new HttpsError('failed-precondition', 'O envio automático ainda não foi configurado.');
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: true,
+    auth: { user: SMTP_USER, pass: password },
+  });
+}
+
+function actionEmailDetails(action) {
+  const address = action.address ?? {};
+  const dates = action.startDate && action.endDate && action.startDate !== action.endDate
+    ? `${action.startDate} a ${action.endDate}`
+    : action.startDate || action.date || 'data a confirmar';
+  const times = [action.startTime, action.endTime].filter(Boolean).join(' às ');
+  const location = [address.street, address.number, address.neighborhood, address.city, address.state].filter(Boolean).join(', ') || 'local a confirmar';
+  return { dates, times, location };
+}
+
+async function sendVolunteerEnrollmentMessage({ name, email, action }) {
+  const transporter = createSmtpTransporter();
+  const details = actionEmailDetails(action);
+  const safeName = escapeHtml(name);
+  const safeActionName = escapeHtml(action.name);
+  const safeDates = escapeHtml(details.dates);
+  const safeTimes = escapeHtml(details.times);
+  const safeLocation = escapeHtml(details.location);
+  await transporter.sendMail({
+    from: 'MobilizAÇÃO | ONG Moradia e Cidadania <mobilizacao@moradiaecidadania.org.br>',
+    to: email,
+    subject: `Inscrição confirmada: ${action.name}`,
+    text: `Olá, ${name}!\n\nSua inscrição foi confirmada.\n\nAção: ${action.name}\nQuando: ${details.dates}${details.times ? `, ${details.times}` : ''}\nLocal: ${details.location}\n\nEsperamos você!\n\nMobilizAÇÃO | ONG Moradia e Cidadania`,
+    html: `<p>Olá, ${safeName}!</p><p>Sua inscrição foi confirmada.</p><p><strong>Ação:</strong> ${safeActionName}<br><strong>Quando:</strong> ${safeDates}${safeTimes ? `, ${safeTimes}` : ''}<br><strong>Local:</strong> ${safeLocation}</p><p>Esperamos você!</p><p><strong>MobilizAÇÃO | ONG Moradia e Cidadania</strong></p>`,
+  });
+}
+
+async function trySendVolunteerEnrollmentMessage({ name, email, action }) {
+  try {
+    await sendVolunteerEnrollmentMessage({ name, email, action });
+    return true;
+  } catch (error) {
+    // A inscrição já foi gravada. Não a desfazemos por uma indisponibilidade
+    // temporária do provedor de e-mail.
+    console.error('Erro ao enviar confirmação de inscrição', error);
+    return false;
+  }
 }
 
 function digits(value) { return String(value ?? '').replace(/\D/g, ''); }
@@ -202,7 +244,7 @@ export const initializePublicVolunteerCounter = onCall(PUBLIC_FUNCTION_OPTIONS, 
   return { count: current.data()?.total ?? count };
 });
 
-export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+export const enrollVolunteer = onCall({ ...PUBLIC_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Entre ou crie uma conta para participar.');
   const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
   const db = getFirestore();
@@ -236,7 +278,8 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
         transaction.set(db.collection('publicStats').doc(`${VOLUNTEER_COUNTER_PREFIX}${year}`), { total: FieldValue.increment(1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
       }
     });
-    return { created: false, replaced: Boolean(request.data?.replaceActionId) };
+    const emailSent = await trySendVolunteerEnrollmentMessage({ name: existing.data().fullName, email: existing.data().email, action });
+    return { created: false, replaced: Boolean(request.data?.replaceActionId), emailSent };
   }
   const profile = request.data?.profile ?? {};
   const fullName = requiredText(profile.fullName, 'nome', 2, 120);
@@ -262,12 +305,13 @@ export const enrollVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) =
   await batch.commit();
   await getAuth().updateUser(request.auth.uid, { displayName: fullName });
   await getAuth().setCustomUserClaims(request.auth.uid, { role: VOLUNTEER_ROLE, status: 'active' });
-  return { created: true };
+  const emailSent = await trySendVolunteerEnrollmentMessage({ name: fullName, email, action });
+  return { created: true, emailSent };
 });
 
 // Cadastro público: dados pessoais nunca são gravados diretamente pelo navegador.
 // O App Check protege o endpoint e a Function valida todas as autorizações.
-export const registerPublicVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+export const registerPublicVolunteer = onCall({ ...PUBLIC_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
   const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
   const db = getFirestore();
   const actionSnapshot = await db.collection('actions').doc(actionId).get();
@@ -283,7 +327,8 @@ export const registerPublicVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (re
   batch.set(db.collection('volunteerPrivate').doc(volunteerRef.id), { volunteerId: volunteerRef.id, cpf: profile.cpf, rg: profile.rg, birthDate: profile.birthDate, address: profile.address, shirtSize: profile.shirtSize, ngoRelationship: profile.ngoRelationship, lgpdAccepted: true, regulationAccepted: true, imageUseAccepted: true, guardianAuthorizationAccepted: profile.guardianAuthorizationAccepted, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   updateVolunteerYearCounters(batch, db, volunteerYears([action.date]), 1);
   await batch.commit();
-  return { created: true };
+  const emailSent = await trySendVolunteerEnrollmentMessage({ name: profile.fullName, email: profile.email, action });
+  return { created: true, emailSent };
 });
 
 // A coordenação pode cadastrar voluntários da própria UF, porém os documentos
