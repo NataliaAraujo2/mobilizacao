@@ -3,10 +3,16 @@
 .page h1 { margin: .25rem 0; font-size: clamp(2rem, 7vw, 3.7rem); }
 .page > header span { color: var(--text-muted); }
 .list { display: grid; gap: 1rem; margin-top: 1.5rem; }
-.list article { padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
-.list article > div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.list h2 { margin: 0; }
-.list p { color: var(--text-muted); }
+.list article { padding: clamp(1.25rem, 3vw, 1.75rem); background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; box-shadow: 0 .35rem 1.5rem rgb(21 64 93 / 6%); }
+.actionHeader { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+.list h2 { max-width: 48rem; margin: 0; font-size: clamp(1.3rem, 3vw, 1.75rem); line-height: 1.2; }
+.essentials { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 1.25rem 0; }
+.essentials > div { padding: .85rem 1rem; background: #f2f8fc; border-left: .25rem solid var(--brand-orange); border-radius: .5rem; }
+.essentials dt { margin-bottom: .2rem; color: var(--brand-blue); font-size: .74rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.essentials dd { margin: 0; color: var(--text); font-weight: 700; line-height: 1.45; }
+.detail { max-width: 58rem; margin-top: 1.25rem; padding-top: 1.2rem; border-top: 1px solid #dbe7ef; }
+.detail h3 { margin: 0 0 .55rem; color: var(--brand-blue); font-size: 1rem; }
+.detail p { max-width: 52rem; margin: 0 0 .75rem; color: var(--text-muted); font-size: .98rem; font-weight: 500; line-height: 1.7; }
 .list strong[class] { padding: .4rem .7rem; border-radius: 999px; }
 .participante { color: var(--brand-blue); background: #e5f1fb; }
 .presente { color: #176b35; background: #e4f3e8; }
@@ -16,7 +22,8 @@
 @media (max-width: 560px) {
   .page { width: min(100% - 1rem, 65rem); }
   .list article { padding: 1rem; }
-  .list article > div { align-items: start; flex-direction: column; }
+  .actionHeader { align-items: start; flex-direction: column; }
+  .essentials { grid-template-columns: 1fr; }
   .list strong[class], .list article > button { width: 100%; text-align: center; }
   .list article > button { min-height: 3.1rem; }
 }
