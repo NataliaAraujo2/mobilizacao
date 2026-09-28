@@ -6,7 +6,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { createBranchViewer, deleteBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
 import { listBranches } from "../services/branchesService";
 import { whatsappUrl } from "../utils/whatsapp";
-import { gmailComposeUrl } from "../utils/email";
 import styles from "./BranchViewersPage.module.css";
 
 const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contactPhone: "" };
@@ -135,13 +134,6 @@ export default function BranchViewersPage() {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  function emailCredentials() {
-    if (!credentials) return;
-    const url = gmailComposeUrl(credentials.contactEmail, "Seu acesso à MobilizAÇÃO", credentialsMessage());
-    if (!url) { setError("Cadastre o e-mail da pessoa responsável antes de compartilhar."); return; }
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-
   async function copyCredentials() {
     if (!credentials) return;
     try {
@@ -154,7 +146,7 @@ export default function BranchViewersPage() {
 
   return <main className={styles.page}>
     <PageHeading eyebrow="Administração nacional" title="Acessos das coordenações" description="Gerencie usuários, senhas e contatos por estado." meta={<span>{viewers.length} acesso{viewers.length === 1 ? "" : "s"}</span>} />
-    {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><div className={styles.credentialsActions}><button type="button" onClick={copyCredentials}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button><button type="button" onClick={emailCredentials}>Enviar por e-mail</button></div>{credentialsCopied && <p className={styles.copied} role="status">Usuário e senha copiados.</p>}<p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
+    {credentials && <div className={styles.modalBackdrop} role="presentation"><section className={styles.credentials} role="dialog" aria-modal="true"><p className={styles.credentialsEyebrow}>Acesso criado</p><h2>Guarde as credenciais agora</h2><div><span>Coordenação estadual</span><strong>{credentials.branchName}</strong></div><div><span>Usuário</span><strong>{credentials.username}</strong></div><div><span>Senha temporária</span><strong>{credentials.password}</strong></div><p className={styles.copied} role="status">{credentials.emailSent ? `Acesso enviado para ${credentials.contactEmail}.` : 'O acesso foi criado, mas o e-mail não pôde ser enviado agora.'}</p><div className={styles.credentialsActions}><button type="button" onClick={copyCredentials}>Copiar usuário e senha</button><button type="button" onClick={shareCredentials}>Enviar pelo WhatsApp</button></div>{credentialsCopied && <p className={styles.copied} role="status">Usuário e senha copiados.</p>}<p>Por segurança, a senha não fica salva para consulta.</p><button className={styles.closeCredentials} type="button" onClick={() => setCredentials(null)}>Fechar</button></section></div>}
     {error && <p className={styles.error} role="alert">{error}</p>}{message && <p className={styles.success} role="status">{message}</p>}
     <section className={styles.card}><h2>Coordenações estaduais</h2>{loading ? <p aria-busy="true">Carregando...</p> : branches.map((branch) => {
       const branchViewers = viewersByBranch.get(branch.id) ?? [];

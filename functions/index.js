@@ -128,6 +128,29 @@ function createSmtpTransporter() {
   });
 }
 
+async function sendSystemEmail({ to, subject, text, html }) {
+  await createSmtpTransporter().sendMail({
+    from: 'MobilizAÇÃO | ONG Moradia e Cidadania <mobilizacao@moradiaecidadania.org.br>',
+    to,
+    subject,
+    text,
+    html,
+  });
+}
+
+async function sendAdministrativeAccessMessage({ name, email, username, password, role }) {
+  const safeName = escapeHtml(name);
+  const safeUsername = escapeHtml(username);
+  const safePassword = escapeHtml(password);
+  const roleLabel = role === VIEWER_ROLE ? 'coordenação estadual' : 'administração nacional';
+  await sendSystemEmail({
+    to: email,
+    subject: 'Seu acesso à MobilizAÇÃO',
+    text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO foi criado para a ${roleLabel}.\n\nAcesse: https://mobilizacao.web.app/login\nUsuário: ${username}\nSenha temporária: ${password}\n\nNo primeiro acesso, defina sua senha pessoal.`,
+    html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> foi criado para a ${roleLabel}.</p><p><strong>Usuário:</strong> ${safeUsername}<br><strong>Senha temporária:</strong> ${safePassword}</p><p><a href="https://mobilizacao.web.app/login">Acessar a MobilizAÇÃO</a></p><p>No primeiro acesso, defina sua senha pessoal.</p>`,
+  });
+}
+
 function actionEmailDetails(action) {
   const address = action.address ?? {};
   const dates = action.startDate && action.endDate && action.startDate !== action.endDate
@@ -481,7 +504,7 @@ export const resolveBranchViewerLogin = onCall({ region: REGION, minInstances: 0
   return { email: profile?.data().email ?? null };
 });
 
-export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+export const createBranchViewer = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
   requireSuperAdmin(request);
 
   const branchId = requiredText(request.data?.branchId, "branchId", 1, 80);
@@ -527,7 +550,8 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
-      return { uid, username, password, coordinationNumber, userNumber };
+      const emailSent = await trySendAdministrativeAccessMessage({ name: contactName, email: contactEmail, username, password, role: VIEWER_ROLE });
+      return { uid, username, password, coordinationNumber, userNumber, emailSent };
     } catch (error) {
       // Só remove a conta criada por esta própria tentativa após uma falha
       // posterior. Conflitos nunca excluem uma conta que já existia.
@@ -539,7 +563,7 @@ export const createBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   throw new HttpsError("resource-exhausted", "Não foi possível gerar um identificador único. Tente novamente.");
 });
 
-export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+export const createSuperAdmin = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
   requireSuperAdmin(request);
   const displayName = requiredText(request.data?.displayName, "displayName", 2, 120);
   const email = requiredText(request.data?.email, "email", 5, 160).toLowerCase();
@@ -551,7 +575,8 @@ export const createSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
     created = await auth.createUser({ displayName, email, password });
     await auth.setCustomUserClaims(created.uid, { role: "superAdmin", status: "active", mustChangePassword: true });
     await getFirestore().collection("users").doc(created.uid).set({ displayName, email, role: "superAdmin", status: "active", createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
-    return { uid: created.uid, email, displayName, password };
+    const emailSent = await trySendAdministrativeAccessMessage({ name: displayName, email, username: email, password, role: 'superAdmin' });
+    return { uid: created.uid, email, displayName, password, emailSent };
   } catch (error) {
     if (created?.uid) await auth.deleteUser(created.uid).catch(() => {});
     if (error.code === "auth/email-already-exists") throw new HttpsError("already-exists", "Este e-mail já possui uma conta.");
@@ -604,7 +629,7 @@ export const updateSuperAdmin = onCall(ADMIN_FUNCTION_OPTIONS, async (request) =
   return { uid, displayName, email };
 });
 
-export const resetSuperAdminPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+export const resetSuperAdminPassword = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
   requireSuperAdmin(request);
   const uid = requiredText(request.data?.uid, 'uid', 1, 128);
   if (uid.includes('/')) throw new HttpsError('invalid-argument', 'Identificador inválido.');
@@ -618,7 +643,8 @@ export const resetSuperAdminPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (req
     throw new HttpsError('internal', 'Não foi possível gerar uma nova senha.');
   }
   await profile.ref.update({ updatedAt: FieldValue.serverTimestamp() });
-  return { uid, displayName: profile.data().displayName, email: profile.data().email, password };
+  const emailSent = await trySendAdministrativeAccessMessage({ name: profile.data().displayName, email: profile.data().email, username: profile.data().email, password, role: 'superAdmin' });
+  return { uid, displayName: profile.data().displayName, email: profile.data().email, password, emailSent };
 });
 
 // Reaplica as permissões do Auth a partir do cadastro administrativo. Isso evita
@@ -718,7 +744,7 @@ export const deleteBranchViewer = onCall(ADMIN_FUNCTION_OPTIONS, async (request)
   return { ok: true };
 });
 
-export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+export const resetBranchViewerPassword = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
   requireSuperAdmin(request);
   const uid = requiredText(request.data?.uid, "uid", 1, 128);
   const profile = await getFirestore().collection("users").doc(uid).get();
@@ -728,7 +754,30 @@ export const resetBranchViewerPassword = onCall(ADMIN_FUNCTION_OPTIONS, async (r
   const password = generateFriendlyPassword();
   await getAuth().updateUser(uid, { password });
   await getAuth().setCustomUserClaims(uid, { role: VIEWER_ROLE, branchId: profile.data().branchId, status: profile.data().status, mustChangePassword: true });
-  return { uid, username: profile.data().displayName, password };
+  const emailSent = await trySendAdministrativeAccessMessage({ name: profile.data().contactName || profile.data().displayName, email: profile.data().contactEmail || profile.data().email, username: profile.data().displayName, password, role: VIEWER_ROLE });
+  return { uid, username: profile.data().displayName, password, emailSent };
+});
+
+async function trySendAdministrativeAccessMessage(data) {
+  try { await sendAdministrativeAccessMessage(data); return true; }
+  catch (error) { console.error('Erro ao enviar acesso administrativo', error); return false; }
+}
+
+export const sendActionQrEmail = onCall({ ...ADMIN_FUNCTION_OPTIONS, secrets: [SMTP_PASSWORD] }, async (request) => {
+  requireSuperAdmin(request);
+  const actionId = requiredText(request.data?.actionId, 'actionId', 1, 128);
+  const kind = request.data?.kind === 'attendance' ? 'attendance' : 'registration';
+  const action = await getFirestore().collection('actions').doc(actionId).get();
+  if (!action.exists) throw new HttpsError('not-found', 'Ação não encontrada.');
+  const data = action.data();
+  const viewer = await getFirestore().collection('users').where('role', '==', VIEWER_ROLE).where('branchId', '==', data.branchId).limit(1).get();
+  const contact = viewer.docs.find(item => item.data().status === 'active')?.data() ?? viewer.docs[0]?.data();
+  const email = String(contact?.contactEmail ?? contact?.email ?? '').toLowerCase();
+  if (!isValidEmail(email)) throw new HttpsError('failed-precondition', 'Cadastre o e-mail do responsável da coordenação estadual.');
+  const link = `https://mobilizacao.web.app/${kind === 'attendance' ? 'presenca' : 'participar'}/${actionId}`;
+  const purpose = kind === 'attendance' ? 'confirmarem presença no local' : 'se inscreverem na ação';
+  await sendSystemEmail({ to: email, subject: `Link da ação: ${data.name}`, text: `Olá, ${contact.contactName || 'Coordenação'}!\n\nSegue o link da ação “${data.name}” para os voluntários ${purpose}:\n\n${link}`, html: `<p>Olá, ${escapeHtml(contact.contactName || 'Coordenação')}!</p><p>Segue o link da ação <strong>${escapeHtml(data.name)}</strong> para os voluntários ${purpose}.</p><p><a href="${escapeHtml(link)}">Abrir ação</a></p>` });
+  return { deliveredTo: email };
 });
 
 export const deleteAction = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {

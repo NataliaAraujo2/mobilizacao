@@ -48,6 +48,11 @@ export async function publishExistingActions() {
   return (await httpsCallable(functions, 'backfillPublicActions')({})).data;
 }
 
+export async function sendActionQrEmail(actionId, kind) {
+  const { functions, httpsCallable } = await getFunctionsService();
+  return (await httpsCallable(functions, 'sendActionQrEmail')({ actionId, kind })).data;
+}
+
 export async function listPublicActionsByCoordinationState(state) {
   const coordinationState = String(state ?? '').trim().toUpperCase();
   if (!coordinationState) return [];

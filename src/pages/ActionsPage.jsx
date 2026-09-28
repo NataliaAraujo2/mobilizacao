@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useAuth } from "../auth/useAuth";
-import { addAction, deleteAction, deleteActionPhoto, listActionsPage, publishExistingActions, updateAction, uploadActionPhotos } from "../services/actionsService";
+import { addAction, deleteAction, deleteActionPhoto, listActionsPage, publishExistingActions, sendActionQrEmail, updateAction, uploadActionPhotos } from "../services/actionsService";
 import { listBranches } from "../services/branchesService";
 import { getBranchViewerByBranch } from "../services/branchViewersService";
 import { findAddressByCep } from "../services/cepService";
@@ -10,7 +10,6 @@ import ListSearch from '../components/ListSearch';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import { CoordinationActionDetails } from './ConsultationPage';
 import { whatsappUrl } from '../utils/whatsapp';
-import { gmailComposeUrl } from '../utils/email';
 import ActionStatus from '../components/ActionStatus';
 import styles from "./ActionsPage.module.css";
 import PageHeading from "../components/PageHeading";
@@ -209,11 +208,14 @@ export default function ActionsPage() {
     setError("");
     try {
       const viewer = await getBranchViewerByBranch(qrAction.branchId);
-      const url = channel === 'email'
-        ? gmailComposeUrl(viewer?.contactEmail, `QR Code da ação: ${qrAction.name}`, qrMessage(viewer))
-        : whatsappUrl(viewer?.contactPhone, qrMessage(viewer));
-      if (!url) throw new Error(channel === 'email' ? 'Cadastre o e-mail do responsável da coordenação estadual para enviar o QR Code.' : 'Cadastre o telefone do responsável da coordenação estadual para enviar o QR Code pelo WhatsApp.');
-      window.open(url, '_blank', 'noopener,noreferrer');
+      if (channel === 'email') {
+        const result = await sendActionQrEmail(qrAction.id, qrAction.qrKind);
+        setMessage(`Link da ação enviado para ${result.deliveredTo}.`);
+      } else {
+        const url = whatsappUrl(viewer?.contactPhone, qrMessage(viewer));
+        if (!url) throw new Error('Cadastre o telefone do responsável da coordenação estadual para enviar o QR Code pelo WhatsApp.');
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     } catch (shareError) {
       setError(shareError.message || 'Não foi possível preparar o envio ao coordenador.');
     } finally {
