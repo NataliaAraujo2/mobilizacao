@@ -17,14 +17,14 @@
 .actionEssentials > div { padding: .8rem .9rem; background: #f2f7fa; border: 1px solid #d9e6ee; border-radius: .7rem; }
 .actionEssentials dt { margin-bottom: .25rem; color: var(--brand-blue); font-size: .78rem; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
 .actionEssentials dd { margin: 0; color: var(--text); font-size: .92rem; font-weight: 650; line-height: 1.45; }
-.detailSection { display: grid; gap: .55rem; max-width: 74ch; }
+.detailSection { display: grid; gap: .55rem; width: 100%; max-width: none; }
 .detailSection h4 { margin: 0; color: var(--brand-blue); font-size: 1rem; }
 .detailSection p { margin: 0; color: #29485a; font-size: .98rem; line-height: 1.7; text-align: justify; text-align-last: left; hyphens: auto; }
 .details :global(.gallery) { margin-top: .55rem; }
 .back { justify-self: start; min-height: auto !important; padding: .15rem 0 !important; color: var(--brand-blue) !important; background: transparent !important; }
 .participate { width: 100%; margin-top: .35rem; }
 .modalBackdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: clamp(.75rem, 3vw, 2rem); background: rgb(35 49 60 / 68%); backdrop-filter: grayscale(1) blur(2px); }
-.actionModal { display: grid; width: min(100%, 62rem); max-height: calc(100vh - 2rem); gap: .9rem; padding: clamp(1rem, 3vw, 1.6rem); overflow: auto; background: white; border: 1px solid #c9dfed; border-top: .35rem solid var(--brand-orange); border-radius: 1rem; box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 38%); }
+.actionModal { box-sizing: border-box; display: grid; width: min(100%, 62rem); max-height: calc(100dvh - 2rem); gap: .9rem; padding: clamp(1rem, 3vw, 1.6rem); overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; background: white; border: 1px solid #c9dfed; border-top: .35rem solid var(--brand-orange); border-radius: 1rem; box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 38%); }
 .actionModal > header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding-bottom: .8rem; border-bottom: 1px solid var(--border); }
 .actionModal h2 { margin: .2rem 0 0; color: var(--brand-blue); font-size: clamp(1.6rem, 4vw, 2.3rem); line-height: 1.1; }
 .signup { display: grid; width: min(100%, 68rem); max-height: calc(100vh - 2rem); gap: .85rem; padding: clamp(1rem, 3vw, 1.5rem); overflow: auto; background: white; border: 1px solid #c9dfed; border-top: .35rem solid var(--brand-orange); border-radius: 1rem; box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 38%); }
