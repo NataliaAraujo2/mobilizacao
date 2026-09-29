@@ -19,7 +19,7 @@
 .actionEssentials dd { margin: 0; color: var(--text); font-size: .92rem; font-weight: 650; line-height: 1.45; }
 .detailSection { display: grid; gap: .55rem; max-width: 74ch; }
 .detailSection h4 { margin: 0; color: var(--brand-blue); font-size: 1rem; }
-.detailSection p { margin: 0; color: #29485a; font-size: .98rem; line-height: 1.7; }
+.detailSection p { margin: 0; color: #29485a; font-size: .98rem; line-height: 1.7; text-align: justify; text-align-last: left; hyphens: auto; }
 .details :global(.gallery) { margin-top: .55rem; }
 .back { justify-self: start; min-height: auto !important; padding: .15rem 0 !important; color: var(--brand-blue) !important; background: transparent !important; }
 .participate { width: 100%; margin-top: .35rem; }
