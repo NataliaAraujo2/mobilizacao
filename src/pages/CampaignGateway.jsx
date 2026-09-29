@@ -5,7 +5,7 @@ import BrazilMap from "../components/BrazilMap/BrazilMap";
 import PublicActionsPanel from "../components/PublicActionsPanel";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
-import associatesGroupPhoto from "../assets/brand/campanha-associados-2026.webp";
+import associatesGroupPhoto from "../assets/brand/associados-2026-grupo.webp";
 import whoWeAreImage from "../assets/brand/quem-somos.svg";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
