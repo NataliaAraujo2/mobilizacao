@@ -13,6 +13,8 @@
 .profileHeading { display: flex; justify-content: space-between; gap: 1rem; }
 .profileHeading p { max-width: 42rem; margin-bottom: 0; color: var(--text-muted); }
 .profileHeading > button, .profileActions button { min-height: 2.65rem; padding: .55rem .85rem; color: white; font: inherit; font-weight: 800; white-space: nowrap; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
+.profileHeading > button { font-size: 0; }
+.profileHeading > button::after { content: "✏ Editar informações"; font-size: 1rem; }
 .profileMessage { margin: 1rem 0 0; color: #176b35; font-weight: 700; }
 .profileForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; margin-top: 1.25rem; }
 .profileForm > label, .profileForm fieldset label { display: grid; gap: .35rem; color: var(--text); font-weight: 750; }
