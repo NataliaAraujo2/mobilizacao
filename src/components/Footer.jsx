@@ -33,12 +33,8 @@ export default function Footer() {
 
         <section className={styles.contact} aria-labelledby="footer-contact-title">
           <h2 id="footer-contact-title">ONG Moradia e Cidadania</h2>
-          <address>
-            Ed. Ceará, Setor Comercial Sul, Q. 1, Bloco E, Lote 30, Sala 913<br />
-            Brasília/DF
-          </address>
           <p className={styles.phone}>☎ <span>(61) 3224-8071</span></p>
-          <a href="mailto:comunicacao@moradiaecidadania.org.br">comunicacao@moradiaecidadania.org.br</a>
+          <a href="mailto:mobilizacao@moradiaecidadania.org.br">mobilizacao@moradiaecidadania.org.br</a>
           <div className={styles.socials} aria-label="Redes sociais">
             {socialLinks.map(({ label, href, className }) => (
               <a key={label} className={styles[className]} href={href} target="_blank" rel="noreferrer" aria-label={`ONG Moradia e Cidadania no ${label}`}>{label}</a>
