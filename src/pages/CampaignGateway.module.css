@@ -85,7 +85,7 @@
 .counterElement { position: absolute; z-index: 0; width: auto; height: auto; max-width: 11rem; opacity: .42; filter: brightness(1.3) saturate(1.15); pointer-events: none; }
 .counterLeaves { top: -1.25rem; right: -2.75rem; transform: rotate(16deg); }
 .counterSprout { bottom: -1.8rem; left: -2rem; transform: rotate(-14deg); }
-.whoWeAre { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(17rem, .8fr); align-items: stretch; width: min(100%, 86rem); margin: 3rem auto 0; overflow: hidden; background: white; border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-blue); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
+.whoWeAre { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, .8fr); align-items: stretch; width: min(100%, 86rem); margin: 3rem auto 0; overflow: hidden; background: white; border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-blue); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
 .whoWeAreCopy { display: grid; align-content: center; justify-items: start; padding: clamp(1.5rem, 4vw, 3rem); }
 .whoWeAreCopy .eyebrow { margin-bottom: .2rem; }
 .whoWeAre h2 { margin: 0 0 1rem; color: var(--brand-blue); font-size: clamp(1.6rem, 3.5vw, 2.4rem); line-height: 1; text-transform: uppercase; }
@@ -94,7 +94,7 @@
 .whoWeAreButton { display: inline-flex; align-items: center; gap: .45rem; margin-top: 1.35rem; padding: .65rem 1.05rem; color: white; font: inherit; font-size: .95rem; font-weight: 850; text-decoration: none; text-transform: uppercase; background: var(--brand-orange); border: 0; border-radius: .7rem; box-shadow: 0 .45rem .85rem rgb(156 73 11 / 20%); transition: transform 180ms ease, background 180ms ease; }
 .whoWeAreButton > img { width: 2.25rem; height: 2.25rem; object-fit: contain; filter: brightness(0) invert(1); }
 .whoWeAreButton:hover, .whoWeAreButton:focus-visible { color: white; background: #d96e16; outline: 3px solid rgb(244 131 43 / 35%); outline-offset: 3px; transform: translateY(-1px); }
-.whoWeAre > img { align-self: stretch; width: 135.2%; max-width: none; height: 100%; min-height: 19rem; margin-left: -13.1%; object-fit: fill; }
+.whoWeAre > img { align-self: stretch; width: 100%; max-width: 100%; height: 100%; min-height: 19rem; margin: 0; object-fit: cover; object-position: center; }
 .previousHeading { margin-bottom: 1rem; text-align: center; }
 .previousHeading h2 { margin: .35rem 0 0; color: var(--brand-blue); font-size: clamp(1.5rem, 4vw, 2.25rem); }
 .previousCard { display: grid; grid-template-columns: 8rem auto minmax(0, 1fr) auto; align-items: center; gap: clamp(.8rem, 3vw, 1.5rem); padding: 1.25rem; color: var(--text); text-decoration: none; background: linear-gradient(rgb(255 255 255 / 88%), rgb(255 255 255 / 94%)), url("../assets/brand/mobilizacao-fundo-2025.webp") center / cover; border: 1px solid var(--border); border-radius: 1.25rem; box-shadow: 0 .8rem 2rem rgb(23 50 77 / 9%); transition: transform 180ms ease, box-shadow 180ms ease; }
@@ -148,7 +148,7 @@
   .kitSprout { display: none; }
   .videoSection { grid-template-columns: 1fr; }
   .whoWeAre { grid-template-columns: 1fr; }
-  .whoWeAre > img { width: 135.2%; min-height: 15rem; max-height: 24rem; margin-left: -13.1%; }
+  .whoWeAre > img { width: 100%; min-height: 15rem; max-height: 24rem; margin: 0; }
   .previousCard { grid-template-columns: 6rem 1fr; }
   .previousCard > img { grid-row: span 2; width: 6rem; height: 6rem; }
   .previousCopy { grid-column: 2; }
