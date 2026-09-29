@@ -12,7 +12,6 @@ import impactElement from "../assets/brand/elements/elemento-02.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
 import { getPublicVolunteerCount } from "../services/publicVolunteerService";
-import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "./CampaignGateway.module.css";
 
 const CAMPAIGN_YEAR = '2026';
@@ -166,23 +165,6 @@ export default function CampaignGateway() {
         <img src={whoWeAreImage} alt="Voluntários da ONG Moradia e Cidadania" />
       </section>
 
-      <section className={styles.previousEditions} aria-labelledby="previous-editions-title">
-        <div className={styles.previousHeading}>
-          <p className={styles.eyebrow}>Nossa história</p>
-          <h2 id="previous-editions-title">Conheça nossas edições anteriores</h2>
-        </div>
-        <Link className={styles.previousCard} to="/2025">
-          <img src={logo2025} alt="Marca da MobilizAÇÃO 2025" width="900" height="900" />
-          <span className={styles.year}>2025</span>
-          <span className={styles.previousCopy}>
-            <strong>MobilizAÇÃO 2025</strong>
-            <small>Relembre a campanha e conheça as ações da edição anterior.</small>
-            <span className={styles.previousMetric}><b>1.417</b> voluntários mobilizados</span>
-          </span>
-          <span className={styles.previousLink}>Ver relatório da edição 2025 <b aria-hidden="true">→</b></span>
-        </Link>
-      </section>
-
       <section id="agenda-2030" className={styles.activeCampaign} aria-labelledby="active-campaign-title">
         <div className={styles.associationPhoto}>
           <img src={associatesGroupPhoto} alt="Grupo de pessoas voluntárias da ONG Moradia e Cidadania" />
@@ -202,7 +184,22 @@ export default function CampaignGateway() {
           <a href="https://moradiaecidadania.org.br" target="_blank" rel="noreferrer">Seja associado</a>
         </div>
       </section>
-      <PublicCoordinatorAccess />
+      <section className={styles.previousEditions} aria-labelledby="previous-editions-title">
+        <div className={styles.previousHeading}>
+          <p className={styles.eyebrow}>Nossa história</p>
+          <h2 id="previous-editions-title">Conheça nossas edições anteriores</h2>
+        </div>
+        <Link className={styles.previousCard} to="/2025">
+          <img src={logo2025} alt="Marca da MobilizAÇÃO 2025" width="900" height="900" />
+          <span className={styles.year}>2025</span>
+          <span className={styles.previousCopy}>
+            <strong>MobilizAÇÃO 2025</strong>
+            <small>Relembre a campanha e conheça as ações da edição anterior.</small>
+            <span className={styles.previousMetric}><b>1.417</b> voluntários mobilizados</span>
+          </span>
+          <span className={styles.previousLink}>Ver relatório da edição 2025 <b aria-hidden="true">→</b></span>
+        </Link>
+      </section>
     </main>
   );
 }
