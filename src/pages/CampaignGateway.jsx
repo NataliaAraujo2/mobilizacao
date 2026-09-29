@@ -5,7 +5,7 @@ import BrazilMap from "../components/BrazilMap/BrazilMap";
 import PublicActionsPanel from "../components/PublicActionsPanel";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
-import associatesBanner from "../assets/brand/campanha-associados-2026.webp";
+import associatesGroupPhoto from "../assets/brand/associados-2026-grupo.svg";
 import whoWeAreImage from "../assets/brand/quem-somos.svg";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
@@ -183,19 +183,23 @@ export default function CampaignGateway() {
       </section>
 
       <section id="agenda-2030" className={styles.activeCampaign} aria-labelledby="active-campaign-title">
-        <div className={styles.campaignHeading}>
-          <div>
-            <p className={styles.eyebrow}>Associação em andamento</p>
-            <h2 id="active-campaign-title">Você já pode contribuir para a MobilizAÇÃO! Seja um associado</h2>
-          </div>
+        <div className={styles.associationPhoto}>
+          <img src={associatesGroupPhoto} alt="Grupo de pessoas voluntárias da ONG Moradia e Cidadania" />
+          <span>Colabore o ano todo!</span>
+        </div>
+        <div className={styles.associationImpact}>
+          <img src={sproutElement} alt="" aria-hidden="true" />
+          <p>Uma nova pessoa,<br />uma nova árvore.</p>
+          <strong>Um futuro em crescimento.</strong>
           <AssociatesCounter />
         </div>
-        <img
-          src={associatesBanner}
-          alt="Seja um associado da ONG Moradia e Cidadania. De 1º de setembro a 31 de dezembro de 2026, cada novo associado representa uma árvore plantada."
-          width="1920"
-          height="689"
-        />
+        <div className={styles.associationCommitment}>
+          <img src={leavesElement} alt="" aria-hidden="true" />
+          <p className={styles.eyebrow}>Compromisso</p>
+          <h2 id="active-campaign-title">Para cada <b>novo associado</b>, de setembro a dezembro de 2026, plantaremos <b>1 árvore</b>.</h2>
+          <p>Seja associado da <b>Moradia e Cidadania</b> e contribua mensalmente para os mais de 200 projetos que apoiamos em todo o Brasil.</p>
+          <a href="https://moradiaecidadania.org.br" target="_blank" rel="noreferrer">Seja associado</a>
+        </div>
       </section>
       <PublicCoordinatorAccess />
     </main>
