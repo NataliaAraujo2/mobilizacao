@@ -15,7 +15,7 @@ import styles from "./ActionsPage.module.css";
 import PageHeading from "../components/PageHeading";
 
 const EMPTY_ADDRESS = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", source: "manual" };
-const EMPTY_FORM = { name: "", branchId: "", startDate: "", endDate: "", startTime: "", endTime: "", scheduleText: "", address: EMPTY_ADDRESS, description: "", whatToBring: "", tips: "", status: "planning" };
+const EMPTY_FORM = { name: "", branchId: "", startDate: "", endDate: "", startTime: "", endTime: "", scheduleText: "", contactPhone: "", contactEmail: "", address: EMPTY_ADDRESS, description: "", whatToBring: "", tips: "", status: "planning" };
 const EMPTY_PHOTOS = { before: [], during: [], after: [] };
 
 function formatCep(value) {
@@ -66,7 +66,7 @@ export default function ActionsPage() {
 
   function startEdit(action) {
     setEditingActionId(action.id);
-    setForm({ name: action.name ?? "", branchId: action.branchId ?? "", startDate: action.startDate ?? action.date ?? "", endDate: action.endDate ?? action.startDate ?? action.date ?? "", startTime: action.startTime ?? "", endTime: action.endTime ?? "", scheduleText: action.scheduleText ?? "", address: { ...EMPTY_ADDRESS, ...(action.address ?? {}) }, description: action.description ?? "", whatToBring: action.whatToBring ?? "", tips: action.tips ?? "", status: action.status ?? "planning" });
+    setForm({ name: action.name ?? "", branchId: action.branchId ?? "", startDate: action.startDate ?? action.date ?? "", endDate: action.endDate ?? action.startDate ?? action.date ?? "", startTime: action.startTime ?? "", endTime: action.endTime ?? "", scheduleText: action.scheduleText ?? "", contactPhone: action.contactPhone ?? "", contactEmail: action.contactEmail ?? "", address: { ...EMPTY_ADDRESS, ...(action.address ?? {}) }, description: action.description ?? "", whatToBring: action.whatToBring ?? "", tips: action.tips ?? "", status: action.status ?? "planning" });
     setPhotos(EMPTY_PHOTOS); setError(""); setMessage(""); setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -241,6 +241,11 @@ export default function ActionsPage() {
             <label>Data de fim<input required type="date" min={form.startDate || undefined} value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} /></label>
             <label>Hora de fim<input required type="time" value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></label>
             <label className={styles.wide}>Informações de data e horário <small>(opcional)</small><textarea rows="3" maxLength="500" placeholder="Ex.: concentração às 8h30; atividade sujeita às condições climáticas." value={form.scheduleText} onChange={(event) => setForm({ ...form, scheduleText: event.target.value })} /></label>
+          </div></fieldset>
+
+          <fieldset><legend>Contatos da ação</legend><p>Opcional — serão exibidos para quem consultar os detalhes da ação.</p><div className={styles.grid}>
+            <label>Telefone de contato<input type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} /></label>
+            <label>E-mail de contato<input type="email" placeholder="contato@exemplo.org.br" value={form.contactEmail} onChange={(event) => setForm({ ...form, contactEmail: event.target.value })} /></label>
           </div></fieldset>
 
           <fieldset><legend>Endereço</legend><p>Busque pelo CEP ou preencha qualquer campo manualmente.</p><div className={styles.grid}>

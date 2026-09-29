@@ -58,6 +58,7 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
         <div><dt>Situação</dt><dd><ActionStatus action={action} /></dd></div>
         <div className={styles.detailWide}><dt>Local</dt><dd>{[address.street, address.number, address.complement, address.neighborhood, address.city, address.state].filter(Boolean).join(', ')}</dd></div>
         {address.cep && <div><dt>CEP</dt><dd>{address.cep}</dd></div>}
+        {(action.contactPhone || action.contactEmail) && <div className={styles.detailWide}><dt>Contatos</dt><dd>{[action.contactPhone, action.contactEmail].filter(Boolean).join(' · ')}</dd></div>}
         {action.description && <div className={styles.detailWide}><dt>Descrição</dt><dd>{action.description}</dd></div>}
         <div className={styles.detailWide}><dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd></div>
         <div className={styles.detailWide}><dt>Orientações</dt><dd>{action.tips || 'Nenhuma orientação adicional.'}</dd></div>

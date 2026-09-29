@@ -27,6 +27,8 @@ export function createAction(input) {
     startTime,
     endTime,
     scheduleText: String(input.scheduleText ?? '').trim(),
+    contactPhone: String(input.contactPhone ?? '').trim(),
+    contactEmail: String(input.contactEmail ?? '').trim().toLowerCase(),
     dateStart,
     dateEnd,
     status: input.status ?? "planning",
@@ -56,6 +58,8 @@ export function createAction(input) {
   if (endDateValue < dateStart) throw new Error('A data de fim não pode ser anterior à data de início.');
   if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) throw new Error('Informe os horários de início e fim da ação.');
   if (startDate === endDate && endTime <= startTime) throw new Error('Em uma ação no mesmo dia, o horário de fim deve ser posterior ao início.');
+  if (data.contactPhone && !/^\d{10,13}$/.test(data.contactPhone.replace(/\D/g, ''))) throw new Error('Informe um telefone de contato válido.');
+  if (data.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contactEmail)) throw new Error('Informe um e-mail de contato válido.');
   if (!data.address.street || !data.address.number || !data.address.city || !isBrazilStateCode(data.address.state)) {
     throw new Error("Preencha logradouro, número, cidade e estado.");
   }

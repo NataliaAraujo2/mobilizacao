@@ -17,6 +17,11 @@
 .actionEssentials > div { padding: .8rem .9rem; background: #f2f7fa; border: 1px solid #d9e6ee; border-radius: .7rem; }
 .actionEssentials dt { margin-bottom: .25rem; color: var(--brand-blue); font-size: .78rem; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
 .actionEssentials dd { margin: 0; color: var(--text); font-size: .92rem; font-weight: 650; line-height: 1.45; }
+.actionContacts { display: grid; gap: .4rem; padding: .75rem .9rem; background: #f2f7fa; border: 1px solid #d9e6ee; border-radius: .7rem; }
+.actionContacts h4 { margin: 0; color: var(--brand-blue); font-size: .82rem; letter-spacing: .03em; text-transform: uppercase; }
+.actionContacts > div { display: flex; flex-wrap: wrap; gap: .35rem 1rem; }
+.actionContacts a { color: #29485a; font-size: .92rem; font-weight: 700; text-decoration-color: #79a8c4; text-underline-offset: .16em; }
+.actionContacts a:hover { color: var(--brand-blue); }
 .detailSection { display: grid; gap: .55rem; width: 100%; max-width: none; }
 .detailSection h4 { margin: 0; color: var(--brand-blue); font-size: 1rem; }
 .detailSection p { margin: 0; color: #29485a; font-size: .98rem; line-height: 1.7; text-align: justify; text-align-last: left; hyphens: none; overflow-wrap: normal; word-break: normal; }
