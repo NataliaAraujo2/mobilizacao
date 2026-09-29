@@ -10,6 +10,7 @@ import whoWeAreImage from "../assets/brand/quem-somos.webp";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
 import impactElement from "../assets/brand/elements/elemento-02.webp";
 import whoWeAreElement from "../assets/brand/elements/elemento-03.webp";
+import heroActionElement from "../assets/brand/elements/elemento-04.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
 import { getPublicVolunteerCount } from "../services/publicVolunteerService";
@@ -117,7 +118,7 @@ export default function CampaignGateway() {
           <h2 id="home-hero-title" className={styles.heroWordmark}><span>Mobiliz</span><em>AÇÃO</em></h2>
           <p className={styles.heroTitle}>Semeando e<br />Cultivando<br />o Futuro!</p>
           <p className={styles.heroDescription}>Voluntariado que transforma<br />vidas e territórios</p>
-          <button className={styles.heroAction} type="button" aria-expanded={heroExpanded} aria-controls="mapa-acoes-publico" onClick={toggleActions}>{heroExpanded ? 'Fechar ações de 2026' : 'Conheça as ações de 2026'}</button>
+          <button className={styles.heroAction} type="button" aria-expanded={heroExpanded} aria-controls="mapa-acoes-publico" onClick={toggleActions}><img src={heroActionElement} alt="" aria-hidden="true" />{heroExpanded ? 'Fechar ações de 2026' : 'Conheça as ações de 2026'}</button>
         </div>
         {heroExpanded && <div ref={mapRef} id="mapa-acoes-publico" className={styles.publicMap}>
           <div className={styles.mapIntro}><p className={styles.eyebrow}>Mapa interativo</p><h3>Escolha um estado</h3><p>Toque ou clique no estado para ver as ações disponíveis.</p></div>
