@@ -183,7 +183,7 @@ export default function CampaignGateway() {
           <p className={styles.eyebrow}>Compromisso</p>
           <h2 id="active-campaign-title">Para cada <b>novo associado</b>, de setembro a dezembro de 2026, plantaremos <b>1 árvore</b>.</h2>
           <p>Seja associado da <b>Moradia e Cidadania</b> e contribua mensalmente para os mais de 200 projetos que apoiamos em todo o Brasil.</p>
-          <a href="https://moradiaecidadania.org.br" target="_blank" rel="noreferrer">Seja associado</a>
+          <a href="https://moradiaecidadania.org.br" target="_blank" rel="noreferrer"><img src={leavesElement} alt="" aria-hidden="true" />Seja associado</a>
         </div>
       </section>
       <section className={styles.previousEditions} aria-labelledby="previous-editions-title">
