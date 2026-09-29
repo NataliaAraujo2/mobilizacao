@@ -23,7 +23,7 @@
 .associationPhoto span { position: absolute; top: .75rem; left: 50%; padding: .22rem .75rem; color: white; font-size: clamp(1.05rem, 2.4vw, 1.75rem); font-weight: 850; white-space: nowrap; background: var(--brand-blue); border-radius: 999px; transform: translateX(-50%); }
 .associationImpact { grid-area: impact; position: relative; display: grid; grid-template-columns: 1fr auto; align-content: center; gap: .25rem 1rem; min-height: 10rem; padding: 1.1rem .8rem .5rem; overflow: hidden; }
 .associationImpact > img { position: absolute; width: 6.5rem; bottom: -.5rem; left: -.5rem; opacity: .78; }
-.associationImpact > p, .associationImpact > strong { grid-column: 1; position: relative; z-index: 1; margin: 0; padding-left: 4.4rem; color: var(--brand-blue); font-size: clamp(1.15rem, 2.4vw, 1.65rem); font-weight: 850; line-height: 1.18; }
+.associationImpact > p, .associationImpact > strong { grid-column: 1; position: relative; z-index: 1; margin: 0; padding-left: 5.35rem; color: var(--brand-blue); font-size: clamp(1.15rem, 2.4vw, 1.65rem); font-weight: 850; line-height: 1.18; }
 .associationImpact > strong { color: var(--brand-green); font-family: "Amithen", cursive; font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 400; }
 .associationImpact .associatesCounter { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-width: 9.5rem; border: 2px solid var(--brand-green); }
 .associationCommitment { grid-area: commitment; isolation: isolate; position: relative; display: grid; align-content: center; justify-items: center; padding: clamp(1.4rem, 3vw, 2.1rem); overflow: hidden; text-align: center; background: #fff; border: 1px solid #b7c9d4; border-left: .45rem solid var(--brand-orange); border-radius: 1rem; }
