@@ -25,6 +25,7 @@ export function enrollInAction(actionId, profile, replaceActionId = '') { return
 export function registerPublicVolunteer(actionId, profile) { return call('registerPublicVolunteer', { actionId, profile }); }
 export function withdrawFromAction(actionId) { return call('withdrawVolunteer', { actionId }); }
 export function getVolunteerDashboard() { return call('getVolunteerDashboard', {}); }
+export function updateVolunteerContactDetails(details) { return call('updateVolunteerContactDetails', details); }
 export function confirmVolunteerAttendance(actionId) { return call('confirmVolunteerAttendance', { actionId }); }
 
 export async function createVolunteerAccount(email, password) {

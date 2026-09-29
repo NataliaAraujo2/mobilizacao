@@ -410,6 +410,23 @@ export const withdrawVolunteer = onCall(PUBLIC_FUNCTION_OPTIONS, async (request)
   return { ok: true };
 });
 
+export const updateVolunteerContactDetails = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || request.auth.token.role !== VOLUNTEER_ROLE || request.auth.token.status !== 'active') throw new HttpsError('permission-denied', 'Acesso de voluntário necessário.');
+  const shirtSize = String(request.data?.shirtSize ?? '').trim().toUpperCase();
+  const phone = digits(request.data?.phone);
+  const contactEmails = [...new Set((Array.isArray(request.data?.contactEmails) ? request.data.contactEmails : []).map(value => String(value).trim().toLowerCase()).filter(Boolean))];
+  const contactPhones = [...new Set((Array.isArray(request.data?.contactPhones) ? request.data.contactPhones : []).map(digits).filter(Boolean))];
+  if (!['PP', 'P', 'M', 'G', 'GG', 'XG'].includes(shirtSize) || !isValidPhone(phone, 13) || contactEmails.length > 3 || contactEmails.some(email => !isValidEmail(email)) || contactPhones.length > 3 || contactPhones.some(value => !isValidPhone(value, 13))) {
+    throw new HttpsError('invalid-argument', 'Revise o tamanho da camiseta e os dados de contato informados.');
+  }
+  const db = getFirestore();
+  await Promise.all([
+    db.collection('volunteers').doc(request.auth.uid).update({ phone, updatedAt: FieldValue.serverTimestamp() }),
+    db.collection('volunteerPrivate').doc(request.auth.uid).set({ shirtSize, additionalContacts: { emails: contactEmails, phones: contactPhones }, updatedAt: FieldValue.serverTimestamp() }, { merge: true }),
+  ]);
+  return { shirtSize, phone, contactEmails, contactPhones };
+});
+
 export const getVolunteerDashboard = onCall(PUBLIC_FUNCTION_OPTIONS, async (request) => {
   if (!request.auth || request.auth.token.role !== VOLUNTEER_ROLE || request.auth.token.status !== 'active') {
     throw new HttpsError('permission-denied', 'Acesso de voluntário necessário.');
@@ -435,6 +452,8 @@ export const getVolunteerDashboard = onCall(PUBLIC_FUNCTION_OPTIONS, async (requ
       address: privateData.address ?? {},
       shirtSize: privateData.shirtSize ?? '',
       ngoRelationship: privateData.ngoRelationship ?? '',
+      contactEmails: privateData.additionalContacts?.emails ?? [],
+      contactPhones: privateData.additionalContacts?.phones ?? [],
     },
     actions,
     sessionActionIds: sessionSnapshots.filter((item) => item.exists).map((item) => item.id),

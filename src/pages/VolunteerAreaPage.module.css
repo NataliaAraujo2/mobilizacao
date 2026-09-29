@@ -10,6 +10,19 @@
 .profile, .empty { margin-top: 1.5rem; padding: clamp(1.25rem, 3vw, 1.75rem); background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
 .profile h2, .empty h2 { margin-top: 0; }
 .profile > p { color: var(--text-muted); }
+.profileHeading { display: flex; justify-content: space-between; gap: 1rem; }
+.profileHeading p { max-width: 42rem; margin-bottom: 0; color: var(--text-muted); }
+.profileHeading > button, .profileActions button { min-height: 2.65rem; padding: .55rem .85rem; color: white; font: inherit; font-weight: 800; white-space: nowrap; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
+.profileMessage { margin: 1rem 0 0; color: #176b35; font-weight: 700; }
+.profileForm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; margin-top: 1.25rem; }
+.profileForm > label, .profileForm fieldset label { display: grid; gap: .35rem; color: var(--text); font-weight: 750; }
+.profileForm input, .profileForm select { width: 100%; min-height: 2.7rem; padding: .55rem .7rem; color: var(--text); font: inherit; background: white; border: 1px solid #aac0ce; border-radius: .55rem; }
+.profileForm input[readonly] { color: var(--text-muted); background: #eef4f7; cursor: not-allowed; }
+.profileForm fieldset { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0; padding: 1rem; border: 1px solid #d6e5ed; border-radius: .7rem; }
+.profileForm legend { padding: 0 .3rem; color: var(--brand-blue); font-weight: 850; }
+.profileForm legend small { color: var(--text-muted); font-weight: 500; }
+.profileActions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .6rem; }
+.profileActions button:last-child { color: var(--brand-blue); background: white; border: 1px solid #b7cdd9; }
 .profile dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 1.25rem 0 0; }
 .profile dl > div { padding: .85rem 1rem; background: #f2f8fc; border-radius: .55rem; }
 .profile dt { margin-bottom: .2rem; color: var(--brand-blue); font-size: .74rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
@@ -41,6 +54,8 @@
   .essentials { grid-template-columns: 1fr; }
   .profile dl { grid-template-columns: 1fr; }
   .profile .full { grid-column: auto; }
+  .profileHeading { align-items: start; flex-direction: column; }
+  .profileForm, .profileForm fieldset { grid-template-columns: 1fr; }
   .list strong[class], .list article > button { width: 100%; text-align: center; }
   .list article > button { min-height: 3.1rem; }
 }
