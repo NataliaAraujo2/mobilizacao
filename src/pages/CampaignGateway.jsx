@@ -8,6 +8,7 @@ import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
 import associatesGroupPhoto from "../assets/brand/associados-2026-grupo.webp";
 import whoWeAreImage from "../assets/brand/quem-somos.webp";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
+import impactElement from "../assets/brand/elements/elemento-02.webp";
 import sproutElement from "../assets/brand/elements/elemento-05.webp";
 import { getNewAssociatesCount } from "../services/associationStatsService";
 import { getPublicVolunteerCount } from "../services/publicVolunteerService";
@@ -188,7 +189,7 @@ export default function CampaignGateway() {
           <span>Colabore o ano todo!</span>
         </div>
         <div className={styles.associationImpact}>
-          <img src={sproutElement} alt="" aria-hidden="true" />
+          <img src={impactElement} alt="" aria-hidden="true" />
           <p>Uma nova pessoa,<br />uma nova árvore.</p>
           <strong>Um futuro em crescimento.</strong>
           <AssociatesCounter />
