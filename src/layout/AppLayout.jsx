@@ -8,7 +8,7 @@ import styles from "./AppLayout.module.css";
 export default function AppLayout() {
   const { pathname } = useLocation();
   const adminArea = pathname === "/admin" || pathname.startsWith("/admin/");
-  const publicArea = pathname === "/" || pathname === "/2025";
+  const publicArea = pathname === "/" || pathname === "/2025" || pathname === "/2026" || pathname === "/agenda-2030";
   const { user, claims, logout } = useAuth();
   const accountPath = claims?.role === "volunteer" ? "/voluntario" : claims?.role === "branchViewer" ? "/consulta" : "/admin";
   const derivedAccountPage = user && pathname !== accountPath && (
@@ -26,8 +26,8 @@ export default function AppLayout() {
           {publicArea ? (
             <>
               <Link to="/">Início</Link>
-              <a href="/#acoes-2026">Ações 2026</a>
-              <a href="/#agenda-2030">Agenda 2030</a>
+              <Link to="/2026">Ações 2026</Link>
+              <Link to="/agenda-2030">Agenda 2030</Link>
               <Link to="/2025">Edição 2025</Link>
             </>
           ) : user ? (

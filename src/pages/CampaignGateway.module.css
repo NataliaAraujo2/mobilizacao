@@ -124,6 +124,21 @@
 .soonHero h2 { margin: 0; color: var(--brand-blue); font-size: clamp(1.6rem, 5vw, 2.6rem); }
 .soonHero > p:not(.eyebrow) { max-width: 35rem; margin: .8rem auto 1.4rem; color: var(--text-muted); line-height: 1.6; }
 .soonLeaf { position: absolute; top: 2rem; right: 2rem; width: 4rem; height: auto; opacity: .14; transform: rotate(18deg); }
+.campaignPage { padding-top: clamp(2rem, 6vw, 4.5rem); }
+.campaignHeader { width: min(100%, 54rem); margin: 0 auto 2rem; text-align: center; }
+.campaignHeader h1 { margin: .3rem 0 .15rem; color: var(--brand-blue); font-size: clamp(2.25rem, 7vw, 4.7rem); line-height: .95; letter-spacing: -.055em; }
+.campaignHeader h1 span { color: var(--brand-blue); }
+.campaignHeader h1 em { margin-left: .06em; color: var(--brand-green); font-family: "Amithen", cursive; font-size: 1.15em; font-style: normal; font-weight: 400; letter-spacing: 0; }
+.campaignHeader h2 { margin: .65rem 0 .25rem; color: var(--brand-green); font-size: clamp(1.25rem, 3vw, 1.8rem); }
+.campaignHeader > p:last-child { max-width: 43rem; margin: .6rem auto 0; color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+.campaignMapCard { display: grid; gap: 1.25rem; width: min(100%, 86rem); margin: 0 auto; padding: clamp(1rem, 3vw, 2rem); background: white; border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
+.campaignMapCard .mapIntro > img { width: 2.5rem; height: 2.5rem; object-fit: contain; margin-bottom: .25rem; }
+.agendaCard { display: grid; grid-template-columns: minmax(12rem, .55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.25rem, 5vw, 4rem); width: min(100%, 68rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3.5rem); overflow: hidden; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #f5fbf4 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-green); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
+.agendaCard > img { width: min(100%, 16rem); justify-self: center; }
+.agendaCard h2 { max-width: 32rem; margin: .4rem 0 .7rem; color: var(--brand-blue); font-size: clamp(1.55rem, 4vw, 2.6rem); line-height: 1.1; }
+.agendaCard p:not(.eyebrow) { max-width: 38rem; margin: 0; color: var(--text-muted); line-height: 1.65; }
+.agendaCard .primaryButton { align-items: center; gap: .45rem; margin-top: 1.25rem; text-transform: uppercase; }
+.agendaCard .primaryButton img { width: 2rem; height: 2rem; object-fit: contain; filter: brightness(0) invert(1); }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 720px) {
@@ -168,6 +183,8 @@
   .previousCard > img { width: 5rem; height: 5rem; }
   .year { font-size: 2rem; }
   .soonHero { border-radius: 1.25rem; }
+  .agendaCard { grid-template-columns: 1fr; text-align: center; }
+  .agendaCard p:not(.eyebrow) { margin-inline: auto; }
   .legacyActions { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { .mapLogoButton, .previousCard { transition: none; } .publicMap { animation: none; } }

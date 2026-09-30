@@ -4,6 +4,8 @@ import styles from "./Footer.module.css";
 
 const links = [
   { label: "Página inicial", to: "/" },
+  { label: "Ações 2026", to: "/2026" },
+  { label: "Agenda 2030", to: "/agenda-2030" },
   { label: "Edição 2025", to: "/2025" },
   { label: "Acesso do voluntário", to: "/login" },
   { label: "Acesso da coordenação", to: "/admin/login" },
