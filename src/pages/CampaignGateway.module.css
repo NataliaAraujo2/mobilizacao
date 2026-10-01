@@ -155,7 +155,8 @@
 .actionsGuideInfo li > i svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.1; }
 .actionsGuideInfo li:nth-child(2) > i { color: #438c54; background: #eaf5ed; }
 .actionsGuideInfo li:nth-child(3) > i { color: #ee943d; background: #fff1e5; }
-.actionsGuideInfo li:nth-child(4) > i { color: #76a55e; background: #f2f4e7; }
+.actionsGuideInfo li:nth-child(4) > i { background: transparent; }
+.actionsGuideInfo li:nth-child(4) > i img { width: 2.35rem; height: 2.35rem; object-fit: contain; }
 .actionsGuideInfo b { font-size: .94rem; }
 .actionsGuideInfo span { color: #437092; font-size: .87rem; }
 .agendaCard { display: grid; grid-template-columns: minmax(12rem, .55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.25rem, 5vw, 4rem); width: min(100%, 68rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3.5rem); overflow: hidden; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #f5fbf4 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-green); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }

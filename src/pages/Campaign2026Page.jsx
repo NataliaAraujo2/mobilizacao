@@ -4,8 +4,9 @@ import PublicActionsPanel from "../components/PublicActionsPanel";
 import { useAuth } from "../auth/useAuth";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import campaignLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
-import guinho from "../assets/brand/guinho.png";
+import guinho from "../assets/brand/guinhos/huguinhoPlanta.png";
 import beachVolunteers from "../assets/brand/acoes-2026-praia.webp";
+import collaborationIcon from "../assets/brand/icone-colaboracao.png";
 import styles from "./CampaignGateway.module.css";
 
 function GuideIcon({ type }) {
@@ -13,7 +14,6 @@ function GuideIcon({ type }) {
     pin: <path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Zm0-8.2A2.8 2.8 0 1 1 12 7a2.8 2.8 0 0 1 0 5.8Z" />,
     people: <><circle cx="9" cy="8" r="3" /><circle cx="16.5" cy="9" r="2.5" /><path d="M3.5 19c.5-3.3 2.5-5 5.5-5s5 1.7 5.5 5M14 18.8c.2-2.3 1.5-3.7 3.8-3.7 1.8 0 3.2 1.1 3.7 3.2" /></>,
     heart: <path d="M12 20.3 4.8 13A4.8 4.8 0 0 1 11.6 6L12 6.5l.4-.5A4.8 4.8 0 0 1 19.2 13L12 20.3Z" />,
-    hands: <><path d="m3.5 12 3.3-3.3 3.1 2.2 2.2-2.2 5.5 5.5-2.1 2.1-2.2-1.8" /><path d="m7 14.5-2.2 2.2 2.1 2.1 2.2-2.1m1.5-1.6 3.4 3.4 2.1-2.1m-5.5-1.4 2.7 2.7 2.1-2.1M17.2 8.7l3.3 3.3-3.3 3.3" /></>,
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">{icons[type]}</svg>;
 }
@@ -48,7 +48,7 @@ export default function Campaign2026Page() {
               <li><i><GuideIcon type="pin" /></i><b>Escolha seu estado no mapa</b><span>e descubra ações perto de você</span></li>
               <li><i><GuideIcon type="people" /></i><b>Participe de iniciativas que</b><span>transformam comunidades locais</span></li>
               <li><i><GuideIcon type="heart" /></i><b>Seja voluntário</b><span>e faça a diferença na sua região</span></li>
-              <li><i><GuideIcon type="hands" /></i><b>Conecte-se e colabore</b><span>fortaleça nossa rede em todo o Brasil</span></li>
+              <li><i><img src={collaborationIcon} alt="" aria-hidden="true" /></i><b>Conecte-se e colabore</b><span>fortaleça nossa rede em todo o Brasil</span></li>
             </ul>
           </div>
         </section>
