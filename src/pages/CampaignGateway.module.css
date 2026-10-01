@@ -133,6 +133,29 @@
 .campaignHeader > p:last-child { max-width: 43rem; margin: .6rem auto 0; color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
 .campaignMapCard { display: grid; gap: 1.25rem; width: min(100%, 86rem); margin: 0 auto; padding: clamp(1rem, 3vw, 2rem); background: white; border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-orange); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
 .campaignMapCard .mapIntro > img { width: 2.5rem; height: 2.5rem; object-fit: contain; margin-bottom: .25rem; }
+.campaignMapCard .mapIntro h1 { margin: .25rem 0; color: var(--brand-blue); font-size: clamp(1.35rem, 3vw, 1.8rem); }
+.actionsShowcase { display: grid; grid-template-columns: minmax(16rem, .62fr) minmax(30rem, 1fr); gap: clamp(.8rem, 1.5vw, 1.2rem); width: min(100%, 86rem); margin: 0 auto; }
+.actionsPhotoCard { isolation: isolate; position: relative; min-height: 24rem; overflow: hidden; border: 1px solid #d2dce4; border-radius: 1rem; background: #114c80; }
+.actionsPhotoCard::after { content: ""; position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, rgb(2 35 78 / 48%) 0%, transparent 52%); pointer-events: none; }
+.actionsPhotoCard > img { position: absolute; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; transform: scale(1.48); }
+.actionsPhotoCard > div { position: relative; z-index: 2; display: grid; gap: .05rem; padding: clamp(1.25rem, 3vw, 2rem); color: white; font-weight: 850; line-height: 1; text-transform: uppercase; }
+.actionsPhotoCard strong { font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -.04em; }
+.actionsPhotoCard span { color: var(--brand-orange); font-size: clamp(1.35rem, 3vw, 2.3rem); }
+.actionsGuideCard { display: grid; grid-template-columns: minmax(15rem, .9fr) minmax(17rem, 1.1fr); align-items: center; gap: clamp(.75rem, 2vw, 1.5rem); min-height: 24rem; padding: clamp(1rem, 2.5vw, 1.75rem); background: white; border: 1px solid #b8c7d2; border-left: .45rem solid var(--brand-blue); border-radius: 1rem; }
+.actionsGuideBrand { display: grid; justify-items: center; gap: .55rem; }
+.actionsGuideBrand > img { width: min(100%, 22rem); height: auto; }
+.actionsGuideBrand button { padding: .55rem .9rem; color: var(--brand-blue); font: inherit; font-size: .8rem; font-weight: 850; text-transform: uppercase; background: white; border: 1px solid var(--brand-blue); border-radius: .55rem; cursor: pointer; }
+.actionsGuideBrand button:hover, .actionsGuideBrand button:focus-visible { color: white; background: var(--brand-blue); outline: 3px solid rgb(0 97 168 / 20%); outline-offset: 2px; }
+.actionsGuideInfo { display: grid; grid-template-columns: minmax(6.5rem, .48fr) minmax(0, 1fr); align-items: center; gap: .8rem; }
+.actionsGuideInfo > img { width: min(100%, 10rem); justify-self: center; }
+.actionsGuideInfo ul { display: grid; gap: .8rem; padding: 0; margin: 0; list-style: none; }
+.actionsGuideInfo li { position: relative; display: grid; gap: .08rem; min-height: 2.35rem; padding-left: 2.9rem; color: var(--brand-blue); font-size: .78rem; line-height: 1.35; }
+.actionsGuideInfo li::before { content: ""; position: absolute; top: .05rem; left: 0; width: 2.15rem; height: 2.15rem; background: #e9f4fb; border-radius: 50%; }
+.actionsGuideInfo li:nth-child(2)::before { background: #eaf5ed; }
+.actionsGuideInfo li:nth-child(3)::before { background: #fff1e5; }
+.actionsGuideInfo li:nth-child(4)::before { background: #f2f4e7; }
+.actionsGuideInfo b { font-size: .82rem; }
+.actionsGuideInfo span { color: #437092; }
 .agendaCard { display: grid; grid-template-columns: minmax(12rem, .55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.25rem, 5vw, 4rem); width: min(100%, 68rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3.5rem); overflow: hidden; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #f5fbf4 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-green); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
 .agendaCard > img { width: min(100%, 16rem); justify-self: center; }
 .agendaCard h2 { max-width: 32rem; margin: .4rem 0 .7rem; color: var(--brand-blue); font-size: clamp(1.55rem, 4vw, 2.6rem); line-height: 1.1; }
@@ -157,6 +180,9 @@
   .mapLogoButton { grid-row: 1; }
   .publicMap { flex-basis: 100%; }
   .mapLayout, .mapWithActions { grid-template-columns: 1fr; }
+  .actionsShowcase { grid-template-columns: 1fr; }
+  .actionsPhotoCard { min-height: 20rem; }
+  .actionsGuideCard { min-height: 0; }
   .actionsModal { position: static; max-height: none; }
   .kitLeaves { left: -2rem; }
   .kitGrowing { right: -3rem; bottom: 18%; }
@@ -185,6 +211,8 @@
   .soonHero { border-radius: 1.25rem; }
   .agendaCard { grid-template-columns: 1fr; text-align: center; }
   .agendaCard p:not(.eyebrow) { margin-inline: auto; }
+  .actionsGuideCard { grid-template-columns: 1fr; }
+  .actionsGuideInfo { width: min(100%, 27rem); margin: 0 auto; }
   .legacyActions { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { .mapLogoButton, .previousCard { transition: none; } .publicMap { animation: none; } }
