@@ -11,6 +11,7 @@ import ListSearch from '../components/ListSearch';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import { actionScheduleSummary, formatActionDate } from '../domain/actions/actionSchedule';
 import ActionStatus from '../components/ActionStatus';
+import FullAddress from '../components/FullAddress';
 import styles from "./ConsultationPage.module.css";
 
 export default function ConsultationPage() {
@@ -44,7 +45,6 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
   const [view, setView] = useState('details');
   if (view === 'volunteers') return <ActionVolunteers action={action} branch={branch} user={user} onBack={() => setView('details')} />;
   if (view === 'attendance') return <><div className={styles.page}><button className={styles.back} type="button" onClick={() => setView('details')}>← Voltar aos detalhes da ação</button></div><AttendancePage fixedAction={action} /></>;
-  const address = action.address ?? {};
   return <main className={styles.page}>
     <button className={styles.back} type="button" onClick={onBack}>← Voltar às ações</button>
     <header className={styles.header}><div><p>{branch?.name}</p><h1>{action.name}</h1></div></header>
@@ -56,8 +56,7 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
         <div><dt>Hora de fim</dt><dd>{action.endTime || 'Não informada'}</dd></div>
         {action.scheduleText && <div className={styles.detailWide}><dt>Informações de data e horário</dt><dd>{action.scheduleText}</dd></div>}
         <div><dt>Situação</dt><dd><ActionStatus action={action} /></dd></div>
-        <div className={styles.detailWide}><dt>Local</dt><dd>{[address.street, address.number, address.complement, address.neighborhood, address.city, address.state].filter(Boolean).join(', ')}</dd></div>
-        {address.cep && <div><dt>CEP</dt><dd>{address.cep}</dd></div>}
+        <div className={styles.detailWide}><dt>Local</dt><dd><FullAddress address={action.address} /></dd></div>
         {(action.contactPhone || action.contactEmail) && <div className={styles.detailWide}><dt>Contatos</dt><dd>{[action.contactPhone, action.contactEmail].filter(Boolean).join(' · ')}</dd></div>}
         {action.description && <div className={styles.detailWide}><dt>Descrição</dt><dd>{action.description}</dd></div>}
         <div className={styles.detailWide}><dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd></div>

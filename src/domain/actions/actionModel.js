@@ -60,8 +60,8 @@ export function createAction(input) {
   if (startDate === endDate && endTime <= startTime) throw new Error('Em uma ação no mesmo dia, o horário de fim deve ser posterior ao início.');
   if (data.contactPhone && !/^\d{10,13}$/.test(data.contactPhone.replace(/\D/g, ''))) throw new Error('Informe um telefone de contato válido.');
   if (data.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contactEmail)) throw new Error('Informe um e-mail de contato válido.');
-  if (!data.address.street || !data.address.number || !data.address.city || !isBrazilStateCode(data.address.state)) {
-    throw new Error("Preencha logradouro, número, cidade e estado.");
+  if (!data.address.street || !data.address.number || !data.address.city || !isBrazilStateCode(data.address.state) || !/^\d{8}$/.test(data.address.cep)) {
+    throw new Error("Preencha logradouro, número, cidade, estado e CEP válido.");
   }
   return data;
 }

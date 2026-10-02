@@ -10,6 +10,7 @@ import { BRAZIL_STATES } from '../domain/locations/brazilStates';
 import { findAddressByCep } from '../services/cepService';
 import ActionPhotoGallery from './ActionPhotoGallery';
 import VolunteerRegulation from './VolunteerRegulation';
+import FullAddress from './FullAddress';
 
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
 const EMPTY = { fullName: '', email: '', phone: '', cpf: '', rg: '', birthDate: '', address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, imageUseAccepted: false, guardianAuthorizationAccepted: false };
@@ -109,7 +110,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   }
   const selectedDetails = selected && <article className={styles.details}>
     <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3>
-    <dl className={styles.actionEssentials}><div><dt>Quando</dt><dd>{actionScheduleSummary(selected)}</dd></div><div><dt>Local</dt><dd>{selected.address.street}, {selected.address.number}{selected.address.neighborhood ? ` · ${selected.address.neighborhood}` : ''}</dd></div></dl>
+    <dl className={styles.actionEssentials}><div><dt>Quando</dt><dd>{actionScheduleSummary(selected)}</dd></div><div><dt>Local</dt><dd><FullAddress address={selected.address} /></dd></div></dl>
     {(selected.contactPhone || selected.contactEmail) && <section className={styles.actionContacts}><h4>Contatos</h4><div>{selected.contactPhone && <a href={`tel:${selected.contactPhone.replace(/\D/g, '')}`}>Telefone: {selected.contactPhone}</a>}{selected.contactEmail && <a href={`mailto:${selected.contactEmail}`}>E-mail: {selected.contactEmail}</a>}</div></section>}
     {selected.description && <section className={styles.detailSection}><h4>Sobre a ação</h4>{textParagraphs(selected.description).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
     {selected.whatToBring && <section className={styles.detailSection}><h4>O que levar</h4>{textParagraphs(selected.whatToBring).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
@@ -120,7 +121,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   return <section className={styles.panel} aria-live="polite">
     {!actionId && <section className={styles.actionChooser} aria-label="Lista de ações">
         <h3>Ações disponíveis</h3>
-        {loading ? <p>Carregando ações…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <button className={styles.actionChoice} type="button" key={action.id} onClick={() => openDetails(action)}><span className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</span><strong>{action.name}</strong><span>{action.address.street}, {action.address.number}</span><small>{actionScheduleSummary(action)}</small><b>Ver detalhes <span aria-hidden="true">→</span></b></button>)}</div>}
+        {loading ? <p>Carregando ações…</p> : actions.length === 0 ? <p>Não há ações abertas neste estado.</p> : <div className={styles.actions}>{actions.map(action => <button className={styles.actionChoice} type="button" key={action.id} onClick={() => openDetails(action)}><span className={styles.municipality}><strong>{action.address.city}</strong>{action.address.state ? ` · ${action.address.state}` : ''}</span><strong>{action.name}</strong><span><FullAddress address={action.address} /></span><small>{actionScheduleSummary(action)}</small><b>Ver detalhes <span aria-hidden="true">→</span></b></button>)}</div>}
       </section>}
     {actionId && selectedDetails}
     {selected && !actionId && !showSignup && createPortal(<div className={styles.modalBackdrop} role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeDetails(); }}><section className={styles.actionModal} role="dialog" aria-modal="true" aria-labelledby="action-details-title" onMouseDown={event => event.stopPropagation()}><header><div><p className={styles.municipality}>Detalhes da ação</p><h2 id="action-details-title">Informações da ação</h2></div><button className={styles.close} type="button" aria-label="Fechar detalhes da ação" onClick={closeDetails}>×</button></header>{selectedDetails}</section></div>, document.body)}

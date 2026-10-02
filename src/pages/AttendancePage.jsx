@@ -6,6 +6,7 @@ import { listBranches } from '../services/branchesService';
 import { listCoordinationActionVolunteers } from '../services/volunteersService';
 import ListSearch from '../components/ListSearch';
 import { actionStatus } from '../domain/actions/actionSchedule';
+import FullAddress from '../components/FullAddress';
 import styles from './AttendancePage.module.css';
 
 export default function AttendancePage({ fixedAction = null }) {
@@ -79,7 +80,7 @@ export default function AttendancePage({ fixedAction = null }) {
     </section>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {actionId && <section className={styles.sheet} aria-busy={loading}>
-      <header><div><h2>{selectedAction?.name}</h2><p>{selectedAction?.address?.street}, {selectedAction?.address?.number} · {selectedAction?.address?.city}/{selectedAction?.address?.state}</p></div><p>{volunteers.length} voluntário(s){attendanceEffective ? ` · ${presentIds.size} presente(s) · ${volunteers.length - presentIds.size} ausente(s)` : ' · chamada não iniciada'}</p></header>
+      <header><div><h2>{selectedAction?.name}</h2><p><FullAddress address={selectedAction?.address} /></p></div><p>{volunteers.length} voluntário(s){attendanceEffective ? ` · ${presentIds.size} presente(s) · ${volunteers.length - presentIds.size} ausente(s)` : ' · chamada não iniciada'}</p></header>
       <div className={styles.search}><ListSearch label="Buscar voluntário" placeholder="Nome do voluntário" initialValue="" onSearch={setSearch} disabled={loading} /></div>
       {!attendanceEffective && volunteers.length > 0 && <p className={styles.callNotice}>A chamada ainda não começou. Ao marcar a primeira presença, os demais passarão a constar como ausentes.</p>}
       {!isSuperAdmin && phase !== 'ongoing' && <p className={styles.callNotice}>{phase === 'completed' ? 'A chamada foi encerrada porque a ação terminou. Somente o superadmin pode fazer correções.' : 'A presença poderá ser registrada a partir do horário de início da ação.'}</p>}
