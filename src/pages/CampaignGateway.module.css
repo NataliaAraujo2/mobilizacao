@@ -150,16 +150,20 @@
 .actionsGuideBrand button:hover, .actionsGuideBrand button:focus-visible { outline: 3px solid rgb(244 131 43 / 35%); outline-offset: 3px; transform: translateY(-1px); }
 .actionsHeroGuinho { position: absolute; z-index: 1; right: clamp(.8rem, 2.6vw, 2.8rem); bottom: 0; width: clamp(13rem, 24vw, 23rem); max-height: 92%; object-fit: contain; object-position: bottom; filter: drop-shadow(.1rem .7rem .8rem rgb(15 86 82 / 16%)); }
 .actionsGuideInfo { z-index: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(.65rem, 1.4vw, 1.1rem); padding: 0; margin: 0; list-style: none; }
-.actionsGuideInfo li { display: grid; grid-template-columns: clamp(3.4rem, 5vw, 5rem) minmax(0, 1fr); align-items: start; gap: .75rem; min-height: 10rem; padding: clamp(1rem, 2vw, 1.35rem); color: var(--brand-blue); background: white; border: 1px solid #d8e4ea; border-radius: 1.3rem; box-shadow: 0 .65rem 1.5rem rgb(0 97 168 / 9%); }
-.actionsGuideInfo li > i { display: grid; width: clamp(3.4rem, 5vw, 5rem); aspect-ratio: 1; place-items: center; color: #1672b7; background: #e9f4fb; border-radius: 50%; }
-.actionsGuideInfo li > i svg { width: 54%; height: 54%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.1; }
-.actionsGuideInfo li:nth-child(2) > i { color: #438c54; background: #eaf5ed; }
-.actionsGuideInfo li:nth-child(3) > i { color: #e2741b; background: #fff0e4; }
-.actionsGuideInfo li:nth-child(4) > i { background: transparent; }
-.actionsGuideInfo li:nth-child(4) > i img { width: 112%; height: 112%; object-fit: contain; }
-.actionsGuideInfo li > div { display: grid; align-content: start; gap: .35rem; }
-.actionsGuideInfo b { font-size: clamp(1rem, 1.65vw, 1.45rem); line-height: 1.08; }
-.actionsGuideInfo span { color: #437092; font-size: clamp(.78rem, 1.1vw, .98rem); line-height: 1.35; }
+.actionsGuideInfo li { position: relative; display: grid; grid-template-columns: clamp(3.7rem, 5.25vw, 5.4rem) minmax(0, 1fr); align-items: start; gap: clamp(.8rem, 1.3vw, 1.15rem); min-height: 10.4rem; padding: clamp(1.1rem, 2vw, 1.45rem); overflow: hidden; color: var(--brand-blue); background: rgb(255 255 255 / 94%); border: 1px solid rgb(228 239 241 / 95%); border-radius: 1.45rem; box-shadow: 0 .75rem 1.8rem rgb(0 97 168 / 10%); }
+.actionsGuideInfo li::after { position: absolute; bottom: 1rem; left: calc(clamp(1.1rem, 2vw, 1.45rem) + clamp(3.7rem, 5.25vw, 5.4rem) + .15rem); width: 3.35rem; height: .32rem; content: ""; background: #1476ca; border-radius: 999px; }
+.actionsGuideInfo li > i { display: grid; width: clamp(3.7rem, 5.25vw, 5.4rem); aspect-ratio: 1; place-items: center; color: #0873c2; background: #e4f3ff; border-radius: 50%; }
+.actionsGuideInfo li > i svg { width: 54%; height: 54%; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.15; }
+.actionsGuideInfo li:nth-child(2) > i { color: #25844d; background: #e2f6e6; }
+.actionsGuideInfo li:nth-child(2) b { color: #177640; }
+.actionsGuideInfo li:nth-child(2)::after { background: #168240; }
+.actionsGuideInfo li:nth-child(3) > i { color: #e56f12; background: #fff0e2; }
+.actionsGuideInfo li:nth-child(3) b { color: #ed6f12; }
+.actionsGuideInfo li:nth-child(3)::after { background: #ff741c; }
+.actionsGuideInfo li:nth-child(4) > i { color: #096ac4; background: #e5f3ff; }
+.actionsGuideInfo li > div { display: grid; align-content: start; gap: .42rem; padding-bottom: 1rem; }
+.actionsGuideInfo b { font-size: clamp(1rem, 1.65vw, 1.42rem); line-height: 1.06; }
+.actionsGuideInfo span { color: #356785; font-size: clamp(.78rem, 1.1vw, .98rem); font-weight: 550; line-height: 1.32; }
 .agendaCard { display: grid; grid-template-columns: minmax(12rem, .55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.25rem, 5vw, 4rem); width: min(100%, 68rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3.5rem); overflow: hidden; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #f5fbf4 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-green); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
 .agendaCard > img { width: min(100%, 16rem); justify-self: center; }
 .agendaCard h2 { max-width: 32rem; margin: .4rem 0 .7rem; color: var(--brand-blue); font-size: clamp(1.55rem, 4vw, 2.6rem); line-height: 1.1; }

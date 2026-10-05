@@ -6,14 +6,14 @@ import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import campaignLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import guinho from "../assets/brand/guinhos/huguinhoPlanta.png";
 import beachVolunteers from "../assets/brand/acoes-2026-praia-cortada.png";
-import collaborationIcon from "../assets/brand/icone-colaboracao.png";
 import styles from "./CampaignGateway.module.css";
 
 function GuideIcon({ type }) {
   const icons = {
     pin: <path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Zm0-8.2A2.8 2.8 0 1 1 12 7a2.8 2.8 0 0 1 0 5.8Z" />,
     people: <><circle cx="9" cy="8" r="3" /><circle cx="16.5" cy="9" r="2.5" /><path d="M3.5 19c.5-3.3 2.5-5 5.5-5s5 1.7 5.5 5M14 18.8c.2-2.3 1.5-3.7 3.8-3.7 1.8 0 3.2 1.1 3.7 3.2" /></>,
-    heart: <path d="M12 20.3 4.8 13A4.8 4.8 0 0 1 11.6 6L12 6.5l.4-.5A4.8 4.8 0 0 1 19.2 13L12 20.3Z" />,
+    sprout: <><path d="M12 21v-8.4" /><path d="M11.8 13.2C7.1 13.2 4.3 10.7 4 6.2c4.8-.1 7.5 2.3 7.8 7Z" /><path d="M12.2 11.4c.4-4.4 3.2-6.8 7.8-6.7-.2 4.5-2.9 7-7.8 6.7Z" /></>,
+    share: <><circle cx="6" cy="12" r="2.4" /><circle cx="17.5" cy="6" r="2.4" /><circle cx="17.5" cy="18" r="2.4" /><path d="m8.1 10.9 7.3-3.8M8.1 13.1l7.3 3.8" /></>,
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">{icons[type]}</svg>;
 }
@@ -53,9 +53,9 @@ export default function Campaign2026Page() {
         </section>
         <ul className={styles.actionsGuideInfo}>
           <li><i><GuideIcon type="pin" /></i><div><b>Escolha seu estado</b><span>Navegue pelo mapa e veja as ações da sua região.</span></div></li>
-          <li><i><GuideIcon type="heart" /></i><div><b>Descubra ações</b><span>Conheça iniciativas que transformam comunidades locais.</span></div></li>
+          <li><i><GuideIcon type="sprout" /></i><div><b>Descubra ações</b><span>Conheça iniciativas que transformam comunidades locais.</span></div></li>
           <li><i><GuideIcon type="people" /></i><div><b>Seja voluntário</b><span>Faça a diferença na sua região.</span></div></li>
-          <li><i><img src={collaborationIcon} alt="" aria-hidden="true" /></i><div><b>Conecte-se e colabore</b><span>Fortaleça nossa rede em todo o Brasil.</span></div></li>
+          <li><i><GuideIcon type="share" /></i><div><b>Conecte-se e colabore</b><span>Fortaleça nossa rede em todo o Brasil.</span></div></li>
         </ul>
       </section>
 
