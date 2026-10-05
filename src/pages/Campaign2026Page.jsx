@@ -33,25 +33,23 @@ export default function Campaign2026Page() {
   return (
     <main className={`${styles.page} ${styles.campaignPage}`}>
       <section className={styles.actionsShowcase} aria-labelledby="actions-map-title">
-        <article className={styles.actionsPhotoCard}>
-          <img src={beachVolunteers} alt="Voluntárias da ONG Moradia e Cidadania em uma ação de limpeza na praia" />
-          <div><strong>Ações</strong><span>Mapa interativo</span></div>
-        </article>
-        <section className={styles.actionsGuideCard}>
+        <section className={styles.actionsHero}>
+          <article className={styles.actionsPhotoCard}>
+            <img src={beachVolunteers} alt="Voluntárias da ONG Moradia e Cidadania em uma ação de limpeza na praia" />
+            <div><h1 id="actions-map-title">Ações</h1><strong>Mapa interativo</strong><p>Conheça e participe das ações da MobilizAÇÃO em todo o Brasil.</p></div>
+          </article>
           <div className={styles.actionsGuideBrand}>
             <img src={campaignLogo} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" />
-            <button type="button" onClick={openMap}>Abra o mapa interativo</button>
+            <button type="button" onClick={openMap}><span aria-hidden="true">⌑</span> Abra o mapa interativo <b aria-hidden="true">→</b></button>
           </div>
-          <div className={styles.actionsGuideInfo}>
-            <img src={guinho} alt="Guinho, o planeta mascote da MobilizAÇÃO" />
-            <ul>
-              <li><i><GuideIcon type="pin" /></i><b>Escolha seu estado no mapa</b><span>e descubra ações perto de você</span></li>
-              <li><i><GuideIcon type="people" /></i><b>Participe de iniciativas que</b><span>transformam comunidades locais</span></li>
-              <li><i><GuideIcon type="heart" /></i><b>Seja voluntário</b><span>e faça a diferença na sua região</span></li>
-              <li><i><img src={collaborationIcon} alt="" aria-hidden="true" /></i><b>Conecte-se e colabore</b><span>fortaleça nossa rede em todo o Brasil</span></li>
-            </ul>
-          </div>
+          <img className={styles.actionsHeroGuinho} src={guinho} alt="Guinho, o planeta mascote da MobilizAÇÃO, com uma plantinha" />
         </section>
+        <ul className={styles.actionsGuideInfo}>
+          <li><i><GuideIcon type="pin" /></i><div><b>Escolha seu estado</b><span>Navegue pelo mapa e veja as ações da sua região.</span></div></li>
+          <li><i><GuideIcon type="heart" /></i><div><b>Descubra ações</b><span>Conheça iniciativas que transformam comunidades locais.</span></div></li>
+          <li><i><GuideIcon type="people" /></i><div><b>Seja voluntário</b><span>Faça a diferença na sua região.</span></div></li>
+          <li><i><img src={collaborationIcon} alt="" aria-hidden="true" /></i><div><b>Conecte-se e colabore</b><span>Fortaleça nossa rede em todo o Brasil.</span></div></li>
+        </ul>
       </section>
 
       {mapOpen && <section ref={mapRef} className={styles.campaignMapCard} aria-labelledby="actions-map-title">
