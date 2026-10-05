@@ -135,6 +135,7 @@
 .campaignMapCard .mapIntro > img { width: 2.5rem; height: 2.5rem; object-fit: contain; margin-bottom: .25rem; }
 .campaignMapCard .mapIntro h1 { margin: .25rem 0; color: var(--brand-blue); font-size: clamp(1.35rem, 3vw, 1.8rem); }
 .actionsShowcase { display: grid; gap: 1rem; width: min(100%, 96rem); margin: 0 auto; }
+.actionsShowcase + .campaignMapCard { margin-top: clamp(2.5rem, 5vw, 4.5rem); }
 .actionsHero { position: relative; display: grid; grid-template-columns: minmax(20rem, .88fr) minmax(0, 1.12fr); align-items: stretch; min-height: clamp(25rem, 39vw, 36rem); overflow: hidden; background: #c6efff url("../assets/brand/acoes-2026-campo-ilustrado.png") center / cover no-repeat; border-radius: 1.65rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 13%); }
 .actionsPhotoCard { isolation: isolate; position: relative; z-index: 1; align-self: stretch; width: 100%; min-height: 0; height: 100%; margin: 0; overflow: hidden; background: #0a5398; border-radius: 1.65rem 1.65rem 5.5rem 1.65rem; }
 .actionsPhotoCard::after { content: ""; position: absolute; z-index: 1; inset: 0; background: linear-gradient(160deg, rgb(0 41 92 / 57%) 0%, rgb(0 55 104 / 16%) 36%, transparent 59%); pointer-events: none; }

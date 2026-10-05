@@ -5,10 +5,15 @@ import BrazilMap from "../components/BrazilMap/BrazilMap";
 import PublicActionsPanel from '../components/PublicActionsPanel';
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logoMobilizacao from "../assets/brand/mobilizacao-logo-colorido.webp";
+import aliancaOdsLogo from "../assets/brand/alianca-ods.png";
 import leafElement from "../assets/brand/elements/elemento-02.webp";
 import treeElement from "../assets/brand/elements/elemento-04.webp";
 import PublicCoordinatorAccess from '../components/PublicCoordinatorAccess';
 import styles from "../App.module.css";
+
+const institutionalSupporters = [
+  { name: "Aliança ODS", logo: aliancaOdsLogo },
+];
 
 export default function PublicHome() {
   const [selectedState, setSelectedState] = useState("");
@@ -126,6 +131,21 @@ export default function PublicHome() {
           )}
         </nav>
         <PublicCoordinatorAccess />
+
+        <section className={styles.institutionalSupport} aria-labelledby="institutional-support-title">
+          <div>
+            <p className={styles.eyebrow}>Parcerias que fortalecem</p>
+            <h2 id="institutional-support-title">Apoio institucional</h2>
+            <p>Organizações que colaboram para ampliar o impacto da MobilizAÇÃO.</p>
+          </div>
+          <ul className={styles.supporterList} aria-label="Apoiadores institucionais">
+            {institutionalSupporters.map((supporter) => (
+              <li key={supporter.name}>
+                <img src={supporter.logo} alt={supporter.name} />
+              </li>
+            ))}
+          </ul>
+        </section>
 
       </section>
     </main>

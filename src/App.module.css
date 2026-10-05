@@ -177,6 +177,28 @@
 .quickAccess strong { margin-top: 0.45rem; font-size: 1.08rem; }
 .quickAccess small { margin-top: 0.4rem; color: var(--text-muted); line-height: 1.45; }
 
+.institutionalSupport {
+  display: grid;
+  grid-template-columns: minmax(13rem, .85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 3rem);
+  margin-top: 2.5rem;
+  padding: clamp(1.35rem, 3vw, 2.2rem);
+  text-align: left;
+  background: linear-gradient(135deg, #f5fbff, #fbfdf8);
+  border: 1px solid var(--border);
+  border-left: .35rem solid var(--brand-green);
+  border-radius: 1.2rem;
+  box-shadow: 0 .75rem 1.8rem rgb(0 97 168 / 7%);
+}
+
+.institutionalSupport h2 { margin: 0; color: var(--brand-blue); font-size: clamp(1.35rem, 3vw, 2rem); }
+.institutionalSupport p:last-child { max-width: 28rem; margin: .55rem 0 0; color: var(--text-muted); line-height: 1.5; }
+.institutionalSupport .eyebrow { margin-bottom: .35rem; }
+.supporterList { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .9rem; padding: 0; margin: 0; list-style: none; }
+.supporterList li { display: grid; min-height: 8.75rem; padding: 1rem; place-items: center; background: white; border: 1px solid #e1ebef; border-radius: .9rem; }
+.supporterList img { display: block; width: min(100%, 13rem); max-height: 6.5rem; object-fit: contain; }
+
 @keyframes revealMap {
   from { opacity: 0; transform: translateY(-0.5rem) scale(0.99); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -189,6 +211,9 @@
   .mapLogoLauncher { min-height: 14rem; padding: .85rem; }
   .quickAccess { grid-template-columns: 1fr; margin-top: 1.5rem; padding-top: 1.5rem; }
   .quickAccess a { min-height: auto; }
+  .institutionalSupport { grid-template-columns: 1fr; margin-top: 1.5rem; text-align: center; }
+  .institutionalSupport p:last-child { margin-inline: auto; }
+  .supporterList { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
