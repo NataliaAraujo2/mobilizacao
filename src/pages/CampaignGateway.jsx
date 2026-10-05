@@ -5,6 +5,7 @@ import BrazilMap from "../components/BrazilMap/BrazilMap";
 import PublicActionsPanel from "../components/PublicActionsPanel";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
+import aliancaOdsLogo from "../assets/brand/alianca-ods.png";
 import associatesGroupPhoto from "../assets/brand/associados-2026-grupo.webp";
 import whoWeAreImage from "../assets/brand/quem-somos.webp";
 import leavesElement from "../assets/brand/elements/elemento-01.webp";
@@ -17,6 +18,9 @@ import { getPublicVolunteerCount } from "../services/publicVolunteerService";
 import styles from "./CampaignGateway.module.css";
 
 const CAMPAIGN_YEAR = '2026';
+const INSTITUTIONAL_SUPPORTERS = [
+  { name: "Aliança ODS", logo: aliancaOdsLogo },
+];
 
 function AssociatesCounter() {
   const counterRef = useRef(null);
@@ -201,6 +205,21 @@ export default function CampaignGateway() {
           </span>
           <span className={styles.previousLink}>Ver relatório da edição 2025 <b aria-hidden="true">→</b></span>
         </Link>
+      </section>
+
+      <section className={styles.institutionalSupport} aria-labelledby="institutional-support-title">
+        <div className={styles.institutionalSupportCopy}>
+          <p className={styles.eyebrow}>Parcerias que fortalecem</p>
+          <h2 id="institutional-support-title">Apoio institucional</h2>
+          <p>Organizações que colaboram para ampliar o impacto da MobilizAÇÃO.</p>
+        </div>
+        <ul className={styles.supporterList} aria-label="Apoiadores institucionais">
+          {INSTITUTIONAL_SUPPORTERS.map((supporter) => (
+            <li key={supporter.name}>
+              <img src={supporter.logo} alt={supporter.name} />
+            </li>
+          ))}
+        </ul>
       </section>
     </main>
   );

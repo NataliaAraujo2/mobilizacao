@@ -165,6 +165,13 @@
 .actionsGuideInfo li > div { display: grid; align-content: start; gap: .42rem; padding-bottom: 1rem; }
 .actionsGuideInfo b { font-size: clamp(1rem, 1.65vw, 1.42rem); line-height: 1.06; }
 .actionsGuideInfo span { color: #356785; font-size: clamp(.78rem, 1.1vw, .98rem); font-weight: 550; line-height: 1.32; }
+.institutionalSupport { display: grid; grid-template-columns: minmax(14rem, .85fr) minmax(0, 1.15fr); align-items: center; gap: clamp(1.25rem, 4vw, 3.25rem); width: min(100%, 70rem); margin: clamp(2.5rem, 6vw, 5rem) auto 0; padding: clamp(1.4rem, 3vw, 2.25rem); background: linear-gradient(135deg, #f5fbff, #fbfdf8); border: 1px solid #cfe1e8; border-left: .42rem solid var(--brand-green); border-radius: 1.35rem; box-shadow: 0 .85rem 2rem rgb(0 97 168 / 8%); }
+.institutionalSupportCopy h2 { margin: 0; color: var(--brand-blue); font-size: clamp(1.45rem, 3vw, 2.15rem); line-height: 1.08; }
+.institutionalSupportCopy > p:last-child { max-width: 29rem; margin: .6rem 0 0; color: var(--text-muted); line-height: 1.55; }
+.institutionalSupportCopy .eyebrow { margin-bottom: .4rem; }
+.supporterList { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; padding: 0; margin: 0; list-style: none; }
+.supporterList li { display: grid; min-height: 9rem; padding: 1rem; place-items: center; background: white; border: 1px solid #e0ebee; border-radius: 1rem; }
+.supporterList img { display: block; width: min(100%, 13rem); max-height: 6.6rem; object-fit: contain; }
 .agendaCard { display: grid; grid-template-columns: minmax(12rem, .55fr) minmax(0, 1fr); align-items: center; gap: clamp(1.25rem, 5vw, 4rem); width: min(100%, 68rem); margin: 0 auto; padding: clamp(1.5rem, 5vw, 3.5rem); overflow: hidden; background: linear-gradient(135deg, #fff 0%, #f3faff 55%, #f5fbf4 100%); border: 1px solid #c9dfed; border-left: .45rem solid var(--brand-green); border-radius: 1.5rem; box-shadow: 0 1rem 2.8rem rgb(0 97 168 / 9%); }
 .agendaCard > img { width: min(100%, 16rem); justify-self: center; }
 .agendaCard h2 { max-width: 32rem; margin: .4rem 0 .7rem; color: var(--brand-blue); font-size: clamp(1.55rem, 4vw, 2.6rem); line-height: 1.1; }
@@ -195,6 +202,8 @@
   .actionsGuideBrand > img { width: min(100%, 19rem); }
   .actionsHeroGuinho { right: .75rem; width: min(36vw, 13rem); max-height: 15rem; }
   .actionsGuideInfo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .institutionalSupport { grid-template-columns: 1fr; text-align: center; }
+  .institutionalSupportCopy > p:last-child { margin-inline: auto; }
   .actionsModal { position: static; max-height: none; }
   .kitLeaves { left: -2rem; }
   .kitGrowing { right: -3rem; bottom: 18%; }
@@ -227,6 +236,8 @@
   .actionsGuideBrand { min-height: 15rem; padding: 1.25rem 8.75rem 1.25rem 1rem; }
   .actionsHeroGuinho { right: .35rem; width: 8.5rem; max-height: 12rem; }
   .actionsGuideInfo { grid-template-columns: 1fr; }
+  .institutionalSupport { margin-top: 2rem; padding: 1.25rem; }
+  .supporterList { grid-template-columns: 1fr; }
   .actionsGuideInfo li { min-height: auto; }
   .legacyActions { flex-direction: column; }
 }
