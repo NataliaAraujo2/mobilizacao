@@ -5,7 +5,7 @@ import { useAuth } from "../auth/useAuth";
 import { BRAZIL_STATE_BY_CODE } from "../domain/locations/brazilStates";
 import campaignLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import guinho from "../assets/brand/guinhos/huguinhoPlanta.png";
-import beachVolunteers from "../assets/brand/acoes-2026-praia.webp";
+import beachVolunteers from "../assets/brand/acoes-2026-praia-cortada.png";
 import collaborationIcon from "../assets/brand/icone-colaboracao.png";
 import styles from "./CampaignGateway.module.css";
 
@@ -16,6 +16,13 @@ function GuideIcon({ type }) {
     heart: <path d="M12 20.3 4.8 13A4.8 4.8 0 0 1 11.6 6L12 6.5l.4-.5A4.8 4.8 0 0 1 19.2 13L12 20.3Z" />,
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">{icons[type]}</svg>;
+}
+
+function MapButtonIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="m3.5 5.2 5-2 7 2.6 5-2v15l-5 2-7-2.6-5 2v-15Z" />
+    <path d="M8.5 3.2v15M15.5 5.8v15" />
+  </svg>;
 }
 
 export default function Campaign2026Page() {
@@ -36,11 +43,11 @@ export default function Campaign2026Page() {
         <section className={styles.actionsHero}>
           <article className={styles.actionsPhotoCard}>
             <img src={beachVolunteers} alt="Voluntárias da ONG Moradia e Cidadania em uma ação de limpeza na praia" />
-            <div><h1 id="actions-map-title">Ações</h1><strong>Mapa interativo</strong><p>Conheça e participe das ações da MobilizAÇÃO em todo o Brasil.</p></div>
+            <div><h1 id="actions-map-title">Ações</h1><strong>Mapa interativo</strong></div>
           </article>
           <div className={styles.actionsGuideBrand}>
             <img src={campaignLogo} alt="MobilizAÇÃO 2026 — Semeando e Cultivando o Futuro" />
-            <button type="button" onClick={openMap}><span aria-hidden="true">⌑</span> Abra o mapa interativo <b aria-hidden="true">→</b></button>
+            <button type="button" onClick={openMap}><MapButtonIcon /> Abra o mapa interativo <b aria-hidden="true">→</b></button>
           </div>
           <img className={styles.actionsHeroGuinho} src={guinho} alt="Guinho, o planeta mascote da MobilizAÇÃO, com uma plantinha" />
         </section>
