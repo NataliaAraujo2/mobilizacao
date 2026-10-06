@@ -297,3 +297,37 @@
 .homeHeroCopy .heroEdition, .homeHeroCopy .heroWordmark, .homeHeroCopy .heroDescription { margin: 0; }
 .homeHeroCopy .heroAction { margin-top: .75rem; }
 @media (min-width: 901px) { .homeHeroCopy.homeHeroCopy { width: 42%; max-width: 36rem; } }
+@media (max-width: 900px) {
+  .homeIntroCard.homeIntroCard {
+    min-height: 0;
+    background-color: #042619;
+    background-image: url("../assets/brand/home-intro.svg");
+    background-size: 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+  .homeIntroCard .homeHeroCopy {
+    width: 100%;
+    max-width: none;
+    margin-top: max(8rem, calc((100vw - 5rem) * .5625));
+  }
+  .homeHeroCopy .heroTitle { font-size: clamp(1.65rem, 5vw, 2.6rem); }
+}
+@media (max-width: 600px) {
+  .associationImpact.associationImpact { grid-template-columns: minmax(0, 1fr); gap: .6rem; padding: 1.25rem .5rem .5rem; }
+  .associationImpact > img { top: 1.25rem; bottom: auto; left: 0; width: 4.5rem; }
+  .associationImpact > p, .associationImpact > strong { grid-column: 1; padding-left: 5rem; }
+  .associationImpact > p { font-size: 1.3rem; }
+  .associationImpact > strong { font-size: 1.55rem; }
+  .associationImpact .associatesCounter { grid-column: 1; grid-row: auto; width: 100%; min-width: 0; margin-top: 1.25rem; }
+}
+@media (max-width: 900px) {
+  .homeIntroCard .homeHeroCopy.homeHeroCopy {
+    margin-top: calc(max(8rem, (100vw - 5rem) * .5625) + 1.25rem);
+    gap: .65rem;
+  }
+  .homeHeroCopy .heroEdition { margin-bottom: .2rem; }
+  .homeHeroCopy .heroTitle { margin: 1rem 0 .65rem; line-height: 1.22; }
+  .homeHeroCopy .heroDescription { line-height: 1.5; }
+  .homeHeroCopy .heroAction { width: 100%; margin-top: 1.25rem; justify-content: center; }
+}
