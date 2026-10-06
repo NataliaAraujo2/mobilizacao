@@ -1,0 +1,64 @@
+.page { width: min(100%, 105.6rem); margin: 0 auto; padding: clamp(.75rem, 1.5vw, 1.25rem); }
+.hero { display: grid; grid-template-columns: minmax(18rem, .82fr) minmax(0, 1.18fr); min-height: 49rem; overflow: hidden; background: white; border: 1px solid #d8e7ec; border-radius: 1.6rem; box-shadow: 0 1rem 2.6rem rgb(0 97 168 / 9%); }
+.heroTitle { grid-column: 1 / -1; display: flex; align-items: center; gap: .8rem; padding: .85rem clamp(1.25rem, 3vw, 2.5rem); color: white; background: #075da6; }
+.agendaMark { position: relative; display: grid; flex-shrink: 0; width: 3.5rem; height: 3.65rem; padding: .8rem .2rem .1rem; place-items: center; border: .15rem solid white; border-radius: .45rem; background: white; box-shadow: 0 .2rem .5rem rgb(0 27 72 / 12%); }
+.agendaMark::before, .agendaMark::after { position: absolute; top: -.32rem; width: .3rem; height: .68rem; content: ""; background: white; border-radius: .3rem; }
+.agendaMark::before { left: .58rem; }
+.agendaMark::after { right: .58rem; }
+.agendaMark i { position: absolute; top: .72rem; right: .2rem; left: .2rem; border-top: .12rem solid #f58220; }
+.agendaMark img { width: 2.5rem; height: 2.5rem; object-fit: contain; filter: none; }
+.heroTitle h1 { margin: 0; font-size: clamp(2rem, 4.5vw, 4rem); line-height: 1; }
+.heroTitle b { color: #ff8b25; }
+.introPanel { position: relative; display: grid; grid-template-rows: auto 1fr; min-height: 0; overflow: hidden; background: linear-gradient(145deg, #fff 65%, #fff5e9); }
+.introCopy { position: relative; z-index: 1; padding: clamp(1rem, 2vw, 1.5rem); color: #075b9f; }
+.introCopy p { width: 100%; max-width: none; margin: 0; font-size: clamp(1.15rem, 1.65vw, 1.55rem); line-height: 1.35; }
+.introCopy strong { color: #e98322; }
+.introCopy b { font-weight: 850; }
+.cubesFrame { position: relative; z-index: 1; min-height: clamp(14rem, 23vh, 18rem); overflow: visible; }
+.cubesFrame > img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: contain; object-position: center bottom; transform: translateY(calc(12% + 1rem)) scale(1.32); transform-origin: center bottom; }
+.cnodsPanel { position: relative; isolation: isolate; display: grid; grid-template-rows: auto auto auto; min-height: 0; color: white; background: #075da6; }
+.cnodsPanel::before { position: absolute; inset: 0; z-index: -1; content: ""; pointer-events: none; opacity: .12; filter: brightness(0) invert(1); background-image: url("../assets/brand/elements/elemento-01.webp"), url("../assets/brand/elements/elemento-02.webp"), url("../assets/brand/elements/elemento-03.webp"); background-repeat: no-repeat; background-size: 12rem auto, 15rem auto, 11rem auto; background-position: right -2rem top -2rem, left -3rem bottom -3rem, right -2rem bottom -2rem; }
+.introPanel::before { position: absolute; inset: 0; content: ""; pointer-events: none; opacity: .07; background-image: url("../assets/brand/elements/elemento-01.webp"), url("../assets/brand/elements/elemento-02.webp"); background-repeat: no-repeat; background-size: 12rem auto, 14rem auto; background-position: right -2rem top 25%, left -3rem bottom 15%; }
+.cnodsHeading { padding: clamp(1.25rem, 2.5vw, 2rem) clamp(1.25rem, 3vw, 2.5rem) 0; text-align: center; }
+.cnodsHeading h2 { margin: 0; font-size: clamp(1.3rem, 2.65vw, 2.35rem); line-height: 1.12; }
+.cnodsHeading h2 b { color: #ff8b25; }
+.photoCollage { position: relative; isolation: isolate; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 0; padding: .75rem clamp(1.25rem, 3vw, 2.5rem) 1.5rem; }
+.photoCollage::after { position: absolute; bottom: .15rem; left: calc(50% - .22rem); width: .44rem; height: 2.5rem; z-index: -1; content: ""; pointer-events: none; background: #14743d; border-radius: 0 0 .4rem .4rem; }
+.photoCollage img { display: block; width: 100%; height: auto; object-fit: contain; border: .22rem solid white; border-radius: 0; box-shadow: 0 .55rem 1.1rem rgb(0 27 72 / 22%); }
+.cnodsCopy { display: grid; align-content: end; justify-items: center; gap: .6rem; padding: clamp(1rem, 1.8vw, 1.4rem); text-align: center; }
+.cnodsCopy p { max-width: 45rem; margin: 0; font-size: clamp(.96rem, 1.55vw, 1.25rem); line-height: 1.45; }
+.cnodsCopy a { color: #ffac58; font-weight: 850; text-decoration-thickness: .12em; text-underline-offset: .12em; }
+.cnodsCopy a span { margin-left: .25rem; }
+.cnodsLogo { width: min(100%, 16rem); max-height: 5rem; object-fit: contain; object-position: center; }
+.plantScene { position: relative; min-height: 0; isolation: isolate; margin-top: .75rem; }
+.plantScene > img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+@media (min-width: 761px) { .plantScene > img { transform: scale(1.15); transform-origin: center bottom; } }
+.plantStatement { position: absolute; right: 0; bottom: 0; left: 0; margin: 0; padding: 1rem 1.5rem .75rem; color: white; text-align: center; font-size: clamp(1rem, 1.15vw, 1.15rem); line-height: 1.45; background: linear-gradient(transparent, rgba(0, 47, 94, .72)); text-shadow: 0 1px 3px rgba(0, 25, 55, .85); }
+@media (max-width: 760px) { .plantScene > img { height: auto; } .plantStatement { position: relative; background: none; text-shadow: none; } }
+.leafFrame { position: relative; isolation: isolate; display: grid; place-items: center; min-width: 0; min-height: 0; aspect-ratio: 3 / 5; transform-origin: center 85%; }
+.leafFrame::before { position: absolute; inset: 0; z-index: 2; content: ""; pointer-events: none; background: url("../assets/brand/elements/folha-moldura.svg") center / 100% 100% no-repeat; }
+.leafFrame::after { position: absolute; top: 97.5%; left: 49%; width: 87%; height: 55%; z-index: -1; content: ""; pointer-events: none; background: url("../assets/brand/elements/folha-caule.svg") center / 100% 100% no-repeat; transform-origin: top left; }
+.leafFrame:nth-child(2)::after { left: calc(50% - .2rem); width: .4rem; height: 34%; background: #14743d; border-radius: 0 0 .3rem .3rem; }
+.leafFrame:nth-child(3)::after { transform: scaleX(-1); }
+.leafFrame:nth-child(1) { transform: translateX(16%) rotate(-16deg); }
+.leafFrame:nth-child(2) { z-index: 1; }
+.leafFrame:nth-child(3) { transform: translateX(-16%) rotate(16deg); }
+.leafFrame > img { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: center 20%; border: 0; box-shadow: none; mask: url("../assets/brand/elements/folha-mascara.svg") center / 100% 100% no-repeat; }
+.leafFrame:nth-child(2) > img { object-position: center 45%; }
+@media (min-width: 761px) {
+  .hero { height: calc(100dvh - 8rem); min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+  .heroTitle h1 { font-size: clamp(2rem, 3.4vw, 3rem); }
+  .introPanel { min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+  .cubesFrame { min-height: 0; }
+  .cnodsPanel { min-height: 0; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .cnodsHeading { padding-top: 1rem; }
+  .cnodsHeading h2 { font-size: clamp(1.25rem, 2vw, 1.8rem); }
+  .photoCollage { min-height: 0; width: 92%; justify-self: center; gap: 0; align-items: end; padding-top: 1rem; padding-bottom: 6rem; }
+  .leafFrame { height: 78%; width: 86%; justify-self: center; }
+  .leafFrame:nth-child(2) { height: 96%; width: 100%; }
+  .cnodsCopy { gap: .65rem; padding: 1rem 1.5rem; }
+  .cnodsCopy p { font-size: clamp(1.05rem, 1.3vw, 1.2rem); line-height: 1.45; }
+  .cnodsLogo { max-height: 5rem; }
+}
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .introPanel, .cnodsPanel { min-height: auto; } .introPanel > img { max-height: 26rem; } }
+@media (max-width: 480px) { .page { padding: .75rem; } .hero { border-radius: 1.1rem; } .agendaMark { width: 2.4rem; height: 2.55rem; } .agendaMark img { width: 1.3rem; height: 1.3rem; } .photoCollage { grid-template-columns: repeat(3, 1fr); padding-inline: .75rem; } }
