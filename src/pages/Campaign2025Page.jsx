@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import BrazilMap from "../components/BrazilMap/BrazilMap";
-import logo2025 from "../assets/brand/mobilizacao-logo-2025.webp";
+import action2025 from "../assets/brand/edicao-2025-acao.webp";
+import beforeAfter2025 from "../assets/brand/edicao-2025-antes-depois.webp";
 import { getPublicReport, getPublicReportUrl } from "../services/reportsService";
 import styles from "./Campaign2025Page.module.css";
+import { gallery2025 } from "../data/gallery2025";
 
 function formatFileSize(size = 0) {
   return size ? `${(size / 1024 / 1024).toFixed(1).replace(".", ",")} MB` : "PDF";
@@ -42,17 +44,32 @@ export default function Campaign2025Page() {
 
   return (
     <main className={styles.page}>
-      <section className={styles.hero} aria-labelledby="campaign-2025-title">
-        <div>
-          <p className={styles.eyebrow}>Edição 2025</p>
-          <h1 id="campaign-2025-title">MobilizAÇÃO 2025</h1>
-          <p>Uma mobilização nacional que transformou o voluntariado em ações socioambientais concretas, conectando pessoas, comunidades e territórios em todo o Brasil.</p>
+      <section className={styles.editionIntro} aria-labelledby="campaign-2025-title">
+        <div className={styles.editionIntroCopy}>
+          <h1 id="campaign-2025-title">Mobiliz<em>AÇÃO</em></h1>
+          <p>Onde existe mobilização, existe <strong>TRANSFORMAÇÃO.</strong><br />Em <strong>2025</strong>, pessoas de diferentes lugares se uniram para transformar seus territórios.</p>
+          <p className={styles.editionInvitation}>Conheça as histórias, as ações e os resultados dessa jornada.</p>
+          <figure className={styles.beforeAfter}>
+            <figcaption><span>ANTES</span><span>DEPOIS</span></figcaption>
+            <img src={beforeAfter2025} alt="Antes e depois: escadaria revitalizada com pintura colorida e cuidado com o espaço público" width="351" height="107" />
+          </figure>
         </div>
-        <div className={styles.brandPanel}>
-          <img src={logo2025} alt="MobilizAÇÃO 2025" />
+        <img className={styles.editionActionPhoto} src={action2025} alt="Participantes da MobilizAÇÃO 2025 reunidos na escadaria revitalizada com a faixa Juntos pelo Clima, pelas Pessoas e pelo Planeta" width="679" height="502" />
+      </section>
+
+      <section className={`${styles.section} ${styles.galleryCard}`} aria-labelledby="gallery-2025-title">
+        <h2 id="gallery-2025-title">Galeria de <span>FOTOS</span></h2>
+        <div className={styles.galleryGrid}>
+          {gallery2025.map(({ uf, name, url }) => url ? (
+            <a key={uf} className={styles.galleryButton} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Galeria de fotos de ${name} (abre em nova aba)`}>{uf}</a>
+          ) : (
+            <button key={uf} className={styles.galleryButton} type="button" disabled title={`Galeria de ${name} em breve`} aria-label={`Galeria de ${name} — em breve`}>{uf}</button>
+          ))}
         </div>
       </section>
 
+      <section className={`${styles.section} ${styles.resultsCard}`} aria-labelledby="results-2025-title">
+        <h2 id="results-2025-title" className={styles.resultsTitle}>Resultados <span>2025</span></h2>
       <section className={styles.section} aria-labelledby="numbers-title">
         <div className={styles.sectionHeading}><p className={styles.eyebrow}>Impacto nacional</p><h2 id="numbers-title">Grandes números da mobilização</h2></div>
         <div className={styles.numbers}>
@@ -87,6 +104,7 @@ export default function Campaign2025Page() {
           <div className={styles.reportContent}><p className={styles.reportEyebrow}>{reportUrl ? "Arquivo disponível" : "Arquivo em preparação"}</p><h2 id="report-title">Relatório completo da MobilizAÇÃO 2025</h2><p>Versão para leitura, compartilhamento e impressão, com resultados, fotos e relatos da campanha.</p>{reportUrl && <span className={styles.reportMeta}>PDF comprimido · {formatFileSize(report.size)}</span>}</div>
           {reportUrl ? <div className={styles.reportActions}><Link className={styles.primaryButton} to="/2025/relatorio" target="_blank" rel="noreferrer">Ler relatório completo</Link><a className={styles.secondaryButton} href={reportUrl} download>Baixar PDF</a></div> : <p className={styles.unavailable}>O PDF completo será disponibilizado aqui.</p>}
         </div>
+      </section>
       </section>
     </main>
   );
