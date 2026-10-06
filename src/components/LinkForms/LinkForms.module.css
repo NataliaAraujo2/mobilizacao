@@ -48,3 +48,4 @@
 .recipientRow { display: flex; gap: 1rem; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding: 1rem 0; }
 .recipientRow small { display: block; color: var(--text-muted); }
 @media (max-width: 600px) { .card { padding: 1.15rem; } .recipientRow { align-items: stretch; flex-direction: column; } .page nav.toolbar { gap: .3rem; } }
+.page.page, .publicPage.publicPage { width: var(--app-content-width); max-width: none; padding-inline: 0; }

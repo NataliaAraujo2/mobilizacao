@@ -69,3 +69,4 @@
   .actions { padding: 0 0 .75rem; border: 0; }
   .volunteer { break-inside: avoid; grid-template-columns: auto minmax(12rem, 1.5fr) repeat(2, 1fr); padding: .55rem; font-size: 10pt; border-radius: 0; }
 }
+.page.page { width: var(--app-content-width); }

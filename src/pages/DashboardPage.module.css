@@ -63,3 +63,5 @@
   .actionIcon { width: 2.65rem; height: 2.65rem; }
 }
 @media (prefers-reduced-motion: reduce) { .action, .featuredAction { transition: none; } }
+.page.page { padding-inline: var(--app-page-gutter); }
+.dashboard.dashboard { width: min(100%, var(--app-card-max-width)); }

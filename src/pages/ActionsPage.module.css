@@ -68,3 +68,4 @@
 .qrModal > div { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: 1rem; }
 .qrModal button { min-height: 2.7rem; padding: .6rem .8rem; color: white; font-weight: 800; background: var(--brand-blue); border: 0; border-radius: .55rem; cursor: pointer; }
 @media (max-width: 680px) { .title { align-items: start; flex-direction: column; } .titleActions, .searchFilters { width: 100%; } .searchFilters, .searchFilters form { grid-template-columns: 1fr; } .searchFilters button, .searchFilters > label { width: 100%; min-height: 3.2rem; } .grid, .photoGrid, .actionSummary { grid-template-columns: 1fr; } .wide { grid-column: 1; } .cepRow { grid-template-columns: 1fr; } .cepRow button, .submit, .actionSummary > button { width: 100%; min-height: 3.2rem; } .card fieldset { padding: .8rem; } .actionSummary > span { justify-self: start; } }
+.page.page { width: var(--app-content-width); }

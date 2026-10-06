@@ -37,3 +37,4 @@
   .branch { grid-template-columns: 1fr; }
   .rowActions { flex-wrap: wrap; }
 }
+.page.page { width: var(--app-content-width); }

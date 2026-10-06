@@ -1,8 +1,22 @@
+import { Link } from "react-router-dom";
 import agendaCubes from "../assets/brand/agenda-ods-cubos-recorte.png";
+import guinhoOds from "../assets/brand/guinhos/2_GUINHO_ODS.png";
 import plantComposition from "../assets/brand/agenda-ramo-mundo-inclusao.png";
 import cnodsLogo from "../assets/brand/cnods-conferencia-branco.png";
 import agendaElement from "../assets/brand/elements/elemento-03.webp";
 import styles from "./Agenda2030Page.module.css";
+
+const odsImages = import.meta.glob("../assets/brand/ods/ods-*.{svg,png}", { eager: true, query: "?url", import: "default" });
+const odsTitles = [
+  "Erradicação da Pobreza", "Fome Zero e Agricultura Sustentável", "Saúde e Bem-Estar",
+  "Educação de Qualidade", "Igualdade de Gênero", "Água Potável e Saneamento",
+  "Energia Limpa e Acessível", "Trabalho Decente e Crescimento Econômico",
+  "Indústria, Inovação e Infraestrutura", "Redução das Desigualdades",
+  "Cidades e Comunidades Sustentáveis", "Consumo e Produção Responsáveis",
+  "Ação Contra a Mudança Global do Clima", "Vida na Água", "Vida Terrestre",
+  "Paz, Justiça e Instituições Eficazes", "Parcerias e Meios de Implementação",
+  "Igualdade Étnico-Racial",
+];
 
 export default function Agenda2030Page() {
   return (
@@ -50,6 +64,38 @@ export default function Agenda2030Page() {
             <a href="https://www.conferenciaods.org/" target="_blank" rel="noreferrer">Conheça a Conferência Nacional ODS <span aria-hidden="true">→</span></a>
             <img className={styles.cnodsLogo} src={cnodsLogo} alt="1ª Conferência Nacional dos Objetivos de Desenvolvimento Sustentável" />
           </div>
+        </div>
+      </section>
+      <section className={styles.impactCard} aria-labelledby="impact-title">
+        <div className={styles.impactCopy}>
+          <h2 id="impact-title">Um movimento<br />que gera <span>IMPACTO</span></h2>
+          <p>Em 2025, a MobilizAÇÃO uniu voluntários de todo o Brasil em ações que contribuíram para o avanço dos Objetivos de Desenvolvimento Sustentável (ODS) e para a transformação de comunidades.</p>
+        </div>
+        <div className={styles.impactResults}>
+          <h3>Quer saber o que construímos juntos?</h3>
+          <p>Conheça os resultados da Mobiliz<span>AÇÃO</span> 2025</p>
+          <img src={guinhoOds} alt="Guinho com o círculo colorido dos Objetivos de Desenvolvimento Sustentável" />
+          <Link className={styles.editionButton} to="/2025">
+            <img src={agendaElement} alt="" aria-hidden="true" />
+            EDIÇÃO 2025
+          </Link>
+        </div>
+      </section>
+      <section className={styles.odsCard} aria-labelledby="ods-title">
+        <h2 id="ods-title">Clique nos ícones e conheça as <span>METAS</span> para cada Objetivo:</h2>
+        <div className={styles.odsGrid}>
+          {odsTitles.map((title, index) => {
+            const number = index + 1;
+            const file = `../assets/brand/ods/ods-${String(number).padStart(2, "0")}.${number === 18 ? "png" : "svg"}`;
+            return (
+              <a key={number}
+                href={number === 18 ? "https://brasil.un.org/pt-br/314206-ods-18-gloss%C3%A1rio-de-termos" : `https://brasil.un.org/pt-br/sdgs/${number}`}
+                target="_blank" rel="noopener noreferrer"
+                aria-label={`Conheça as metas do ODS ${number}: ${title} (abre em nova aba)`}>
+                <img src={odsImages[file]} alt={`ODS ${number} — ${title}`} width="200" height="200" loading="lazy" />
+              </a>
+            );
+          })}
         </div>
       </section>
     </main>

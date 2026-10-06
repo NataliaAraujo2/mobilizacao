@@ -61,3 +61,4 @@
   .list strong[class], .list article > button { width: 100%; text-align: center; }
   .list article > button { min-height: 3.1rem; }
 }
+.page.page { width: var(--app-content-width); }

@@ -23,6 +23,10 @@
 }
 
 :root {
+  --app-page-max-width: 105.6rem;
+  --app-page-gutter: clamp(.75rem, 1.5vw, 1.25rem);
+  --app-card-max-width: calc(var(--app-page-max-width) - 2.5rem);
+  --app-content-width: min(calc(100% - var(--app-page-gutter) * 2), var(--app-card-max-width));
   font-family: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   color: #17324d;
   background: #f5f8fa;

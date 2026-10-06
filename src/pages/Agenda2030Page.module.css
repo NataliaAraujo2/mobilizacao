@@ -1,4 +1,4 @@
-.page { width: min(100%, 105.6rem); margin: 0 auto; padding: clamp(.75rem, 1.5vw, 1.25rem); }
+.page { width: min(100%, var(--app-page-max-width)); margin: 0 auto; padding: var(--app-page-gutter); }
 .hero { display: grid; grid-template-columns: minmax(18rem, .82fr) minmax(0, 1.18fr); min-height: 49rem; overflow: hidden; background: white; border: 1px solid #d8e7ec; border-radius: 1.6rem; box-shadow: 0 1rem 2.6rem rgb(0 97 168 / 9%); }
 .heroTitle { grid-column: 1 / -1; display: flex; align-items: center; gap: .8rem; padding: .85rem clamp(1.25rem, 3vw, 2.5rem); color: white; background: #075da6; }
 .agendaMark { position: relative; display: grid; flex-shrink: 0; width: 3.5rem; height: 3.65rem; padding: .8rem .2rem .1rem; place-items: center; border: .15rem solid white; border-radius: .45rem; background: white; box-shadow: 0 .2rem .5rem rgb(0 27 72 / 12%); }
@@ -35,6 +35,19 @@
 @media (min-width: 761px) { .plantScene > img { transform: scale(1.15); transform-origin: center bottom; } }
 .plantStatement { position: absolute; right: 0; bottom: 0; left: 0; margin: 0; padding: 1rem 1.5rem .75rem; color: white; text-align: center; font-size: clamp(1rem, 1.15vw, 1.15rem); line-height: 1.45; background: linear-gradient(transparent, rgba(0, 47, 94, .72)); text-shadow: 0 1px 3px rgba(0, 25, 55, .85); }
 @media (max-width: 760px) { .plantScene > img { height: auto; } .plantStatement { position: relative; background: none; text-shadow: none; } }
+.impactCard { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: clamp(1.5rem, 4vw, 4rem); margin-top: clamp(1.5rem, 3vw, 2.5rem); padding: clamp(1.5rem, 3vw, 3rem); background: white; border: 1px solid #d8e7ec; border-left: .65rem solid #075da6; border-radius: 1.4rem; box-shadow: 0 .8rem 2rem rgb(0 97 168 / 7%); color: #075b9f; }
+.impactCopy h2 { margin: 0 0 1.25rem; font-size: clamp(2rem, 3.6vw, 3.5rem); line-height: 1.15; }
+.impactCopy h2 span, .impactResults p span { color: #f58220; }
+.impactCopy p { max-width: 38rem; margin: 0; font-size: clamp(1.1rem, 1.6vw, 1.5rem); line-height: 1.6; font-weight: 400; }
+.impactResults { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.impactResults h3 { margin: 0 0 .4rem; font-size: clamp(1.3rem, 1.9vw, 1.8rem); line-height: 1.25; }
+.impactResults > p { margin: 0 0 1rem; font-size: clamp(1rem, 1.45vw, 1.3rem); line-height: 1.4; }
+.impactResults > img { display: block; width: min(100%, 17rem); height: auto; object-fit: contain; }
+.editionButton { display: inline-flex; align-items: center; justify-content: center; gap: .8rem; min-height: 3.5rem; margin-top: .8rem; padding: .7rem 1.75rem; border-radius: .85rem; background: #075da6; color: white; font-size: 1.2rem; font-weight: 850; text-decoration: none; transition: background .15s ease; }
+.editionButton img { width: 2rem; height: 2rem; object-fit: contain; filter: brightness(0) invert(1); }
+.editionButton:hover { background: #06477d; }
+.editionButton:focus-visible { outline: 3px solid #f58220; outline-offset: 4px; }
+@media (max-width: 760px) { .impactCard { grid-template-columns: 1fr; gap: 1.75rem; } .impactCopy h2 { font-size: clamp(1.9rem, 6vw, 2.8rem); } .impactResults > img { width: min(75%, 16rem); } }
 .leafFrame { position: relative; isolation: isolate; display: grid; place-items: center; min-width: 0; min-height: 0; aspect-ratio: 3 / 5; transform-origin: center 85%; }
 .leafFrame::before { position: absolute; inset: 0; z-index: 2; content: ""; pointer-events: none; background: url("../assets/brand/elements/folha-moldura.svg") center / 100% 100% no-repeat; }
 .leafFrame::after { position: absolute; top: 97.5%; left: 49%; width: 87%; height: 55%; z-index: -1; content: ""; pointer-events: none; background: url("../assets/brand/elements/folha-caule.svg") center / 100% 100% no-repeat; transform-origin: top left; }
@@ -62,3 +75,27 @@
 }
 @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .introPanel, .cnodsPanel { min-height: auto; } .introPanel > img { max-height: 26rem; } }
 @media (max-width: 480px) { .page { padding: .75rem; } .hero { border-radius: 1.1rem; } .agendaMark { width: 2.4rem; height: 2.55rem; } .agendaMark img { width: 1.3rem; height: 1.3rem; } .photoCollage { grid-template-columns: repeat(3, 1fr); padding-inline: .75rem; } }
+.odsCard {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding: clamp(1rem, 2vw, 2rem);
+  background: #fff;
+  border: 1px solid #d8e7ec;
+  border-left: .65rem solid #f58220;
+  border-radius: 1.4rem;
+  color: #075b9f;
+}
+
+.odsCard h2 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1rem, 1.4vw, 1.4rem);
+}
+
+.odsCard h2 span { color: #f58220; }
+.odsGrid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: clamp(.5rem, 1.2vw, 1.25rem); }
+.odsGrid a { display: block; transition: transform .15s ease; }
+.odsGrid a:hover { transform: translateY(-3px); }
+.odsGrid a:focus-visible { outline: 3px solid #075da6; outline-offset: 4px; }
+.odsGrid img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; }
+.odsNote { margin: 1rem 0 0; font-size: .85rem; }
+@media (max-width: 900px) { .odsGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .odsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; } }

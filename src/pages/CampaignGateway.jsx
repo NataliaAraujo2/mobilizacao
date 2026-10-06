@@ -120,7 +120,7 @@ export default function CampaignGateway() {
         <div className={styles.homeHeroCopy}>
           <p className={styles.heroEdition}>2ª Edição</p>
           <h2 id="home-hero-title" className={styles.heroWordmark}><span>Mobiliz</span><em>AÇÃO</em></h2>
-          <p className={styles.heroTitle}>Semeando e<br />Cultivando<br />o Futuro!</p>
+          <p className={styles.heroTitle}>Semeando e<br />Cultivando o Futuro!</p>
           <p className={styles.heroDescription}>Voluntariado que transforma<br />vidas e territórios</p>
           <button className={styles.heroAction} type="button" aria-expanded={heroExpanded} aria-controls="mapa-acoes-publico" onClick={toggleActions}><img src={heroActionElement} alt="" aria-hidden="true" />{heroExpanded ? 'Fechar ações de 2026' : 'Conheça as ações de 2026'}</button>
         </div>
@@ -142,7 +142,7 @@ export default function CampaignGateway() {
       <section className={styles.videoSection} aria-labelledby="video-title">
         <div className={styles.videoFrame}>
           <iframe
-            src="https://www.youtube-nocookie.com/embed/8rco9x7wIck"
+            src="https://www.youtube-nocookie.com/embed/rVLi3A6BYLM"
             title="MobilizAÇÃO | ONG Moradia e Cidadania"
             loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
