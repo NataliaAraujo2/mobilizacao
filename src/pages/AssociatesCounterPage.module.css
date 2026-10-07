@@ -19,6 +19,6 @@
 .success { color: var(--brand-green); font-weight: 750; }
 .error { color: #a22b2b; font-weight: 750; }
 .costNote { display: block; margin-top: 1rem; color: var(--text-muted); line-height: 1.45; }
-@media (max-width: 680px) { .card { grid-template-columns: 1fr; } .preview { padding-block: 1.4rem; } }
+@media (max-width: 1199px) { .card { grid-template-columns: 1fr; } .preview { padding-block: 1.4rem; } }
 @media (max-width: 440px) { .page { width: min(100% - 1.5rem, 62rem); } .title { align-items: start; flex-direction: column; } .card { border-radius: 1.1rem; } }
 .page.page { width: var(--app-content-width); }

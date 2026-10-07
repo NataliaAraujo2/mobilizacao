@@ -58,8 +58,8 @@
 }
 
 /* ===== Responsividade ===== */
-@media (max-width: 1024px) {
-  .mapWrapper { max-width: 900px; }
+@media (max-width: 1199px) {
+  .mapWrapper { max-width: 1199px; }
 
   :global(.mapWrapper svg) {
     width: 110%;
@@ -69,7 +69,7 @@
   :global(.estado text) { font-size: 11px; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1199px) {
   .mapWrapper {
     max-width: none;
     overflow-x: visible;

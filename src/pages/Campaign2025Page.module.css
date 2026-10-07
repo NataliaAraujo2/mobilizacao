@@ -47,11 +47,11 @@
 .reportActions .primaryButton { color: white; background: var(--brand-blue); border-color: var(--brand-blue); }
 .reportActions .secondaryButton { color: var(--brand-blue); background: white; border-color: #b8d4e5; }
 .unavailable { grid-column: 2 / -1; margin: 0; color: var(--text-muted); font-size: .9rem; }
-@media (max-width: 720px) { .hero, .impact { grid-template-columns: 1fr; text-align: center; border-radius: 1.25rem; } .brandPanel { grid-row: 1; min-height: 15rem; } .brandPanel img { height: 13rem; max-height: 13rem; } .actions, .pillList { justify-content: center; } .numbers { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 720px) { .reportCard { grid-template-columns: auto 1fr; } .reportActions { grid-column: 1 / -1; } }
+@media (max-width: 1199px) { .hero, .impact { grid-template-columns: 1fr; text-align: center; border-radius: 1.25rem; } .brandPanel { grid-row: 1; min-height: 15rem; } .brandPanel img { height: 13rem; max-height: 13rem; } .actions, .pillList { justify-content: center; } .numbers { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1199px) { .reportCard { grid-template-columns: auto 1fr; } .reportActions { grid-column: 1 / -1; } }
 @media (max-width: 420px) { .page { padding: .75rem; } .numbers { grid-template-columns: 1fr 1fr; gap: .6rem; } .number { min-height: 7rem; padding: .9rem .6rem; } .reportCard { grid-template-columns: 1fr; text-align: center; } .reportIcon { justify-self: center; } .reportActions { flex-direction: column; } .unavailable { grid-column: auto; } }
 @media (max-width: 520px) { .odsRow { grid-template-columns: 2.8rem minmax(0, 1fr) 3.2rem; gap: .4rem; } .odsName { max-width: calc(100% - .8rem); overflow: hidden; font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; } .odsValue { font-size: .65rem; } }
-@media (max-width: 620px) { .odsLegend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1199px) { .odsLegend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .page.page { padding-inline: var(--app-page-gutter); }
 .hero.hero, .section.section { width: min(100%, var(--app-card-max-width)); }
 .editionIntro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); width: min(100%, var(--app-card-max-width)); margin-inline: auto; gap: 1rem; align-items: stretch; }
@@ -65,7 +65,7 @@
 .beforeAfter figcaption { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; margin-bottom: .4rem; text-align: center; font-weight: 800; }
 .beforeAfter img { display: block; width: 100%; height: auto; }
 .editionActionPhoto { display: block; align-self: center; width: 100%; height: auto; border-radius: 1.25rem; }
-@media (max-width: 720px) { .editionIntro { grid-template-columns: 1fr; } .beforeAfter { max-width: 24rem; } }
+@media (max-width: 1199px) { .editionIntro { grid-template-columns: 1fr; } .beforeAfter { max-width: 24rem; } }
 .galleryCard { padding: clamp(1rem, 2.5vw, 2.5rem); background: white; border: 1px solid var(--border); border-left: .65rem solid var(--brand-orange); border-radius: 1.25rem; }
 .galleryCard h2 { margin: 0 0 1.25rem; color: var(--brand-blue); font-size: clamp(1.5rem, 2.5vw, 2.25rem); }
 .galleryCard h2 span { color: var(--brand-orange); }
@@ -73,8 +73,8 @@
 .galleryButton { display: flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: .5rem; background: var(--brand-blue); color: white; border: 0; border-radius: .7rem; font: inherit; font-weight: 800; text-decoration: none; }
 .galleryButton:disabled { opacity: 1; cursor: not-allowed; }
 a.galleryButton:hover { background: #004d86; }
-@media (max-width: 900px) { .galleryGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-@media (max-width: 540px) { .galleryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; } }
+@media (max-width: 1199px) { .galleryGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 1199px) { .galleryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; } }
 .resultsCard { padding: clamp(1rem, 2.5vw, 2.5rem); background: white; border: 1px solid var(--border); border-left: .65rem solid var(--brand-blue); border-radius: 1.25rem; box-shadow: 0 .8rem 2rem rgb(23 50 77 / 7%); }
 .resultsTitle { margin: 0; color: var(--brand-blue); font-size: clamp(1.5rem, 2.5vw, 2.25rem); }
 .resultsTitle span { color: var(--brand-orange); }

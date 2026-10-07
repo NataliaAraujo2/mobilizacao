@@ -46,7 +46,7 @@
 .volunteer strong { overflow-wrap: anywhere; }
 .number { display: grid; place-items: center; width: 2rem; height: 2rem; color: white; font-weight: 850; background: var(--map-state); border-radius: 50%; }
 .empty { padding: 2rem; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; }
-@media (max-width: 720px) {
+@media (max-width: 1199px) {
   .header, .actions { align-items: stretch; flex-direction: column; }
   .readOnly { align-self: start; }
   .actions button, .searchForm { width: 100%; }

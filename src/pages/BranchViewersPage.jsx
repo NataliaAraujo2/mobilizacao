@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { createBranchViewer, deleteBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
 import { listBranches } from "../services/branchesService";
 import { whatsappUrl } from "../utils/whatsapp";
+import { administrativeDocumentMessage } from '../utils/administrativeDocument';
 import styles from "./BranchViewersPage.module.css";
 
 const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contactPhone: "" };
@@ -129,7 +130,7 @@ export default function BranchViewersPage() {
 
   function shareCredentials() {
     if (!credentials) return;
-    const url = whatsappUrl(credentials.contactPhone, credentialsMessage());
+    const url = whatsappUrl(credentials.contactPhone, credentialsMessage() + administrativeDocumentMessage());
     if (!url) { setError("Cadastre o telefone da pessoa responsável antes de compartilhar."); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   }

@@ -180,7 +180,7 @@
 .agendaCard .primaryButton img { width: 2rem; height: 2rem; object-fit: contain; filter: brightness(0) invert(1); }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
-@media (max-width: 720px) {
+@media (max-width: 1199px) {
   .homeIntroCard { min-height: 31rem; padding: 1.25rem; background-position: center; }
   .homeHeroCopy { max-width: 22rem; }
   .heroTitle { font-size: clamp(1.75rem, 9vw, 2.6rem); }
@@ -282,7 +282,7 @@
 .previousCopy strong { font-size: clamp(1.2rem, 1.6vw, 1.5rem); }
 .previousCopy small { font-size: clamp(.9rem, 1.1vw, 1.05rem); }
 .previousLink { padding: .8rem 1rem; white-space: normal; text-align: center; font-size: 1rem; background: #eaf4fb; border-radius: .7rem; }
-@media (min-width: 901px) {
+@media (min-width: 1200px) {
   .previousCard { grid-template-columns: minmax(8rem, .8fr) minmax(7rem, .65fr) minmax(0, 2.2fr) minmax(12rem, 1fr); gap: clamp(1rem, 2vw, 2rem); padding: clamp(1.25rem, 2vw, 2rem); }
   .previousCard > img, .previousCard > .year { justify-self: center; }
   .previousCard > .previousCopy { grid-column: auto; }
@@ -290,14 +290,14 @@
 }
 .institutionalSupport .supporterList img { width: min(100%, 17rem); max-height: 8rem; }
 .institutionalSupport .supporterList li { min-height: 11rem; padding: 1.5rem; }
-@media (min-width: 901px) { .institutionalSupport { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 3rem); } }
+@media (min-width: 1200px) { .institutionalSupport { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 3vw, 3rem); } }
 .homeIntroCard.homeIntroCard { background-position: center top; }
 .homeHeroCopy.homeHeroCopy { display: flex; flex-direction: column; align-items: flex-start; gap: .9rem; }
 .homeHeroCopy .heroTitle { margin: .6rem 0; font-size: clamp(1.85rem, 3.2vw, 3rem); line-height: 1.15; }
 .homeHeroCopy .heroEdition, .homeHeroCopy .heroWordmark, .homeHeroCopy .heroDescription { margin: 0; }
 .homeHeroCopy .heroAction { margin-top: .75rem; }
-@media (min-width: 901px) { .homeHeroCopy.homeHeroCopy { width: 42%; max-width: 36rem; } }
-@media (max-width: 900px) {
+@media (min-width: 1200px) { .homeHeroCopy.homeHeroCopy { width: 42%; max-width: 36rem; } }
+@media (max-width: 1199px) {
   .homeIntroCard.homeIntroCard {
     min-height: 0;
     background-color: #042619;
@@ -313,7 +313,7 @@
   }
   .homeHeroCopy .heroTitle { font-size: clamp(1.65rem, 5vw, 2.6rem); }
 }
-@media (max-width: 600px) {
+@media (max-width: 1199px) {
   .associationImpact.associationImpact { grid-template-columns: minmax(0, 1fr); gap: .6rem; padding: 1.25rem .5rem .5rem; }
   .associationImpact > img { top: 1.25rem; bottom: auto; left: 0; width: 4.5rem; }
   .associationImpact > p, .associationImpact > strong { grid-column: 1; padding-left: 5rem; }
@@ -321,7 +321,7 @@
   .associationImpact > strong { font-size: 1.55rem; }
   .associationImpact .associatesCounter { grid-column: 1; grid-row: auto; width: 100%; min-width: 0; margin-top: 1.25rem; }
 }
-@media (max-width: 900px) {
+@media (max-width: 1199px) {
   .homeIntroCard .homeHeroCopy.homeHeroCopy {
     margin-top: calc(max(8rem, (100vw - 5rem) * .5625) + 1.25rem);
     gap: .65rem;

@@ -46,7 +46,7 @@
 .contactForm > div button:last-child { color: var(--map-state); background: white; border: 1px solid var(--border); }
 .error { color: #a22b2b; font-weight: 700; }
 .success { color: var(--brand-green); font-weight: 700; }
-@media (max-width: 850px) { .item { grid-template-columns: 1fr auto; } .viewerList { grid-column: 1 / -1; } }
-@media (max-width: 760px) { .credentials { grid-template-columns: 1fr 1fr; } .credentialsActions { grid-template-columns: 1fr 1fr !important; } .credentialsActions button:last-child { grid-column: 1 / -1; } }
-@media (max-width: 600px) { .page { width: min(100% - 1rem, 72rem); } .title { align-items: start; flex-direction: column; } .credentials, .item, .contactForm { grid-template-columns: 1fr; } .credentials button, .item > button, .viewer > button, .confirm, .contactForm > div { width: 100%; } .credentialsActions { flex-direction: column; } .viewer { align-items: stretch; } .viewer > div:first-child { flex-basis: 100%; } .confirm, .contactForm > div { flex-direction: column; } .contactForm, .contactForm > div, .viewerList { grid-column: 1; } .contactForm button, .confirm button { width: 100%; min-height: 3.1rem; } }
+@media (max-width: 1199px) { .item { grid-template-columns: 1fr auto; } .viewerList { grid-column: 1 / -1; } }
+@media (max-width: 1199px) { .credentials { grid-template-columns: 1fr 1fr; } .credentialsActions { grid-template-columns: 1fr 1fr !important; } .credentialsActions button:last-child { grid-column: 1 / -1; } }
+@media (max-width: 1199px) { .page { width: min(100% - 1rem, 72rem); } .title { align-items: start; flex-direction: column; } .credentials, .item, .contactForm { grid-template-columns: 1fr; } .credentials button, .item > button, .viewer > button, .confirm, .contactForm > div { width: 100%; } .credentialsActions { flex-direction: column; } .viewer { align-items: stretch; } .viewer > div:first-child { flex-basis: 100%; } .confirm, .contactForm > div { flex-direction: column; } .contactForm, .contactForm > div, .viewerList { grid-column: 1; } .contactForm button, .confirm button { width: 100%; min-height: 3.1rem; } }
 .page.page { width: var(--app-content-width); }

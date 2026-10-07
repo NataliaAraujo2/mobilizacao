@@ -6,6 +6,8 @@ import { getStorage } from "firebase-admin/storage";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { randomInt } from "node:crypto";
 import nodemailer from "nodemailer";
+import { readFile } from 'node:fs/promises';
+import { ADMIN_DOCUMENT_NAME, ADMIN_DOCUMENT_PATH, ADMIN_DOCUMENT_URL, canReadAdministrativeDocument, administrativeDocumentAttachment } from './administrativeDocument.js';
 import { nextBranchViewerUsername } from "./viewerIdentity.js";
 
 initializeApp();
@@ -128,13 +130,14 @@ function createSmtpTransporter() {
   });
 }
 
-async function sendSystemEmail({ to, subject, text, html }) {
+async function sendSystemEmail({ to, subject, text, html, attachments = [] }) {
   await createSmtpTransporter().sendMail({
     from: 'MobilizAÇÃO | ONG Moradia e Cidadania <mobilizacao@moradiaecidadania.org.br>',
     to,
     subject,
     text,
     html,
+    attachments,
   });
 }
 
@@ -146,10 +149,42 @@ async function sendAdministrativeAccessMessage({ name, email, username, password
   await sendSystemEmail({
     to: email,
     subject: 'Seu acesso à MobilizAÇÃO',
-    text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO foi criado para a ${roleLabel}.\n\nAcesse: https://mobilizacao.web.app/login\nUsuário: ${username}\nSenha temporária: ${password}\n\nNo primeiro acesso, defina sua senha pessoal.`,
-    html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> foi criado para a ${roleLabel}.</p><p><strong>Usuário:</strong> ${safeUsername}<br><strong>Senha temporária:</strong> ${safePassword}</p><p><a href="https://mobilizacao.web.app/login">Acessar a MobilizAÇÃO</a></p><p>No primeiro acesso, defina sua senha pessoal.</p>`,
+    attachments: administrativeDocumentAttachment(role).length
+      ? [{ filename: ADMIN_DOCUMENT_NAME, content: await administrativeDocumentContent(), contentType: 'application/pdf' }]
+      : [],
+    text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO foi criado para a ${roleLabel}.\n\nAcesse: https://mobilizacao.web.app/login\nUsuário: ${username}\nSenha temporária: ${password}\n\nNo primeiro acesso, defina sua senha pessoal.\n\nSegue em anexo o Guia Prático de Comunicação para as Coordenações Estaduais. Acesse também após entrar no app: ${ADMIN_DOCUMENT_URL}`,
+    html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> foi criado para a ${roleLabel}.</p><p><strong>Usuário:</strong> ${safeUsername}<br><strong>Senha temporária:</strong> ${safePassword}</p><p><a href="https://mobilizacao.web.app/login">Acessar a MobilizAÇÃO</a></p><p>No primeiro acesso, defina sua senha pessoal.</p><p>Segue em anexo o <strong>Guia Prático de Comunicação para as Coordenações Estaduais</strong>.</p><p><a href="${ADMIN_DOCUMENT_URL}">Abrir guia no app (acesso restrito)</a></p>`,
   });
 }
+
+async function administrativeDocumentContent() {
+  const file = getStorage().bucket().file('administrative-documents/guia-comunicacao-coordenacoes.pdf');
+  const [exists] = await file.exists();
+  if (!exists) {
+    // Mesmo armazenamento do relatório de 2025, mas sem token ou URL de acesso público.
+    const original = await readFile(ADMIN_DOCUMENT_PATH);
+    try {
+      await file.save(original, { resumable: false, preconditionOpts: { ifGenerationMatch: 0 }, metadata: { contentType: 'application/pdf', cacheControl: 'private, no-store' } });
+    } catch (error) {
+      if (Number(error.code) !== 412) throw error;
+    }
+  }
+  const [content] = await file.download();
+  return content;
+}
+
+export const getAdministrativeDocument = onCall(ADMIN_FUNCTION_OPTIONS, async (request) => {
+  if (!request.auth || !canReadAdministrativeDocument(request.auth.token)) {
+    throw new HttpsError('permission-denied', 'Documento exclusivo para coordenações estaduais e superadmins ativos.');
+  }
+  // Verifica a situação atual, inclusive quando o token do navegador ainda não foi renovado.
+  const account = await getAuth().getUser(request.auth.uid);
+  if (account.disabled || !canReadAdministrativeDocument(account.customClaims)) {
+    throw new HttpsError('permission-denied', 'Este acesso não está autorizado.');
+  }
+  const content = await administrativeDocumentContent();
+  return { filename: ADMIN_DOCUMENT_NAME, contentType: 'application/pdf', base64: content.toString('base64') };
+});
 
 function actionEmailDetails(action) {
   const address = action.address ?? {};

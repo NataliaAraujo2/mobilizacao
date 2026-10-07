@@ -67,4 +67,4 @@
 .signup form > button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .signup form > button:disabled { cursor: wait; opacity: .65; }
 .error { margin: .8rem 0 0; color: #a22b2b; font-weight: 750; }
-@media (max-width: 680px) { .modalBackdrop { padding: .5rem; } .actionModal, .signup { max-height: calc(100vh - 1rem); padding: 1rem; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address, .actionEssentials { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } .detailSection p { font-size: .94rem; line-height: 1.62; } }
+@media (max-width: 1199px) { .modalBackdrop { padding: .5rem; } .actionModal, .signup { max-height: calc(100vh - 1rem); padding: 1rem; } .tabs { flex-wrap: wrap; } .tabs button { flex: 1 1 8rem; } .signup form, .address, .actionEssentials { grid-template-columns: 1fr; } .signup form > button { min-height: 3rem; grid-column: 1; } .detailSection p { font-size: .94rem; line-height: 1.62; } }

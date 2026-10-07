@@ -27,7 +27,7 @@
 .active { color: var(--brand-green); background: #e4f3e8; }
 .inactive { color: #7b4b13; background: #fff0d9; }
 .rowActions { display: flex; gap: 0.5rem; }
-@media (max-width: 760px) {
+@media (max-width: 1199px) {
   .formCard form { grid-template-columns: 1fr; }
   .branch { grid-template-columns: 1fr auto; }
   .rowActions { grid-column: 1 / -1; }

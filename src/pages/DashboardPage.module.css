@@ -46,7 +46,7 @@
 .emptyState h2 { margin: .4rem 0; }
 .emptyState > p:not(.eyebrow) { color: var(--text-muted); }
 .emptyState a { display: inline-flex; margin-top: .75rem; padding: .7rem 1rem; color: white; font-weight: 800; text-decoration: none; background: var(--brand-blue); border-radius: .7rem; }
-@media (max-width: 700px) {
+@media (max-width: 1199px) {
   .welcome { min-height: auto; border-radius: 1.15rem; }
   .welcome > img { position: absolute; right: -1rem; bottom: -2rem; width: 8rem; }
   .welcomeCopy { padding-right: 1.5rem; }

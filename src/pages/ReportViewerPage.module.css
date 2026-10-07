@@ -10,5 +10,5 @@
 .viewer { display: block; width: 100%; height: calc(100vh - 6.4rem); border: 0; background: #3b3b3b; }
 .loading, .error { width: min(100% - 2rem, 40rem); margin: 3rem auto; padding: 1rem; color: white; text-align: center; background: rgb(255 255 255 / 10%); border-radius: .75rem; }
 .error { color: #ffd7d7; background: #6d2929; }
-@media (max-width: 680px) { .header { align-items: stretch; flex-direction: column; } .actions { justify-content: start; } .viewer { height: calc(100vh - 10.8rem); } }
+@media (max-width: 1199px) { .header { align-items: stretch; flex-direction: column; } .actions { justify-content: start; } .viewer { height: calc(100vh - 10.8rem); } }
 @media (max-width: 400px) { .actions { display: grid; grid-template-columns: 1fr; } .actions a { justify-content: center; } .viewer { height: calc(100vh - 14.5rem); } }

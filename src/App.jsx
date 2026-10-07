@@ -4,6 +4,7 @@ import RequireAuth from "./auth/RequireAuth";
 import AppLayout from "./layout/AppLayout";
 
 const AccessMessagePage = lazy(() => import("./pages/AccessMessagePage"));
+const AdministrativeDocumentPage = lazy(() => import('./pages/AdministrativeDocumentPage'));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const CampaignGateway = lazy(() => import("./pages/CampaignGateway"));
 const Campaign2026Page = lazy(() => import("./pages/Campaign2026Page"));
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="consulta" element={<ConsultationPage />} />
         </Route>
         <Route element={<RequireAuth allowedRoles={["superAdmin", "branchViewer"]} />}>
+          <Route path="coordenacao/documento" element={<AdministrativeDocumentPage />} />
           <Route path="presencas" element={<AttendancePage />} />
         </Route>
 

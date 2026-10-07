@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import mobilizacaoLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import styles from "./Footer.module.css";
 
@@ -18,6 +19,22 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+  const location = useLocation();
+  const scrollRequested = useRef(false);
+
+  useEffect(() => {
+    if (scrollRequested.current) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      scrollRequested.current = false;
+    }
+  }, [location.key]);
+
+  function scrollToStart(event) {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    scrollRequested.current = true;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -29,7 +46,7 @@ export default function Footer() {
         <nav className={styles.navigation} aria-label="Links do rodapé">
           <h2>Navegação</h2>
           <ul>
-            {links.map(({ label, to }) => <li key={to}><Link to={to}>{label}</Link></li>)}
+            {links.map(({ label, to }) => <li key={to}><Link to={to} onClick={scrollToStart}>{label}</Link></li>)}
           </ul>
         </nav>
 

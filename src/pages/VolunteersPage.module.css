@@ -81,7 +81,7 @@
 .modalActionList h3, .modalActionList p { margin: 0; }
 .modalActionList h3 { color: var(--brand-blue); font-size: 1.05rem; }
 .modalActionList p { margin-top: .35rem; color: var(--text-muted); line-height: 1.4; }
-@media (max-width: 620px) {
+@media (max-width: 1199px) {
   .page { width: min(100% - 1rem, 72rem); }
   .title, .sectionHeading { align-items: start; flex-direction: column; }
   .card form, .documents, .addressGrid { grid-template-columns: 1fr; }

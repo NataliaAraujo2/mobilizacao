@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import agendaCubes from "../assets/brand/agenda-ods-cubos-recorte.png";
 import guinhoOds from "../assets/brand/guinhos/2_GUINHO_ODS.png";
 import plantComposition from "../assets/brand/agenda-ramo-mundo-inclusao.png";
+import originalCleanup from '../assets/brand/agenda-ods-limpeza.webp';
+import originalPlanting from '../assets/brand/agenda-ods-plantio.webp';
 import cnodsLogo from "../assets/brand/cnods-conferencia-branco.png";
 import agendaElement from "../assets/brand/elements/elemento-03.webp";
 import styles from "./Agenda2030Page.module.css";
@@ -57,7 +59,15 @@ export default function Agenda2030Page() {
             <h2>A Moradia e Cidadania integra a <b>CNODS</b></h2>
           </div>
           <div className={styles.plantScene}>
-            <img src={plantComposition} alt="Ramo verde com fotos de participantes das ações, crescendo sobre o planeta Terra" />
+            <svg className={styles.plantArtwork} viewBox="0 0 1895 830" role="img" aria-label="Ramo verde com fotos originais de participantes das ações, crescendo sobre o planeta Terra">
+              <defs>
+                <clipPath id="agenda-cleanup-photo"><ellipse cx="923" cy="195" rx="153" ry="153" /></clipPath>
+                <clipPath id="agenda-planting-photo"><ellipse cx="1369" cy="294" rx="154" ry="153" /></clipPath>
+              </defs>
+              <image href={plantComposition} width="1895" height="830" />
+              <image href={originalCleanup} x="770" y="42" width="306" height="306" preserveAspectRatio="xMidYMid slice" clipPath="url(#agenda-cleanup-photo)" />
+              <image href={originalPlanting} x="1215" y="141" width="308" height="306" preserveAspectRatio="xMidYMin slice" clipPath="url(#agenda-planting-photo)" />
+            </svg>
             <p className={styles.plantStatement}>Somamos forças com a Comissão Nacional para os Objetivos de Desenvolvimento Sustentável para mobilização da 1ª Conferência Nacional ODS, levando o voluntariado para as políticas públicas e para a Agenda 2030.</p>
           </div>
           <div className={styles.cnodsCopy}>
