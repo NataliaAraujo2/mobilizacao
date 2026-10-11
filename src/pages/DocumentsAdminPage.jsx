@@ -54,7 +54,7 @@ export default function DocumentsAdminPage() {
     finally { setBusy(''); }
   }
   async function copy(item) {
-    try { await navigator.clipboard.writeText(item.url); setMessage(`Link de “${item.name}” copiado.`); setError(''); }
+    try { await navigator.clipboard.writeText(item.shortUrl || item.url); setMessage(`Link de “${item.name}” copiado.`); setError(''); }
     catch { setError('Não foi possível copiar automaticamente. Selecione e copie o link abaixo do documento.'); }
   }
   async function refresh() {
@@ -89,8 +89,9 @@ export default function DocumentsAdminPage() {
         <h3>{item.name}</h3>
         {item.size && <p>{(item.size / 1024 / 1024).toFixed(1).replace('.', ',')} MB</p>}
         {!item.path && <p>Documento legado: o link foi preservado. A exclusão por esta nova tela não está habilitada.</p>}
+        {item.shortLinkUnavailable && <p>O link longo continua disponível. Clique em “Atualizar lista” para tentar gerar o link curto novamente.</p>}
         <div className={styles.actions}><a href={item.url} target="_blank" rel="noopener noreferrer">Abrir PDF</a><button type="button" onClick={() => copy(item)}>Copiar link</button><button type="button" disabled={Boolean(busy) || !item.path} onClick={() => remove(item)}>{busy === item.id ? 'Excluindo…' : 'Excluir'}</button></div>
-        <input aria-label={`Link público de ${item.name}`} readOnly value={item.url} onFocus={event => event.target.select()} />
+        <input aria-label={`Link público de ${item.name}`} readOnly value={item.shortUrl || item.url} onFocus={event => event.target.select()} />
       </article>)}</div>}
     </section>
   </main>;

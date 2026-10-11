@@ -348,6 +348,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /publicDocumentLinks/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isSuperAdmin()
+        && token.matches('^[a-f0-9]{24}$')
+        && request.resource.data.keys().hasOnly(['uploadId', 'url'])
+        && request.resource.data.uploadId is string
+        && request.resource.data.url is string
+        && request.resource.data.url.size() <= 3000
+        && request.resource.data.url.matches('^https://firebasestorage[.]googleapis[.]com/v0/b/.*')
+        && get(/databases/$(database)/documents/uploads/$(request.resource.data.uploadId)).data.url == request.resource.data.url;
+      allow update: if false;
+      allow delete: if isSuperAdmin();
+    }
+
     match /uploads/{uploadId} {
       allow read, delete: if isSuperAdmin();
       allow create: if isSuperAdmin()

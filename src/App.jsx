@@ -19,6 +19,7 @@ const VolunteerAreaPage = lazy(() => import("./pages/VolunteerAreaPage"));
 const AssociatesCounterPage = lazy(() => import("./pages/AssociatesCounterPage"));
 const ReportsAdminPage = lazy(() => import("./pages/ReportsAdminPage"));
 const DocumentsAdminPage = lazy(() => import("./pages/DocumentsAdminPage"));
+const PublicDocumentPage = lazy(() => import("./pages/PublicDocumentPage"));
 const SuperAdminsPage = lazy(() => import("./pages/SuperAdminsPage"));
 const LinkFormsPage = lazy(() => import("./pages/LinkFormsPage"));
 const PublicLinkFormPage = lazy(() => import("./pages/PublicLinkFormPage"));
@@ -29,6 +30,7 @@ export default function App() {
   return (
     <Suspense fallback={<main style={{ padding: "2rem", textAlign: "center" }}>Carregando...</main>}>
       <Routes>
+      <Route path="d/:token" element={<PublicDocumentPage />} />
       <Route path="formularios/:token" element={<PublicLinkFormPage />} />
       <Route path="participar/:actionId" element={<PublicActionPage />} />
       <Route element={<AppLayout />}>

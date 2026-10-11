@@ -15,6 +15,30 @@ let environment;
 const ACTION_START = new Date(Date.now() - 60 * 60 * 1000);
 const ACTION_END = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+test('links curtos expõem somente o destino público; cadastro e exclusão exclusivos do administrador', async () => {
+  const url = 'https://firebasestorage.googleapis.com/v0/b/test/o/doc.pdf?alt=media';
+  await environment.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'uploads', 'legacy-document'), { name: 'PDF legado', url });
+  });
+  const adminDb = auth('admin-links', 'superAdmin').firestore();
+  const publicDb = environment.unauthenticatedContext().firestore();
+  const token = '0123456789abcdef01234567';
+  const data = { uploadId: 'legacy-document', url };
+  await assertFails(setDoc(doc(publicDb, 'publicDocumentLinks', token), data));
+  await assertFails(setDoc(doc(auth('viewer-links', 'branchViewer', 'sp').firestore(), 'publicDocumentLinks', token), data));
+  await assertFails(setDoc(doc(adminDb, 'publicDocumentLinks', token), { ...data, url: 'https://example.com' }));
+  await assertFails(setDoc(doc(adminDb, 'publicDocumentLinks', token), { ...data, createdBy: 'admin-links' }));
+  await assertFails(setDoc(doc(adminDb, 'publicDocumentLinks', token), { ...data, uploadId: 'missing' }));
+  await assertSucceeds(setDoc(doc(adminDb, 'publicDocumentLinks', token), data));
+  assert.deepEqual((await assertSucceeds(getDoc(doc(publicDb, 'publicDocumentLinks', token)))).data(), data);
+  await assertFails(getDocs(collection(publicDb, 'publicDocumentLinks')));
+  await assertFails(getDoc(doc(publicDb, 'uploads', 'legacy-document')));
+  await assertFails(updateDoc(doc(adminDb, 'publicDocumentLinks', token), { url: 'https://example.com' }));
+  await assertFails(deleteDoc(doc(publicDb, 'publicDocumentLinks', token)));
+  await assertSucceeds(deleteDoc(doc(adminDb, 'publicDocumentLinks', token)));
+  assert.equal((await getDoc(doc(publicDb, 'publicDocumentLinks', token))).exists(), false);
+});
+
 const branch = (name, code, state) => ({
   name,
   code,

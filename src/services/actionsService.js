@@ -120,7 +120,7 @@ export async function uploadActionPhotos(action, phase, files, onProgress) {
 
   for (let index = 0; index < files.length; index += 1) {
     const compressed = await compressImage(files[index]);
-    const safeName = `${Date.now()}-${index}-${compressed.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+    const safeName = compressed.name;
     const path = `branches/${action.branchId}/actions/${action.id}/${phase}/${safeName}`;
     const fileRef = ref(storage, path);
     const task = uploadBytesResumable(fileRef, compressed, { contentType: "image/webp" });
