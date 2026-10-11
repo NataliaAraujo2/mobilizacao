@@ -8,6 +8,7 @@ import { findAddressByCep } from "../services/cepService";
 import { useInfiniteScroll } from "../shared/hooks/useInfiniteScroll";
 import ListSearch from '../components/ListSearch';
 import ActionPhotoGallery from '../components/ActionPhotoGallery';
+import { ActionContactFields } from '../components/CoordinationContacts';
 import { CoordinationActionDetails } from './ConsultationPage';
 import { whatsappUrl } from '../utils/whatsapp';
 import ActionStatus from '../components/ActionStatus';
@@ -244,10 +245,7 @@ export default function ActionsPage() {
             <label className={styles.wide}>Informações de data e horário <small>(opcional)</small><textarea rows="3" maxLength="500" placeholder="Ex.: concentração às 8h30; atividade sujeita às condições climáticas." value={form.scheduleText} onChange={(event) => setForm({ ...form, scheduleText: event.target.value })} /></label>
           </div></fieldset>
 
-          <fieldset><legend>Contatos da ação</legend><p>Opcional — serão exibidos para quem consultar os detalhes da ação.</p><div className={styles.grid}>
-            <label>Telefone de contato<input type="tel" inputMode="tel" placeholder="(00) 00000-0000" value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} /></label>
-            <label>E-mail de contato<input type="email" placeholder="contato@exemplo.org.br" value={form.contactEmail} onChange={(event) => setForm({ ...form, contactEmail: event.target.value })} /></label>
-          </div></fieldset>
+          <fieldset><legend>Contatos públicos</legend><ActionContactFields key={editingActionId || 'new'} form={form} setForm={setForm} /></fieldset>
 
           <fieldset><legend>Endereço</legend><p>Busque pelo CEP ou preencha qualquer campo manualmente.</p><div className={styles.grid}>
             <label>CEP<div className={styles.cepRow}><input required inputMode="numeric" placeholder="00000-000" value={form.address.cep} onChange={(event) => updateAddress("cep", formatCep(event.target.value))} /><button type="button" disabled={searchingCep || form.address.cep.replace(/\D/g, "").length !== 8} onClick={searchCep}>{searchingCep ? "Buscando..." : "Buscar CEP"}</button></div></label>

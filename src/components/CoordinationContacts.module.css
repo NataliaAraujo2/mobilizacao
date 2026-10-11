@@ -1,0 +1,12 @@
+.box { grid-column: 1 / -1; width: 100%; margin: .75rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: .8rem; background: #f5fafc; overflow-wrap: anywhere; }
+.box h3, .box h4 { margin: 0 0 .5rem; }
+.box section + section { margin-top: 1rem; }
+.box p { line-height: 1.5; }
+.box label { display: grid; gap: .4rem; font-weight: 700; }
+.box input, .box select { width: 100%; min-width: 0; min-height: 2.8rem; padding: .65rem; border: 1px solid var(--border); border-radius: .5rem; background: white; }
+.box button { padding: .7rem 1rem; border: 0; border-radius: .5rem; color: white; background: var(--brand-blue); font-weight: 700; cursor: pointer; }
+.box button:disabled { opacity: .6; cursor: wait; }
+.editor { display: grid !important; grid-template-columns: 1fr !important; gap: .8rem; margin-top: .8rem; }
+.values { display: grid; gap: .5rem; }
+.values a { color: var(--brand-blue); }
+.notice { color: #875014; }

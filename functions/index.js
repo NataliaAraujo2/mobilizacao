@@ -146,14 +146,17 @@ async function sendAdministrativeAccessMessage({ name, email, username, password
   const safeUsername = escapeHtml(username);
   const safePassword = escapeHtml(password);
   const roleLabel = role === VIEWER_ROLE ? 'coordenação estadual' : 'administração nacional';
+  const includeGuide = administrativeDocumentAttachment(role).length > 0;
+  const guideText = includeGuide ? `\n\nSegue em anexo o Guia Prático de Comunicação para as Coordenações Estaduais. Acesse também após entrar no app: ${ADMIN_DOCUMENT_URL}` : '';
+  const guideHtml = includeGuide ? `<p>Segue em anexo o <strong>Guia Prático de Comunicação para as Coordenações Estaduais</strong>.</p><p><a href="${ADMIN_DOCUMENT_URL}">Abrir guia no app (acesso restrito)</a></p>` : '';
   await sendSystemEmail({
     to: email,
     subject: 'Seu acesso à MobilizAÇÃO',
-    attachments: administrativeDocumentAttachment(role).length
+    attachments: includeGuide
       ? [{ filename: ADMIN_DOCUMENT_NAME, content: await administrativeDocumentContent(), contentType: 'application/pdf' }]
       : [],
-    text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO foi criado para a ${roleLabel}.\n\nAcesse: https://mobilizacao.web.app/login\nUsuário: ${username}\nSenha temporária: ${password}\n\nNo primeiro acesso, defina sua senha pessoal.\n\nSegue em anexo o Guia Prático de Comunicação para as Coordenações Estaduais. Acesse também após entrar no app: ${ADMIN_DOCUMENT_URL}`,
-    html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> foi criado para a ${roleLabel}.</p><p><strong>Usuário:</strong> ${safeUsername}<br><strong>Senha temporária:</strong> ${safePassword}</p><p><a href="https://mobilizacao.web.app/login">Acessar a MobilizAÇÃO</a></p><p>No primeiro acesso, defina sua senha pessoal.</p><p>Segue em anexo o <strong>Guia Prático de Comunicação para as Coordenações Estaduais</strong>.</p><p><a href="${ADMIN_DOCUMENT_URL}">Abrir guia no app (acesso restrito)</a></p>`,
+    text: `Olá, ${name}!\n\nSeu acesso à MobilizAÇÃO foi criado para a ${roleLabel}.\n\nAcesse: https://mobilizacao.web.app/login\nUsuário: ${username}\nSenha temporária: ${password}\n\nNo primeiro acesso, defina sua senha pessoal.${guideText}`,
+    html: `<p>Olá, ${safeName}!</p><p>Seu acesso à <strong>MobilizAÇÃO</strong> foi criado para a ${roleLabel}.</p><p><strong>Usuário:</strong> ${safeUsername}<br><strong>Senha temporária:</strong> ${safePassword}</p><p><a href="https://mobilizacao.web.app/login">Acessar a MobilizAÇÃO</a></p><p>No primeiro acesso, defina sua senha pessoal.</p>${guideHtml}`,
   });
 }
 

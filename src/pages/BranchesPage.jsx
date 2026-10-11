@@ -3,6 +3,7 @@ import { BRANCH_STATUSES } from "../domain/access/access";
 import { BRAZIL_STATES } from "../domain/locations/brazilStates";
 import { addBranch, deleteBranch, editBranch, listBranches } from "../services/branchesService";
 import PageHeading from "../components/PageHeading";
+import { CoordinationContactsEditor } from '../components/CoordinationContacts';
 import styles from "./BranchesPage.module.css";
 
 const EMPTY_FORM = { name: "", code: "", state: "", status: BRANCH_STATUSES.ACTIVE };
@@ -129,6 +130,7 @@ export default function BranchesPage() {
                   <button type="button" onClick={() => toggleStatus(branch)}>{branch.status === "active" ? "Inativar" : "Reativar"}</button>
                   <button className={styles.deleteButton} type="button" disabled={saving} onClick={() => removeBranch(branch)}>Excluir</button>
                 </div>
+                <CoordinationContactsEditor branch={branch} />
               </article>
             ))}
           </div>

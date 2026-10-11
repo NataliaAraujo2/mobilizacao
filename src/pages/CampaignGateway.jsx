@@ -76,7 +76,8 @@ function VolunteerCounter() {
   return <strong aria-live="polite">{count.toLocaleString("pt-BR")}</strong>;
 }
 
-export default function CampaignGateway() {
+export default function CampaignGateway({ embedded = false }) {
+  const Container = embedded ? "div" : "main";
   const [selectedState, setSelectedState] = useState("");
   const [heroExpanded, setHeroExpanded] = useState(false);
   const mapRef = useRef(null);
@@ -107,7 +108,7 @@ export default function CampaignGateway() {
   }
 
   return (
-    <main className={styles.page}>
+    <Container className={styles.page}>
       <section className={styles.intro} aria-labelledby="editions-title">
         <p className={styles.eyebrow}>ONG Moradia e Cidadania</p>
         <h1 id="editions-title" className={styles.wordmark} aria-label="MobilizAÇÃO">
@@ -116,7 +117,7 @@ export default function CampaignGateway() {
         <p>Conheça nossas edições e acompanhe o que estamos preparando.</p>
       </section>
 
-      <section id="acoes-2026" className={`${styles.homeIntroCard} ${heroExpanded ? styles.homeIntroCardExpanded : ''}`} aria-labelledby="home-hero-title">
+      <section id="destaque-2026" className={`${styles.homeIntroCard} ${heroExpanded ? styles.homeIntroCardExpanded : ''}`} aria-labelledby="home-hero-title">
         <div className={styles.homeHeroCopy}>
           <p className={styles.heroEdition}>2ª Edição</p>
           <h2 id="home-hero-title" className={styles.heroWordmark}><span>Mobiliz</span><em>AÇÃO</em></h2>
@@ -171,7 +172,7 @@ export default function CampaignGateway() {
         <img src={whoWeAreImage} alt="Voluntários da ONG Moradia e Cidadania" />
       </section>
 
-      <section id="agenda-2030" className={styles.activeCampaign} aria-labelledby="active-campaign-title">
+      <section id="compromisso-associados" className={styles.activeCampaign} aria-labelledby="active-campaign-title">
         <div className={styles.associationPhoto}>
           <img src={associatesGroupPhoto} alt="Grupo de pessoas voluntárias da ONG Moradia e Cidadania" />
           <span>Colabore o ano todo!</span>
@@ -195,7 +196,7 @@ export default function CampaignGateway() {
           <p className={styles.eyebrow}>Nossa história</p>
           <h2 id="previous-editions-title">Conheça nossas edições anteriores</h2>
         </div>
-        <Link className={styles.previousCard} to="/2025">
+        <Link className={styles.previousCard} to="/#edicao-2025">
           <img src={logo2025} alt="Marca da MobilizAÇÃO 2025" width="900" height="900" />
           <span className={styles.year}>2025</span>
           <span className={styles.previousCopy}>
@@ -221,6 +222,6 @@ export default function CampaignGateway() {
           ))}
         </ul>
       </section>
-    </main>
+    </Container>
   );
 }

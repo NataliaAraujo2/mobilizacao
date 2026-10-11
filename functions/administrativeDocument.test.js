@@ -9,9 +9,9 @@ test('somente coordenações e superadmins ativos podem ler o documento', () => 
   for (const status of ['blocked', undefined]) assert.equal(canReadAdministrativeDocument({ role: 'superAdmin', status }), false);
   assert.equal(canReadAdministrativeDocument(null), false);
 });
-test('anexos não são incluídos para voluntários ou outros perfis', () => {
+test('envio de senha das coordenações não inclui o guia', () => {
   assert.equal(administrativeDocumentAttachment('volunteer').length, 0);
-  assert.equal(administrativeDocumentAttachment('branchViewer').length, 1);
+  assert.equal(administrativeDocumentAttachment('branchViewer').length, 0);
   assert.equal(administrativeDocumentAttachment('superAdmin').length, 1);
 });
 test('PDF está disponível somente no pacote privado de funções', async () => {

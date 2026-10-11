@@ -7,8 +7,8 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
-import { ref, uploadBytes } from "firebase/storage";
+import { collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, Timestamp, updateDoc, where, writeBatch } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 const PROJECT_ID = "campanha-mobilizacao-dev";
 let environment;
@@ -117,6 +117,58 @@ test("superAdmin cria e acessa qualquer regional", async () => {
   const db = auth("god-admin", "superAdmin").firestore();
   await assertSucceeds(setDoc(doc(db, "branches", "sp"), branch("Regional São Paulo", "SP", "SP")));
   await assertSucceeds(getDoc(doc(db, "branches", "sp")));
+});
+
+test('superadmin publica PDF e público abre o link, sem administrar arquivos', async () => {
+  const admin = auth('admin-documents', 'superAdmin');
+  const publicContext = environment.unauthenticatedContext();
+  const path = 'uploads/public-documents/test-document.pdf';
+  const pdf = new Blob(['%PDF-1.7\nPDF de teste'], { type: 'application/pdf' });
+  await assertSucceeds(uploadBytes(ref(admin.storage(), path), pdf));
+  const url = await assertSucceeds(getDownloadURL(ref(publicContext.storage(), path)));
+  assert.ok(url.includes('test-document.pdf'));
+  await assertFails(uploadBytes(ref(publicContext.storage(), 'uploads/public-documents/public-write.pdf'), pdf));
+  await assertFails(uploadBytes(ref(auth('viewer-docs', 'branchViewer', 'sp').storage(), 'uploads/public-documents/viewer-write.pdf'), pdf));
+  await assertFails(uploadBytes(ref(admin.storage(), 'uploads/public-documents/text.pdf'), new Blob(['texto'], { type: 'text/plain' })));
+  await assertFails(deleteObject(ref(publicContext.storage(), path)));
+  const data = { name: 'Documento de teste.pdf', path, url, size: pdf.size, contentType: 'application/pdf', createdBy: 'admin-documents', createdAt: Timestamp.now() };
+  await assertSucceeds(setDoc(doc(admin.firestore(), 'uploads', 'test-document'), data));
+  await assertFails(getDoc(doc(publicContext.firestore(), 'uploads', 'test-document')));
+  await assertFails(getDocs(collection(publicContext.firestore(), 'uploads')));
+  await assertFails(setDoc(doc(publicContext.firestore(), 'uploads', 'test-document'), data));
+  await assertFails(setDoc(doc(admin.firestore(), 'uploads', 'wrong-path'), data));
+  await assertSucceeds(deleteObject(ref(admin.storage(), path)));
+  await assertSucceeds(deleteDoc(doc(admin.firestore(), 'uploads', 'test-document')));
+});
+
+test('público lê contatos institucionais, mas não lê usuários nem altera contatos', async () => {
+  const db = auth('admin-contacts', 'superAdmin').firestore();
+  await setDoc(doc(db, 'branches', 'df'), branch('Coordenação DF', 'DF', 'DF'));
+  const contacts = { name: 'Coordenação DF', state: 'DF', status: 'active', phone: '61999991234', email: 'df@example.org', updatedAt: Timestamp.now() };
+  await assertSucceeds(setDoc(doc(db, 'publicCoordinationContacts', 'df'), contacts));
+  const publicDb = environment.unauthenticatedContext().firestore();
+  const read = await assertSucceeds(getDoc(doc(publicDb, 'publicCoordinationContacts', 'df')));
+  assert.equal(read.data().phone, contacts.phone);
+  await assertFails(getDoc(doc(publicDb, 'users', 'responsavel-df')));
+  await assertFails(setDoc(doc(publicDb, 'publicCoordinationContacts', 'df'), contacts));
+  await assertFails(setDoc(doc(auth('viewer-df', 'branchViewer', 'df').firestore(), 'publicCoordinationContacts', 'df'), contacts));
+  await assertFails(setDoc(doc(db, 'publicCoordinationContacts', 'df'), { ...contacts, contactName: 'Responsável privado' }));
+  await assertFails(setDoc(doc(db, 'publicCoordinationContacts', 'df'), { ...contacts, phone: '123' }));
+  await assertFails(setDoc(doc(db, 'publicCoordinationContacts', 'inexistente'), contacts));
+});
+
+test('metadados da coordenação sincronizam em lote sem apagar telefone e e-mail', async () => {
+  const db = auth('admin-contacts', 'superAdmin').firestore();
+  await setDoc(doc(db, 'branches', 'df'), branch('Coordenação DF', 'DF', 'DF'));
+  await setDoc(doc(db, 'publicCoordinationContacts', 'df'), { name: 'Coordenação DF', state: 'DF', status: 'active', phone: '61999991234', email: 'df@example.org', updatedAt: Timestamp.now() });
+  const batch = writeBatch(db);
+  batch.update(doc(db, 'branches', 'df'), { name: 'Coordenação Distrito Federal', status: 'inactive' });
+  batch.set(doc(db, 'publicCoordinationContacts', 'df'), { name: 'Coordenação Distrito Federal', state: 'DF', status: 'inactive', updatedAt: Timestamp.now() }, { merge: true });
+  await assertSucceeds(batch.commit());
+  const saved = (await getDoc(doc(db, 'publicCoordinationContacts', 'df'))).data();
+  assert.equal(saved.phone, '61999991234');
+  assert.equal(saved.email, 'df@example.org');
+  assert.equal(saved.status, 'inactive');
 });
 
 test("perfil antigo branchAdmin não possui mais acesso", async () => {

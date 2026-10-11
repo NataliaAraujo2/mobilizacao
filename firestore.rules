@@ -132,7 +132,7 @@ service cloud.firestore {
 
     function validAction(data) {
       return data.keys().hasAll(['name', 'nameSearch', 'branchId', 'date', 'dateStart', 'dateEnd', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'coordinationState', 'publicVisible', 'date', 'dateStart', 'dateEnd', 'startDate', 'endDate', 'startTime', 'endTime', 'scheduleText', 'description', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'nameSearch', 'branchId', 'coordinationState', 'publicVisible', 'date', 'dateStart', 'dateEnd', 'startDate', 'endDate', 'startTime', 'endTime', 'scheduleText', 'contactPhone', 'contactEmail', 'description', 'status', 'address', 'whatToBring', 'tips', 'photosBefore', 'photosDuring', 'photosAfter', 'createdAt', 'updatedAt'])
         && data.name is string
         && data.name.size() >= 3
         && data.name.size() <= 160
@@ -157,6 +157,8 @@ service cloud.firestore {
         && (!data.keys().hasAll(['endTime']) || (data.endTime is string && data.endTime.matches('^\\d{2}:\\d{2}$')))
         && (!data.keys().hasAll(['scheduleText']) || (data.scheduleText is string && data.scheduleText.size() <= 500))
         && (!data.keys().hasAll(['description']) || (data.description is string && data.description.size() <= 1500))
+        && (!data.keys().hasAll(['contactPhone']) || (data.contactPhone is string && (data.contactPhone == '' || data.contactPhone.matches('^[0-9]{10,13}$'))))
+        && (!data.keys().hasAll(['contactEmail']) || (data.contactEmail is string && data.contactEmail.size() <= 160 && (data.contactEmail == '' || data.contactEmail.matches('^[^ @]+@[^ @]+[.][^ @]+$'))))
         && data.status in ['planning', 'ongoing', 'completed']
         && data.whatToBring is string
         && data.whatToBring.size() <= 5000
@@ -239,6 +241,22 @@ service cloud.firestore {
     match /branches/{branchId} {
       allow get, list: if isSuperAdmin() || belongsToBranch(branchId);
       allow create, update: if isSuperAdmin() && validBranch(request.resource.data);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Public institutional contacts only. Never grant public access to users.
+    match /publicCoordinationContacts/{branchId} {
+      allow get: if true;
+      allow list: if isSuperAdmin();
+      allow create, update: if isSuperAdmin()
+        && request.resource.data.keys().hasAll(['name', 'state', 'status', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['name', 'state', 'status', 'phone', 'email', 'updatedAt'])
+        && request.resource.data.name == getAfter(/databases/$(database)/documents/branches/$(branchId)).data.name
+        && request.resource.data.state == getAfter(/databases/$(database)/documents/branches/$(branchId)).data.state
+        && request.resource.data.status == getAfter(/databases/$(database)/documents/branches/$(branchId)).data.status
+        && request.resource.data.updatedAt is timestamp
+        && (!request.resource.data.keys().hasAny(['phone']) || (request.resource.data.phone is string && (request.resource.data.phone == '' || request.resource.data.phone.matches('^[0-9]{10,13}$'))))
+        && (!request.resource.data.keys().hasAny(['email']) || (request.resource.data.email is string && request.resource.data.email.size() <= 160 && (request.resource.data.email == '' || request.resource.data.email.matches('^[^ @]+@[^ @]+[.][^ @]+$'))));
       allow delete: if isSuperAdmin();
     }
 
@@ -328,6 +346,26 @@ service cloud.firestore {
         && isSuperAdmin()
         && validAssociationStats(request.resource.data);
       allow delete: if false;
+    }
+
+    match /uploads/{uploadId} {
+      allow read, delete: if isSuperAdmin();
+      allow create: if isSuperAdmin()
+        && request.resource.data.keys().hasAll(['name', 'path', 'url', 'size', 'contentType', 'createdBy', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['name', 'path', 'url', 'size', 'contentType', 'createdBy', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 255
+        && request.resource.data.path == 'uploads/public-documents/' + uploadId + '.pdf'
+        && request.resource.data.url is string
+        && request.resource.data.url.size() <= 3000
+        && request.resource.data.size is int
+        && request.resource.data.size > 0
+        && request.resource.data.size <= 40 * 1024 * 1024
+        && request.resource.data.contentType == 'application/pdf'
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt is timestamp;
+      allow update: if false;
     }
 
     match /publicReports/{year} {

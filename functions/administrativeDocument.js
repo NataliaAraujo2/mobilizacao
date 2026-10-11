@@ -9,7 +9,7 @@ export function canReadAdministrativeDocument(claims) {
 }
 
 export function administrativeDocumentAttachment(role) {
-  return ['branchViewer', 'superAdmin'].includes(role)
+  return role === 'superAdmin'
     ? [{ filename: ADMIN_DOCUMENT_NAME, path: ADMIN_DOCUMENT_PATH, contentType: 'application/pdf' }]
     : [];
 }

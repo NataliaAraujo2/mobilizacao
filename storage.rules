@@ -26,6 +26,18 @@ service firebase.storage {
         && request.resource.contentType == 'application/pdf';
     }
 
+    match /uploads/public-documents/{fileName} {
+      allow get: if true;
+      allow list: if isSuperAdmin();
+      allow create: if isSuperAdmin()
+        && fileName.matches('^[-a-zA-Z0-9_]+[.]pdf$')
+        && request.resource.size > 0
+        && request.resource.size <= 40 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+      allow update: if false;
+      allow delete: if isSuperAdmin();
+    }
+
     match /public-reports/{year}/report.pdf {
       // O relatório é uma publicação institucional aberta ao público.
       allow read: if true;

@@ -8,6 +8,7 @@ const ADMIN_SECTIONS = [
     title: "Comunicação",
     description: "Formulários e materiais para compartilhar informações.",
     actions: [
+      { to: "/admin/documentos", code: "DOC", title: "Documentos por link público", description: "Envie PDFs, copie links públicos e gerencie os arquivos publicados." },
       { to: "/admin/formularios", code: "FO", title: "Formulários por link", description: "Crie formulários, envie links e revise respostas individualmente." },
       { to: "/admin/relatorio-2025", code: "PDF", title: "Relatório 2025", description: "Arquive a versão comprimida para leitura e impressão pública." },
     ],

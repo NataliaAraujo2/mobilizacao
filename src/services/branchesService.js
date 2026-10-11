@@ -1,5 +1,6 @@
 import { createBranch } from "../domain/branches/branchModel";
 import { getDbService } from "./firebaseDb";
+import { publicCoordinationMetadata } from '../domain/coordinationContacts';
 
 const CACHE_MS = 60_000;
 let branchesCache = null;
@@ -38,8 +39,8 @@ export async function getBranch(id) {
 }
 
 export async function addBranch(input) {
-  const { db, doc, getDoc, setDoc, serverTimestamp } = await getDbService([
-    "doc", "getDoc", "setDoc", "serverTimestamp",
+  const { db, doc, getDoc, writeBatch, serverTimestamp } = await getDbService([
+    "doc", "getDoc", "writeBatch", "serverTimestamp",
   ]);
   const data = createBranch(input);
   const id = branchIdFromCode(data.code);
@@ -51,34 +52,40 @@ export async function addBranch(input) {
     throw error;
   }
 
-  await setDoc(reference, {
+  const batch = writeBatch(db);
+  batch.set(reference, {
     ...data,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  batch.set(doc(db, 'publicCoordinationContacts', id), { ...publicCoordinationMetadata(data), phone: '', email: '', updatedAt: serverTimestamp() });
+  await batch.commit();
   clearBranchesCache();
   return { id, ...data };
 }
 
 export async function editBranch(id, input) {
-  const { db, doc, updateDoc, serverTimestamp } = await getDbService([
-    "doc", "updateDoc", "serverTimestamp",
+  const { db, doc, writeBatch, serverTimestamp } = await getDbService([
+    "doc", "writeBatch", "serverTimestamp",
   ]);
   const data = createBranch(input);
 
-  await updateDoc(doc(db, "branches", id), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, "branches", id), {
     name: data.name,
     state: data.state,
     status: data.status,
     updatedAt: serverTimestamp(),
   });
+  batch.set(doc(db, 'publicCoordinationContacts', id), { ...publicCoordinationMetadata(data), updatedAt: serverTimestamp() }, { merge: true });
+  await batch.commit();
   clearBranchesCache();
   return { id, ...data };
 }
 
 export async function deleteBranch(id) {
-  const { db, collection, deleteDoc, doc, getDocs, limit, query, where } = await getDbService([
-    "collection", "deleteDoc", "doc", "getDocs", "limit", "query", "where",
+  const { db, collection, writeBatch, doc, getDocs, limit, query, where } = await getDbService([
+    "collection", "writeBatch", "doc", "getDocs", "limit", "query", "where",
   ]);
   const [actions, viewers] = await Promise.all([
     getDocs(query(collection(db, "actions"), where("branchId", "==", id), limit(1))),
@@ -89,6 +96,9 @@ export async function deleteBranch(id) {
     error.code = "branch/has-linked-records";
     throw error;
   }
-  await deleteDoc(doc(db, "branches", id));
+  const batch = writeBatch(db);
+  batch.delete(doc(db, "branches", id));
+  batch.delete(doc(db, 'publicCoordinationContacts', id));
+  await batch.commit();
   clearBranchesCache();
 }

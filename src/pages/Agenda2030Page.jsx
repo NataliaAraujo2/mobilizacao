@@ -20,9 +20,10 @@ const odsTitles = [
   "Igualdade Étnico-Racial",
 ];
 
-export default function Agenda2030Page() {
+export default function Agenda2030Page({ embedded = false }) {
+  const Container = embedded ? "div" : "main";
   return (
-    <main className={styles.page}>
+    <Container className={styles.page}>
       <section className={styles.hero} aria-labelledby="agenda-title">
         <header className={styles.heroTitle}>
           <span className={styles.agendaMark} aria-hidden="true"><i /><img src={agendaElement} alt="" /></span>
@@ -85,7 +86,7 @@ export default function Agenda2030Page() {
           <h3>Quer saber o que construímos juntos?</h3>
           <p>Conheça os resultados da Mobiliz<span>AÇÃO</span> 2025</p>
           <img src={guinhoOds} alt="Guinho com o círculo colorido dos Objetivos de Desenvolvimento Sustentável" />
-          <Link className={styles.editionButton} to="/2025">
+          <Link className={styles.editionButton} to="/#edicao-2025">
             <img src={agendaElement} alt="" aria-hidden="true" />
             EDIÇÃO 2025
           </Link>
@@ -108,6 +109,6 @@ export default function Agenda2030Page() {
           })}
         </div>
       </section>
-    </main>
+    </Container>
   );
 }

@@ -1,12 +1,12 @@
 import { formatPhone } from '../../functions/contactFields.js';
 import ContactInput from '../components/ContactInput';
+import { CoordinationContactsEditor } from '../components/CoordinationContacts';
 import PageHeading from '../components/PageHeading';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createBranchViewer, deleteBranchViewer, listBranchViewers, resetBranchViewerPassword, updateBranchViewer, updateBranchViewerContact } from "../services/branchViewersService";
 import { listBranches } from "../services/branchesService";
 import { whatsappUrl } from "../utils/whatsapp";
-import { administrativeDocumentMessage } from '../utils/administrativeDocument';
 import styles from "./BranchViewersPage.module.css";
 
 const EMPTY_CONTACT = { branchId: "", contactName: "", contactEmail: "", contactPhone: "" };
@@ -130,7 +130,7 @@ export default function BranchViewersPage() {
 
   function shareCredentials() {
     if (!credentials) return;
-    const url = whatsappUrl(credentials.contactPhone, credentialsMessage() + administrativeDocumentMessage());
+    const url = whatsappUrl(credentials.contactPhone, credentialsMessage());
     if (!url) { setError("Cadastre o telefone da pessoa responsável antes de compartilhar."); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   }
@@ -152,6 +152,8 @@ export default function BranchViewersPage() {
     <section className={styles.card}><h2>Coordenações estaduais</h2>{loading ? <p aria-busy="true">Carregando...</p> : branches.map((branch) => {
       const branchViewers = viewersByBranch.get(branch.id) ?? [];
       return <article className={styles.item} key={branch.id}><div className={styles.identity}><h3>{branch.name}</h3><p>{branch.state} · {branchViewers.length} usuário{branchViewers.length === 1 ? "" : "s"}</p></div>
+        <CoordinationContactsEditor branch={branch} />
+        <p>Dados do responsável pelo acesso: privados, usados somente para login e comunicação administrativa.</p>
         <button type="button" disabled={Boolean(busy)} onClick={() => startContactForm(branch)}>Cadastrar usuário</button>
         {editingContact === `new-${branch.id}` && <form className={styles.contactForm} onSubmit={(event) => generateAccess(event, branch)}><label>Nome da pessoa responsável<input required minLength="2" value={contactForm.contactName} onChange={(event) => setContactForm({ ...contactForm, contactName: event.target.value })} /></label><label>Telefone para contato<ContactInput required type="tel" value={contactForm.contactPhone} onChange={(event) => setContactForm({ ...contactForm, contactPhone: formatPhone(event.target.value) })} /></label><label>E-mail para contato<ContactInput required type="email" value={contactForm.contactEmail} onChange={(event) => setContactForm({ ...contactForm, contactEmail: event.target.value })} /></label><div><button type="submit" disabled={Boolean(busy)}>{busy === `create-${branch.id}` ? "Gerando..." : "Gerar acesso"}</button><button type="button" onClick={cancelContactForm}>Cancelar</button></div></form>}
         <div className={styles.viewerList}>{branchViewers.map((viewer) => <section className={styles.viewer} key={viewer.id}><div><strong>{viewer.contactName || "Pessoa responsável"}</strong><p>{viewer.displayName}</p><small>{formatPhone(viewer.contactPhone) || "Sem telefone"} · {viewer.contactEmail || "Sem e-mail"}</small></div><span className={viewer.status === "active" ? styles.active : styles.blocked}>{viewer.status === "active" ? "Ativo" : "Bloqueado"}</span><button type="button" disabled={Boolean(busy)} onClick={() => changeStatus(viewer)}>{viewer.status === "active" ? "Bloquear" : "Reativar"}</button><button className={styles.secondary} type="button" disabled={Boolean(busy)} onClick={() => setPendingReset(viewer.id)}>Nova senha</button><button className={styles.secondary} type="button" disabled={Boolean(busy)} onClick={() => startContactForm(branch, viewer)}>Editar</button><button type="button" disabled={Boolean(busy)} onClick={() => removeViewer(viewer, branch)}>Excluir</button>{pendingReset === viewer.id && <div className={styles.confirm}><button type="button" disabled={Boolean(busy)} onClick={() => resetPassword(viewer, branch)}>Confirmar nova senha</button><button type="button" onClick={() => setPendingReset("")}>Cancelar</button></div>}{editingContact === viewer.id && <form className={styles.contactForm} onSubmit={(event) => saveContact(event, viewer)}><label>Nome da pessoa responsável<input required minLength="2" value={contactForm.contactName} onChange={(event) => setContactForm({ ...contactForm, contactName: event.target.value })} /></label><label>Telefone para contato<ContactInput required type="tel" value={contactForm.contactPhone} onChange={(event) => setContactForm({ ...contactForm, contactPhone: formatPhone(event.target.value) })} /></label><label>E-mail para contato<ContactInput required type="email" value={contactForm.contactEmail} onChange={(event) => setContactForm({ ...contactForm, contactEmail: event.target.value })} /></label><div><button type="submit" disabled={Boolean(busy)}>Salvar</button><button type="button" onClick={cancelContactForm}>Cancelar</button></div></form>}</section>)}</div>

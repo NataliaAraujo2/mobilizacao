@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import AdminInstall from "../components/AdminInstall";
 import BackButton from "../components/BackButton";
 import Footer from "../components/Footer";
+import SectionScroll from "../components/SectionScroll";
 import { useAuth } from "../auth/useAuth";
 import styles from "./AppLayout.module.css";
 
@@ -17,6 +18,7 @@ export default function AppLayout() {
 
   return (
     <>
+      <SectionScroll />
       <header className={styles.header}>
         <Link className={styles.brand} to="/" aria-label="MobilizAÇÃO — página inicial">
           <small>ONG Moradia e Cidadania</small>
@@ -25,10 +27,10 @@ export default function AppLayout() {
         <nav aria-label="Navegação principal">
           {publicArea ? (
             <>
-              <Link to="/">Início</Link>
-              <Link to="/2026">Ações 2026</Link>
-              <Link to="/agenda-2030">Agenda 2030</Link>
-              <Link to="/2025">Edição 2025</Link>
+              <Link to="/#inicio">Início</Link>
+              <Link to="/#acoes-2026">Ações 2026</Link>
+              <Link to="/#agenda-2030">Agenda 2030</Link>
+              <Link to="/#edicao-2025">Edição 2025</Link>
             </>
           ) : user ? (
             <>

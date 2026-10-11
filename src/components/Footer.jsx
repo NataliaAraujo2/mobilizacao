@@ -4,10 +4,10 @@ import mobilizacaoLogo from "../assets/brand/mobilizacao-logo-colorido.webp";
 import styles from "./Footer.module.css";
 
 const links = [
-  { label: "Página inicial", to: "/" },
-  { label: "Ações 2026", to: "/2026" },
-  { label: "Agenda 2030", to: "/agenda-2030" },
-  { label: "Edição 2025", to: "/2025" },
+  { label: "Página inicial", to: "/#inicio" },
+  { label: "Ações 2026", to: "/#acoes-2026" },
+  { label: "Agenda 2030", to: "/#agenda-2030" },
+  { label: "Edição 2025", to: "/#edicao-2025" },
   { label: "Acesso do voluntário", to: "/login" },
   { label: "Acesso da coordenação", to: "/admin/login" },
 ];
@@ -46,7 +46,7 @@ export default function Footer() {
         <nav className={styles.navigation} aria-label="Links do rodapé">
           <h2>Navegação</h2>
           <ul>
-            {links.map(({ label, to }) => <li key={to}><Link to={to} onClick={scrollToStart}>{label}</Link></li>)}
+            {links.map(({ label, to }) => <li key={to}><Link to={to} onClick={to.includes("#") ? undefined : scrollToStart}>{label}</Link></li>)}
           </ul>
         </nav>
 

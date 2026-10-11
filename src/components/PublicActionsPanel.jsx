@@ -11,6 +11,7 @@ import { findAddressByCep } from '../services/cepService';
 import ActionPhotoGallery from './ActionPhotoGallery';
 import VolunteerRegulation from './VolunteerRegulation';
 import FullAddress from './FullAddress';
+import { PublicActionContacts } from './CoordinationContacts';
 
 const EMPTY_ADDRESS = { cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' };
 const EMPTY = { fullName: '', email: '', phone: '', cpf: '', rg: '', birthDate: '', address: EMPTY_ADDRESS, shirtSize: '', ngoRelationship: '', lgpdAccepted: false, regulationAccepted: false, imageUseAccepted: false, guardianAuthorizationAccepted: false };
@@ -111,7 +112,7 @@ export default function PublicActionsPanel({ state, user, claims, actionId = '' 
   const selectedDetails = selected && <article className={styles.details}>
     <p className={styles.municipality}><strong>{selected.address.city}</strong>{selected.address.state ? ` · ${selected.address.state}` : ''}</p><h3>{selected.name}</h3>
     <dl className={styles.actionEssentials}><div><dt>Quando</dt><dd>{actionScheduleSummary(selected)}</dd></div><div><dt>Local</dt><dd><FullAddress address={selected.address} /></dd></div></dl>
-    {(selected.contactPhone || selected.contactEmail) && <section className={styles.actionContacts}><h4>Contatos</h4><div>{selected.contactPhone && <a href={`tel:${selected.contactPhone.replace(/\D/g, '')}`}>Telefone: {selected.contactPhone}</a>}{selected.contactEmail && <a href={`mailto:${selected.contactEmail}`}>E-mail: {selected.contactEmail}</a>}</div></section>}
+    <PublicActionContacts action={selected} />
     {selected.description && <section className={styles.detailSection}><h4>Sobre a ação</h4>{textParagraphs(selected.description).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
     {selected.whatToBring && <section className={styles.detailSection}><h4>O que levar</h4>{textParagraphs(selected.whatToBring).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}
     {selected.tips && <section className={styles.detailSection}><h4>Orientações</h4>{textParagraphs(selected.tips).map((paragraph, index) => <p key={index}>{paragraph}</p>)}</section>}

@@ -22,7 +22,8 @@ const odsIndicators = [
   [17, "Parcerias", 10800, "#19486a"], [18, "Igualdade étnico-racial", 1900, "#a44a1c"],
 ];
 
-export default function Campaign2025Page() {
+export default function Campaign2025Page({ embedded = false }) {
+  const Container = embedded ? "div" : "main";
   const [report, setReport] = useState(null);
   const [reportUrl, setReportUrl] = useState("");
 
@@ -43,7 +44,7 @@ export default function Campaign2025Page() {
   }, []);
 
   return (
-    <main className={styles.page}>
+    <Container className={styles.page}>
       <section className={styles.editionIntro} aria-labelledby="campaign-2025-title">
         <div className={styles.editionIntroCopy}>
           <h1 id="campaign-2025-title">Mobiliz<em>AÇÃO</em></h1>
@@ -106,6 +107,6 @@ export default function Campaign2025Page() {
         </div>
       </section>
       </section>
-    </main>
+    </Container>
   );
 }

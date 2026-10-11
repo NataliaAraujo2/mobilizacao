@@ -25,7 +25,8 @@ function MapButtonIcon() {
   </svg>;
 }
 
-export default function Campaign2026Page() {
+export default function Campaign2026Page({ embedded = false }) {
+  const Container = embedded ? "div" : "main";
   const [selectedState, setSelectedState] = useState("");
   const [mapOpen, setMapOpen] = useState(false);
   const mapRef = useRef(null);
@@ -38,7 +39,7 @@ export default function Campaign2026Page() {
   }
 
   return (
-    <main className={`${styles.page} ${styles.campaignPage}`}>
+    <Container className={`${styles.page} ${styles.campaignPage}`}>
       <section className={styles.actionsShowcase} aria-labelledby="actions-map-title">
         <section className={styles.actionsHero}>
           <article className={styles.actionsPhotoCard}>
@@ -62,7 +63,7 @@ export default function Campaign2026Page() {
       {mapOpen && <section ref={mapRef} className={styles.campaignMapCard} aria-labelledby="actions-map-title">
         <div className={styles.mapIntro}>
           <p className={styles.eyebrow}>Mapa interativo</p>
-          <h1 id="actions-map-title">Escolha seu estado</h1>
+          <h2>Escolha seu estado</h2>
           <p>Toque ou clique no mapa para conhecer as ações disponíveis na sua coordenação.</p>
         </div>
         <div className={`${styles.mapLayout} ${selectedState ? styles.mapWithActions : ''}`}>
@@ -76,6 +77,6 @@ export default function Campaign2026Page() {
           </aside>}
         </div>
       </section>}
-    </main>
+    </Container>
   );
 }

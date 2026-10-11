@@ -27,7 +27,7 @@ export function createAction(input) {
     startTime,
     endTime,
     scheduleText: String(input.scheduleText ?? '').trim(),
-    contactPhone: String(input.contactPhone ?? '').trim(),
+    contactPhone: String(input.contactPhone ?? '').replace(/\D/g, ''),
     contactEmail: String(input.contactEmail ?? '').trim().toLowerCase(),
     dateStart,
     dateEnd,

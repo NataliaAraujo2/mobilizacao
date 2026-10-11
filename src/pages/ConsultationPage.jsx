@@ -12,6 +12,7 @@ import ActionPhotoGallery from '../components/ActionPhotoGallery';
 import { actionScheduleSummary, formatActionDate } from '../domain/actions/actionSchedule';
 import ActionStatus from '../components/ActionStatus';
 import FullAddress from '../components/FullAddress';
+import { PublicActionContacts } from '../components/CoordinationContacts';
 import styles from "./ConsultationPage.module.css";
 
 export default function ConsultationPage() {
@@ -57,7 +58,7 @@ export function CoordinationActionDetails({ action, branch, user, onBack }) {
         {action.scheduleText && <div className={styles.detailWide}><dt>Informações de data e horário</dt><dd>{action.scheduleText}</dd></div>}
         <div><dt>Situação</dt><dd><ActionStatus action={action} /></dd></div>
         <div className={styles.detailWide}><dt>Local</dt><dd><FullAddress address={action.address} /></dd></div>
-        {(action.contactPhone || action.contactEmail) && <div className={styles.detailWide}><dt>Contatos</dt><dd>{[action.contactPhone, action.contactEmail].filter(Boolean).join(' · ')}</dd></div>}
+        <div className={styles.detailWide}><dt>Contatos públicos</dt><dd><PublicActionContacts action={action} /></dd></div>
         {action.description && <div className={styles.detailWide}><dt>Descrição</dt><dd>{action.description}</dd></div>}
         <div className={styles.detailWide}><dt>O que levar</dt><dd>{action.whatToBring || 'Não informado'}</dd></div>
         <div className={styles.detailWide}><dt>Orientações</dt><dd>{action.tips || 'Nenhuma orientação adicional.'}</dd></div>

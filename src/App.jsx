@@ -6,10 +6,7 @@ import AppLayout from "./layout/AppLayout";
 const AccessMessagePage = lazy(() => import("./pages/AccessMessagePage"));
 const AdministrativeDocumentPage = lazy(() => import('./pages/AdministrativeDocumentPage'));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
-const CampaignGateway = lazy(() => import("./pages/CampaignGateway"));
-const Campaign2026Page = lazy(() => import("./pages/Campaign2026Page"));
-const Agenda2030Page = lazy(() => import("./pages/Agenda2030Page"));
-const Campaign2025Page = lazy(() => import("./pages/Campaign2025Page"));
+const HomePage = lazy(() => import("./pages/HomePage"));
 const ReportViewerPage = lazy(() => import("./pages/ReportViewerPage"));
 const BranchesPage = lazy(() => import("./pages/BranchesPage"));
 const BranchViewersPage = lazy(() => import("./pages/BranchViewersPage"));
@@ -21,6 +18,7 @@ const AttendancePage = lazy(() => import("./pages/AttendancePage"));
 const VolunteerAreaPage = lazy(() => import("./pages/VolunteerAreaPage"));
 const AssociatesCounterPage = lazy(() => import("./pages/AssociatesCounterPage"));
 const ReportsAdminPage = lazy(() => import("./pages/ReportsAdminPage"));
+const DocumentsAdminPage = lazy(() => import("./pages/DocumentsAdminPage"));
 const SuperAdminsPage = lazy(() => import("./pages/SuperAdminsPage"));
 const LinkFormsPage = lazy(() => import("./pages/LinkFormsPage"));
 const PublicLinkFormPage = lazy(() => import("./pages/PublicLinkFormPage"));
@@ -34,11 +32,11 @@ export default function App() {
       <Route path="formularios/:token" element={<PublicLinkFormPage />} />
       <Route path="participar/:actionId" element={<PublicActionPage />} />
       <Route element={<AppLayout />}>
-        <Route index element={<CampaignGateway />} />
-        <Route path="2025" element={<Campaign2025Page />} />
+        <Route index element={<HomePage />} />
+        <Route path="2025" element={<Navigate to="/#edicao-2025" replace />} />
         <Route path="2025/relatorio" element={<ReportViewerPage />} />
-        <Route path="2026" element={<Campaign2026Page />} />
-        <Route path="agenda-2030" element={<Agenda2030Page />} />
+        <Route path="2026" element={<Navigate to="/#acoes-2026" replace />} />
+        <Route path="agenda-2030" element={<Navigate to="/#agenda-2030" replace />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="admin/login" element={<LoginPage />} />
         <Route path="admin/acesso-bloqueado" element={<AccessMessagePage blocked />} />
@@ -54,6 +52,7 @@ export default function App() {
           <Route path="admin/presencas" element={<AttendancePage />} />
           <Route path="admin/contador-associados" element={<AssociatesCounterPage />} />
           <Route path="admin/relatorio-2025" element={<ReportsAdminPage />} />
+          <Route path="admin/documentos" element={<DocumentsAdminPage />} />
           <Route path="admin/superadmins" element={<SuperAdminsPage />} />
         </Route>
 
